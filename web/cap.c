@@ -106,6 +106,9 @@ typedef struct _sensor_times {
 #define CONFIG_FILE "sensor_alarm.cfg"
 sensor_alarm sensor;
 sensor_times sensortimes;
+char history_co_time[100000][20];
+char history_co_data[100000][10];
+long g_history_co_cnt=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -1663,22 +1666,149 @@ void write_string(int fd,unsigned int addr,char *data,int len)
 		cmd[6+i]=data[i];
 	for(i=0;i<len+6;i++)
 		printf("%02x ",cmd[i]);
-	printf("\n");
+	printf("\n<len %d>\n",len);
 	write(fd,cmd,len+6);
 	free(cmd);
 }
 #define LCD_PROCESS "[LCD_PROCESS]"
 FILE *history_fp=NULL;
-void list_dir(int fd_lcd,const char *name)
+void load_history(const char *name)
 {
 	DIR *d = NULL;
 	struct dirent *de = NULL;
 	char file_list[512][15];
-	int i=0,j=0,m=0;
-	
+	int i=0,j=0,m=0;	
+	int cnt=0,cnt_co=0;
+	char history_time[100000][20];
+	char history_data[100000][10];
 	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
 	char mon_j[3]={0},mon_m[3]={0};
 	char day_j[3]={0},day_m[3]={0};
+	d = opendir(name);
+	if(d == 0)
+	{
+		printf("open failed %s , %s",name,strerror(errno));
+		return;
+	}
+	
+	while((de = readdir(d))!=0)
+	{
+		if(strncmp(de->d_name,".",strlen("."))==0||strncmp(de->d_name,"..",strlen(".."))==0)
+			continue;
+		memset(file_list[i],'\0',15);
+		strcpy(file_list[i],de->d_name);
+		i++;
+	}	
+	closedir(d);
+	//compare year
+	for(j=0;j<i-1;j++)
+	{
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(year_m,file_list[m],4);
+			if(atoi(year_j)>atoi(year_m))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{	
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(mon_j,file_list[j]+5,2);
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			if((atoi(mon_j)>atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{		
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(mon_j,file_list[j]+5,2);
+			memcpy(day_j,file_list[j]+8,2);
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			memcpy(day_m,file_list[m]+8,2);
+			if((atoi(day_j)>atoi(day_m)) && (atoi(mon_j)==atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				//printf(LCD_PROCESS"switch day_j %s,day_m %s,mon_j %s,mon_m %s,year_j %s,year_m %s\n",day_j,day_m,mon_j,mon_m,year_j,year_m);
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i;j++)
+	{
+		char *line=NULL;
+		char file_path[32]={0};
+		int len;
+		printf(LCD_PROCESS"==> %s\n",file_list[j]);
+		strcpy(file_path,"/home/user/history/");
+		strcat(file_path,file_list[j]);
+		FILE *fp = fopen(file_path, "r");
+		while (getline(&line, &len, fp) != -1) 
+		{
+			if((cnt%2)!=0)
+			{
+				//get co,co2,hcho,pm25,shidu,temp
+				char *co=doit_data(line,ID_CAP_CO);
+				if(co!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_co_data[g_history_co_cnt],'\0',10);
+					//strcpy(history_data[cnt_co],co);					
+					sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					free(co);
+					g_history_co_cnt++;
+				}
+			}
+			else
+			{
+				char tmp[11]={0};
+				memset(history_co_time[g_history_co_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_co_time[g_history_co_cnt],tmp);
+				strcat(history_co_time[g_history_co_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_co_time[g_history_co_cnt],tmp);
+			}
+			cnt++;
+		}
+		fclose(fp);
+	}
+	//for(i=0;i<g_history_co_cnt;i++)
+		//printf(LCD_PROCESS"[%d]time %s, data %s\n",i,history_co_time[i],history_co_data[i]);
+}
+
+void show_history(int fd_lcd,const char *name,char *id,int offset)
+{
+	#if 0
+	DIR *d = NULL;
+	struct dirent *de = NULL;
+	char file_list[512][15];
+	int i=0,j=0,m=0,cnt=0;	
+	char *line=NULL;
+	char file_path[32]={0};
+	int len;
+	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
+	char mon_j[3]={0},mon_m[3]={0};
+	char day_j[3]={0},day_m[3]={0};	
+	char history_time[8][20];
+	char history_data[8][10];
 	d = opendir(name);
 	if(d == 0)
 	{
@@ -1746,76 +1876,182 @@ void list_dir(int fd_lcd,const char *name)
 			}
 		}
 	}
-	int cnt=0,cnt_co=0;
-	char history_time[100000][20];
-	char history_data[100000][10];
-	for(j=0;j<i;j++)
+	strcpy(file_path,"/home/user/history/");
+	strcat(file_path,file_list[0]);	
+	printf(LCD_PROCESS"==> %s id %s\n",file_path,id);
+	FILE *fp = fopen(file_path, "r");
+	i=0;
+	m=0;
+	if(fp==NULL)
 	{
-		char *line=NULL;
-		char file_path[32]={0};
-		int len;
-		printf(LCD_PROCESS"==> %s\n",file_list[j]);
-		strcpy(file_path,"/home/user/history/");
-		strcat(file_path,file_list[j]);
-		FILE *fp = fopen(file_path, "r");
-		while (getline(&line, &len, fp) != -1) 
-		{
-			if((cnt%2)!=0)
-			{
-				//get co,co2,hcho,pm25,shidu,temp
-				char *co=doit_data(line,ID_CAP_CO);
-				if(co!=NULL)
-				{
-					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_data[cnt_co],'\0',20);
-					strcpy(history_data[cnt_co],co);
-					free(co);
-					cnt_co++;
-				}
-			}
-			else
-			{
-				char tmp[11]={0};
-				memset(history_time[cnt_co],'\0',20);
-				memcpy(tmp,file_list[j],10);
-				strcpy(history_time[cnt_co],tmp);
-				strcat(history_time[cnt_co],"    ");
-				memset(tmp,'\0',11);
-				memcpy(tmp,line,5);
-				strcat(history_time[cnt_co],tmp);
-			}
-			cnt++;
-		}
-		fclose(fp);
+		printf(LCD_PROCESS"can not open %s\n",file_path);
+		return ;
+	}	
+	while(getline(&line, &len, fp) != -1) 
+	{
+		i++;
+		printf(LCD_PROCESS"i is %d\n",i);
 	}
-	printf(LCD_PROCESS"==>cnt %d,page %d\n",cnt_co,cnt_co/7);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[0],history_data[0]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[1],history_data[1]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[2],history_data[2]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[3],history_data[3]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[4],history_data[4]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[5],history_data[5]);
-	printf(LCD_PROCESS"history_time %s,%s\n",history_time[6],history_data[6]);
 	
-	write_string(fd_lcd,VAR_CO_TIME1,history_time[0],strlen(history_time[0]));
-	write_string(fd_lcd,VAR_CO_DATA1,history_data[0],strlen(history_data[0]));
-	write_string(fd_lcd,VAR_CO_TIME2,history_time[1],strlen(history_time[1]));
-	write_string(fd_lcd,VAR_CO_DATA2,history_data[1],strlen(history_data[1]));
-	write_string(fd_lcd,VAR_CO_TIME3,history_time[2],strlen(history_time[2]));
-	write_string(fd_lcd,VAR_CO_DATA3,history_data[2],strlen(history_data[2]));
-	write_string(fd_lcd,VAR_CO_TIME4,history_time[3],strlen(history_time[3]));
-	write_string(fd_lcd,VAR_CO_DATA4,history_data[3],strlen(history_data[3]));
-	write_string(fd_lcd,VAR_CO_TIME5,history_time[4],strlen(history_time[4]));
-	write_string(fd_lcd,VAR_CO_DATA5,history_data[4],strlen(history_data[4]));
-	write_string(fd_lcd,VAR_CO_TIME6,history_time[5],strlen(history_time[5]));
-	write_string(fd_lcd,VAR_CO_DATA6,history_data[5],strlen(history_data[5]));
-	write_string(fd_lcd,VAR_CO_TIME7,history_time[6],strlen(history_time[6]));
-	write_string(fd_lcd,VAR_CO_DATA7,history_data[6],strlen(history_data[6]));
-	//begin to update lcd 
+	fseek(fp,0L,SEEK_SET);
+	if(i>(14+offset*2))
+		m=i-14-offset*2;
+	else
+		m=0;
+	printf(LCD_PROCESS"m is %d\n",m);
+	i=0;
+	while (getline(&line, &len, fp) != -1) 
+	{
+		if(i<m)
+		{
+			i++;
+			continue;
+		}
+		printf(LCD_PROCESS"<line> %s \n",line);
+		if((i%2)!=0)
+		{
+			//get co,co2,hcho,pm25,shidu,temp
+			char *data=doit_data(line,id);
+			if(data!=NULL)
+			{
+				memset(history_data[cnt],'\0',20);
+				//strcpy(history_data[cnt],data);					
+				sprintf(history_data[cnt],"%04d",atoi(data));
+				free(data);
+				printf(LCD_PROCESS"<Data %d>%s\n",cnt,history_data[cnt]);
+				printf(LCD_PROCESS"<time 00>%s\n",history_time[0]);
+				cnt++;
+				if(cnt==7)
+					break;
+			}
+		}
+		else
+		{
+			char tmp[11]={0};
+			memset(history_time[cnt],'\0',20);
+			memcpy(tmp,file_list[0],10);
+			strcpy(history_time[cnt],tmp);
+			strcat(history_time[cnt]," ");
+			memset(tmp,'\0',11);
+			memcpy(tmp,line,5);
+			strcat(history_time[cnt],tmp);
+			printf(LCD_PROCESS"<time %d>%s\n",cnt,history_time[cnt]);
+			printf(LCD_PROCESS"<time 0>%s\n",history_time[0]);
+		}
+		i++;
+	}
+	free(line);
+	fclose(fp);
+	#endif
+	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_CO_TIME1,history_co_time[g_history_co_cnt-offset-1],strlen(history_co_time[g_history_co_cnt-offset-1]));
+		write_string(fd_lcd,VAR_CO_DATA1,history_co_data[g_history_co_cnt-offset-1],strlen(history_co_data[g_history_co_cnt-offset-1]));
+		write_string(fd_lcd,VAR_CO_TIME2,history_co_time[g_history_co_cnt-offset-2],strlen(history_co_time[g_history_co_cnt-offset-2]));
+		write_string(fd_lcd,VAR_CO_DATA2,history_co_data[g_history_co_cnt-offset-2],strlen(history_co_data[g_history_co_cnt-offset-2]));
+		write_string(fd_lcd,VAR_CO_TIME3,history_co_time[g_history_co_cnt-offset-3],strlen(history_co_time[g_history_co_cnt-offset-3]));
+		write_string(fd_lcd,VAR_CO_DATA3,history_co_data[g_history_co_cnt-offset-3],strlen(history_co_data[g_history_co_cnt-offset-3]));
+		write_string(fd_lcd,VAR_CO_TIME4,history_co_time[g_history_co_cnt-offset-4],strlen(history_co_time[g_history_co_cnt-offset-4]));
+		write_string(fd_lcd,VAR_CO_DATA4,history_co_data[g_history_co_cnt-offset-4],strlen(history_co_data[g_history_co_cnt-offset-4]));
+		write_string(fd_lcd,VAR_CO_TIME5,history_co_time[g_history_co_cnt-offset-5],strlen(history_co_time[g_history_co_cnt-offset-5]));
+		write_string(fd_lcd,VAR_CO_DATA5,history_co_data[g_history_co_cnt-offset-5],strlen(history_co_data[g_history_co_cnt-offset-5]));
+		write_string(fd_lcd,VAR_CO_TIME6,history_co_time[g_history_co_cnt-offset-6],strlen(history_co_time[g_history_co_cnt-offset-6]));
+		write_string(fd_lcd,VAR_CO_DATA6,history_co_data[g_history_co_cnt-offset-6],strlen(history_co_data[g_history_co_cnt-offset-6]));
+		write_string(fd_lcd,VAR_CO_TIME7,history_co_time[g_history_co_cnt-offset-7],strlen(history_co_time[g_history_co_cnt-offset-7]));
+		write_string(fd_lcd,VAR_CO_DATA7,history_co_data[g_history_co_cnt-offset-7],strlen(history_co_data[g_history_co_cnt-offset-7]));
+	}
+	#if 0
+	else if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_CO2_TIME7,history_time[0],strlen(history_time[0]));
+		write_string(fd_lcd,VAR_CO2_DATA7,history_data[0],strlen(history_data[0]));
+		write_string(fd_lcd,VAR_CO2_TIME6,history_time[1],strlen(history_time[1]));
+		write_string(fd_lcd,VAR_CO2_DATA6,history_data[1],strlen(history_data[1]));
+		write_string(fd_lcd,VAR_CO2_TIME5,history_time[2],strlen(history_time[2]));
+		write_string(fd_lcd,VAR_CO2_DATA5,history_data[2],strlen(history_data[2]));
+		write_string(fd_lcd,VAR_CO2_TIME4,history_time[3],strlen(history_time[3]));
+		write_string(fd_lcd,VAR_CO2_DATA4,history_data[3],strlen(history_data[3]));
+		write_string(fd_lcd,VAR_CO2_TIME3,history_time[4],strlen(history_time[4]));
+		write_string(fd_lcd,VAR_CO2_DATA3,history_data[4],strlen(history_data[4]));
+		write_string(fd_lcd,VAR_CO2_TIME2,history_time[5],strlen(history_time[5]));
+		write_string(fd_lcd,VAR_CO2_DATA2,history_data[5],strlen(history_data[5]));
+		write_string(fd_lcd,VAR_CO2_TIME1,history_time[6],strlen(history_time[6]));
+		write_string(fd_lcd,VAR_CO2_DATA1,history_data[6],strlen(history_data[6]));
+	}
+	else if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_HCHO_TIME1,history_time[0],strlen(history_time[0]));
+		write_string(fd_lcd,VAR_HCHO_DATA1,history_data[0],strlen(history_data[0]));
+		write_string(fd_lcd,VAR_HCHO_TIME2,history_time[1],strlen(history_time[1]));
+		write_string(fd_lcd,VAR_HCHO_DATA2,history_data[1],strlen(history_data[1]));
+		write_string(fd_lcd,VAR_HCHO_TIME3,history_time[2],strlen(history_time[2]));
+		write_string(fd_lcd,VAR_HCHO_DATA3,history_data[2],strlen(history_data[2]));
+		write_string(fd_lcd,VAR_HCHO_TIME4,history_time[3],strlen(history_time[3]));
+		write_string(fd_lcd,VAR_HCHO_DATA4,history_data[3],strlen(history_data[3]));
+		write_string(fd_lcd,VAR_HCHO_TIME5,history_time[4],strlen(history_time[4]));
+		write_string(fd_lcd,VAR_HCHO_DATA5,history_data[4],strlen(history_data[4]));
+		write_string(fd_lcd,VAR_HCHO_TIME6,history_time[5],strlen(history_time[5]));
+		write_string(fd_lcd,VAR_HCHO_DATA6,history_data[5],strlen(history_data[5]));
+		write_string(fd_lcd,VAR_HCHO_TIME7,history_time[6],strlen(history_time[6]));
+		write_string(fd_lcd,VAR_HCHO_DATA7,history_data[6],strlen(history_data[6]));
+	}
+	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_TEMP_TIME1,history_time[0],strlen(history_time[0]));
+		write_string(fd_lcd,VAR_TEMP_DATA1,history_data[0],strlen(history_data[0]));
+		write_string(fd_lcd,VAR_TEMP_TIME2,history_time[1],strlen(history_time[1]));
+		write_string(fd_lcd,VAR_TEMP_DATA2,history_data[1],strlen(history_data[1]));
+		write_string(fd_lcd,VAR_TEMP_TIME3,history_time[2],strlen(history_time[2]));
+		write_string(fd_lcd,VAR_TEMP_DATA3,history_data[2],strlen(history_data[2]));
+		write_string(fd_lcd,VAR_TEMP_TIME4,history_time[3],strlen(history_time[3]));
+		write_string(fd_lcd,VAR_TEMP_DATA4,history_data[3],strlen(history_data[3]));
+		write_string(fd_lcd,VAR_TEMP_TIME5,history_time[4],strlen(history_time[4]));
+		write_string(fd_lcd,VAR_TEMP_DATA5,history_data[4],strlen(history_data[4]));
+		write_string(fd_lcd,VAR_TEMP_TIME6,history_time[5],strlen(history_time[5]));
+		write_string(fd_lcd,VAR_TEMP_DATA6,history_data[5],strlen(history_data[5]));
+		write_string(fd_lcd,VAR_TEMP_TIME7,history_time[6],strlen(history_time[6]));
+		write_string(fd_lcd,VAR_TEMP_DATA7,history_data[6],strlen(history_data[6]));
+	}
+	else if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_SHIDU_TIME1,history_time[0],strlen(history_time[0]));
+		write_string(fd_lcd,VAR_SHIDU_DATA1,history_data[0],strlen(history_data[0]));
+		write_string(fd_lcd,VAR_SHIDU_TIME2,history_time[1],strlen(history_time[1]));
+		write_string(fd_lcd,VAR_SHIDU_DATA2,history_data[1],strlen(history_data[1]));
+		write_string(fd_lcd,VAR_SHIDU_TIME3,history_time[2],strlen(history_time[2]));
+		write_string(fd_lcd,VAR_SHIDU_DATA3,history_data[2],strlen(history_data[2]));
+		write_string(fd_lcd,VAR_SHIDU_TIME4,history_time[3],strlen(history_time[3]));
+		write_string(fd_lcd,VAR_SHIDU_DATA4,history_data[3],strlen(history_data[3]));
+		write_string(fd_lcd,VAR_SHIDU_TIME5,history_time[4],strlen(history_time[4]));
+		write_string(fd_lcd,VAR_SHIDU_DATA5,history_data[4],strlen(history_data[4]));
+		write_string(fd_lcd,VAR_SHIDU_TIME6,history_time[5],strlen(history_time[5]));
+		write_string(fd_lcd,VAR_SHIDU_DATA6,history_data[5],strlen(history_data[5]));
+		write_string(fd_lcd,VAR_SHIDU_TIME7,history_time[6],strlen(history_time[6]));
+		write_string(fd_lcd,VAR_SHIDU_DATA7,history_data[6],strlen(history_data[6]));
+	}
+	else if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
+	{
+		write_string(fd_lcd,VAR_PM25_TIME1,history_time[0],strlen(history_time[0]));
+		write_string(fd_lcd,VAR_PM25_DATA1,history_data[0],strlen(history_data[0]));
+		write_string(fd_lcd,VAR_PM25_TIME2,history_time[1],strlen(history_time[1]));
+		write_string(fd_lcd,VAR_PM25_DATA2,history_data[1],strlen(history_data[1]));
+		write_string(fd_lcd,VAR_PM25_TIME3,history_time[2],strlen(history_time[2]));
+		write_string(fd_lcd,VAR_PM25_DATA3,history_data[2],strlen(history_data[2]));
+		write_string(fd_lcd,VAR_PM25_TIME4,history_time[3],strlen(history_time[3]));
+		write_string(fd_lcd,VAR_PM25_DATA4,history_data[3],strlen(history_data[3]));
+		write_string(fd_lcd,VAR_PM25_TIME5,history_time[4],strlen(history_time[4]));
+		write_string(fd_lcd,VAR_PM25_DATA5,history_data[4],strlen(history_data[4]));
+		write_string(fd_lcd,VAR_PM25_TIME6,history_time[5],strlen(history_time[5]));
+		write_string(fd_lcd,VAR_PM25_DATA6,history_data[5],strlen(history_data[5]));
+		write_string(fd_lcd,VAR_PM25_TIME7,history_time[6],strlen(history_time[6]));
+		write_string(fd_lcd,VAR_PM25_DATA7,history_data[6],strlen(history_data[6]));
+	}
+	#endif
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
+	static int begin=0;
 	char * line = NULL;
 	char date1[32]={0};
 	char date2[32]={0};
@@ -1829,56 +2065,22 @@ unsigned short input_handle(int fd_lcd,char *input)
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
-	if(	addr==TOUCH_DETAIL_CO||
-			addr==TOUCH_DETAIL_CO2||
-			addr==TOUCH_DETAIL_HCHO||
-			addr==TOUCH_DETAIL_TEMP||
-			addr==TOUCH_DETAIL_SHIDU||
-			addr==TOUCH_DETAIL_PM25)
+	if(addr==TOUCH_DETAIL_CO && (TOUCH_DETAIL_CO-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
+	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);
+	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
+	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
+	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
+	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
+	show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
+	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
 	{
-		if((TOUCH_DETAIL_CO-0x100)==data||
-				(TOUCH_DETAIL_CO2-0x100)==data||
-				(TOUCH_DETAIL_HCHO-0x100)==data||
-				(TOUCH_DETAIL_TEMP-0x100)==data||
-				(TOUCH_DETAIL_SHIDU-0x100)==data||
-				(TOUCH_DETAIL_PM25-0x100)==data)
-		{
-			if(history_fp!=NULL)
-			{
-				fclose(history_fp);
-				printf("close the last opened\n");
-			}
-			char *file_path=(char *)malloc(256);
-			memset(file_path,'\0',256);
-			//int year=2015,mon=11,day=23,hour=9,min=36,sec=12,cod=34;
-			//sprintf(time,"%04d-%02d-%02d %02d:%02d:%02d",year,mon,day,hour,min,sec);
-			//sprintf(co,"0.%02d",cod);
-			//write_string(fd_lcd,0x0148,time,sizeof(time));
-			//write_string(fd_lcd,0x0149,co,sizeof(co));				
-			printf(LCD_PROCESS"cur is %s\n",cur_date);
-			list_dir(fd_lcd,"/home/user/history");
-			strcpy(file_path,FILE_PATH);
-			//strcat(file_path,date_buf);
-			printf(LCD_PROCESS"to open %s\r\n",file_path);
-			history_fp = fopen(file_path, "r");
-			if(history_fp!=NULL)
-			{
-				if(fgets(line,512,history_fp))
-				{
-					//char tmp[17]={'\0'};
-					//memcpy(tmp,cur_date,10);
-					//strcat(tmp,line);
-					//printf(LCD_PROCESS"date %s\n",tmp);
-					write_string(fd_lcd,VAR_CO_TIME1,cur_date,strlen(cur_date));
-					write_string(fd_lcd,VAR_CO_DATA1,cur_date,strlen(cur_date));
-				}
-				else
-					printf(LCD_PROCESS"fgets failed\n");
-			}
-			else
-				printf(LCD_PROCESS"open file %s failed\n",file_path);
-
-		}
+		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,begin);
+		begin+=7;
 	}
 #if 0
 	switch(addr)
@@ -2276,6 +2478,7 @@ int main(int argc, char *argv[])
 {
 	key_t shmid; 
 	int fd_com=0,fpid,fd_lcd;
+	load_history("/home/user/history");
 	get_ip(ip);
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{
