@@ -36,9 +36,7 @@
 #include "cJSON.h"
 #include "weblib.h"
 #include "web_interface.h"
-//#include <iostream>
-#include <unistd.h>
-
+//#include <iostream> 
 #define RTCDEV "/dev/rtc0"
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
@@ -106,6 +104,7 @@ typedef struct _sensor_times {
 #define CONFIG_FILE "sensor_alarm.cfg"
 sensor_alarm sensor;
 sensor_times sensortimes;
+#if 0
 char history_co_time[100000][20];
 char history_co_data[100000][10];
 long g_history_co_cnt=0;
@@ -124,6 +123,16 @@ long g_history_temp_cnt=0;
 char history_pm25_time[100000][20];
 char history_pm25_data[100000][10];
 long g_history_pm25_cnt=0;
+#else
+key_t shmid_co,shmid_co2,shmid_hcho,shmid_temp,shmid_pm25,shmid_shidu;
+key_t shmid_co_cnt,shmid_co2_cnt,shmid_hcho_cnt,shmid_temp_cnt,shmid_pm25_cnt,shmid_shidu_cnt;
+struct nano{
+	char time[20];
+	char data[10];
+};
+struct nano *g_history_co,*g_history_temp,*g_history_shidu,*g_history_co2,*g_history_hcho,*g_history_pm25;
+long *g_co_cnt,*g_co2_cnt,*g_hcho_cnt,*g_temp_cnt,*g_pm25_cnt,*g_shidu_cnt;
+#endif
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -1019,56 +1028,68 @@ void send_server_save_local(char *date,char *message,char save)
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
 		{
-			memset(history_co_data[g_history_co_cnt],'\0',10);
-			strcpy(history_co_data[g_history_co_cnt],data);					
+			memset(g_history_co[*g_co_cnt].data,'\0',10);
+			strcpy(g_history_co[*g_co_cnt].data,data);					
+			memset(g_history_co[*g_co_cnt].time,'\0',20);
+			strcpy(g_history_co[*g_co_cnt].time,date);							
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_co_cnt++;
+			(*g_co_cnt)++;
 		}
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
 		{
-			memset(history_co2_data[g_history_co2_cnt],'\0',10);
-			strcpy(history_co2_data[g_history_co2_cnt],data);					
+			memset(g_history_co2[*g_co2_cnt].data,'\0',10);				
+			memset(g_history_co2[*g_co2_cnt].time,'\0',20);
+			strcpy(g_history_co2[*g_co2_cnt].time,date);	
+			sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_co2_cnt++;
+			(*g_co2_cnt)++;
 		}
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
 		{
-			memset(history_shidu_data[g_history_shidu_cnt],'\0',10);
-			strcpy(history_shidu_data[g_history_shidu_cnt],data);					
+			memset(g_history_shidu[*g_shidu_cnt].data,'\0',10);
+			strcpy(g_history_shidu[*g_shidu_cnt].data,data);					
+			memset(g_history_shidu[*g_shidu_cnt].time,'\0',20);
+			strcpy(g_history_shidu[*g_shidu_cnt].time,date);							
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_shidu_cnt++;
+			(*g_shidu_cnt)++;
 		}
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
 		{
-			memset(history_hcho_data[g_history_hcho_cnt],'\0',10);
-			strcpy(history_hcho_data[g_history_hcho_cnt],data);					
+			memset(g_history_hcho[*g_hcho_cnt].data,'\0',10);
+			strcpy(g_history_hcho[*g_hcho_cnt].data,data);					
+			memset(g_history_hcho[*g_hcho_cnt].time,'\0',20);
+			strcpy(g_history_hcho[*g_hcho_cnt].time,date);							
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_hcho_cnt++;
+			(*g_hcho_cnt)++;
 		}
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
 		{
-			memset(history_temp_data[g_history_temp_cnt],'\0',10);
-			strcpy(history_temp_data[g_history_temp_cnt],data);					
+			memset(g_history_temp[*g_temp_cnt].data,'\0',10);
+			strcpy(g_history_temp[*g_temp_cnt].data,data);					
+			memset(g_history_temp[*g_temp_cnt].time,'\0',20);
+			strcpy(g_history_temp[*g_temp_cnt].time,date);							
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_temp_cnt++;
+			(*g_temp_cnt)++;
 		}
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
 		{
-			memset(history_pm25_data[g_history_pm25_cnt],'\0',10);
-			strcpy(history_pm25_data[g_history_pm25_cnt],data);					
+			memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);			
+			memset(g_history_pm25[*g_pm25_cnt].time,'\0',20);
+			strcpy(g_history_pm25[*g_pm25_cnt].time,date);		
+			sprintf(g_history_pm25[*g_pm25_cnt].data,"%03d",atoi(data));
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
-			g_history_pm25_cnt++;
+			(*g_pm25_cnt)++;
 		}
 	}
 	send_web_post(URL,message,9,&rcv);
@@ -1755,6 +1776,21 @@ void load_history(const char *name)
 	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
 	char mon_j[3]={0},mon_m[3]={0};
 	char day_j[3]={0},day_m[3]={0};
+	long ii;
+	printf(LCD_PROCESS"begin to shmat1\n");
+	g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
+	g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
+	g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
+	g_history_shidu = (struct nano *)shmat(shmid_shidu, 0, 0);
+	g_history_temp = (struct nano *)shmat(shmid_temp, 0, 0);
+	g_history_pm25 = (struct nano *)shmat(shmid_pm25, 0, 0);
+	g_co_cnt = (long *)shmat(shmid_co_cnt, 0, 0);
+	g_co2_cnt = (long *)shmat(shmid_co2_cnt, 0, 0);
+	g_hcho_cnt = (long *)shmat(shmid_hcho_cnt, 0, 0);
+	g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
+	g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
+	g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+	printf(LCD_PROCESS"end to shmat\n");
 	d = opendir(name);
 	if(d == 0)
 	{
@@ -1839,113 +1875,114 @@ void load_history(const char *name)
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_co_data[g_history_co_cnt],'\0',10);
-					strcpy(history_co_data[g_history_co_cnt],data);					
+					memset(g_history_co[*g_co_cnt].data,'\0',10);
+					strcpy(g_history_co[*g_co_cnt].data,data);					
 					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					//printf(LCD_PROCESS"g_co_cnt in load %d %s data %s\n",*g_co_cnt,g_history_co[*g_co_cnt].data,data);
 					free(data);
-					g_history_co_cnt++;
+					(*g_co_cnt)++;
 				}
 				data=doit_data(line,ID_CAP_CO2);
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_co2_data[g_history_co2_cnt],'\0',10);
+					memset(g_history_co2[*g_co2_cnt].data,'\0',10);
 					//strcpy(history_co2_data[g_history_co2_cnt],data);					
-					sprintf(history_co2_data[g_history_co2_cnt],"%04d",atoi(data));
+					sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
 					free(data);
-					g_history_co2_cnt++;
+					(*g_co2_cnt)++;
 				}
 				data=doit_data(line,ID_CAP_HCHO);
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_hcho_data[g_history_hcho_cnt],'\0',10);
-					strcpy(history_hcho_data[g_history_hcho_cnt],data);					
+					memset(g_history_hcho[*g_hcho_cnt].data,'\0',10);
+					strcpy(g_history_hcho[*g_hcho_cnt].data,data);					
 					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 					free(data);
-					g_history_hcho_cnt++;
+					(*g_hcho_cnt)++;
 				}
 				data=doit_data(line,ID_CAP_SHI_DU);
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_shidu_data[g_history_shidu_cnt],'\0',10);
-					strcpy(history_shidu_data[g_history_shidu_cnt],data);					
+					memset(g_history_shidu[*g_shidu_cnt].data,'\0',10);
+					strcpy(g_history_shidu[*g_shidu_cnt].data,data);					
 					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 					free(data);
-					g_history_shidu_cnt++;
+					(*g_shidu_cnt)++;
 				}
 				data=doit_data(line,ID_CAP_TEMPERATURE);
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_temp_data[g_history_temp_cnt],'\0',10);
-					strcpy(history_temp_data[g_history_temp_cnt],data);					
+					memset(g_history_temp[*g_temp_cnt].data,'\0',10);
+					strcpy(g_history_temp[*g_temp_cnt].data,data);					
 					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 					free(data);
-					g_history_temp_cnt++;
+					(*g_temp_cnt)++;
 				}
 				data=doit_data(line,ID_CAP_PM_25);
 				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
-					memset(history_pm25_data[g_history_pm25_cnt],'\0',10);
+					memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);
 					//strcpy(history_pm25_data[g_history_pm25_cnt],data);					
-					sprintf(history_pm25_data[g_history_pm25_cnt],"%03d",atoi(data));
+					sprintf(g_history_pm25[*g_pm25_cnt].data,"%03d",atoi(data));
 					free(data);
-					g_history_pm25_cnt++;
+					(*g_pm25_cnt)++;
 				}
 			}
 			else
 			{
 				char tmp[11]={0};
-				memset(history_co_time[g_history_co_cnt],'\0',20);
+				memset(g_history_co[*g_co_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_co_time[g_history_co_cnt],tmp);
-				strcat(history_co_time[g_history_co_cnt]," ");
+				strcpy(g_history_co[*g_co_cnt].time,tmp);
+				strcat(g_history_co[*g_co_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_co_time[g_history_co_cnt],tmp);
+				strcat(g_history_co[*g_co_cnt].time,tmp);
 				
-				memset(history_co2_time[g_history_co2_cnt],'\0',20);
+				memset(g_history_co2[*g_co2_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_co2_time[g_history_co2_cnt],tmp);
-				strcat(history_co2_time[g_history_co2_cnt]," ");
+				strcpy(g_history_co2[*g_co2_cnt].time,tmp);
+				strcat(g_history_co2[*g_co2_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_co2_time[g_history_co2_cnt],tmp);
+				strcat(g_history_co2[*g_co2_cnt].time,tmp);
 				
-				memset(history_hcho_time[g_history_hcho_cnt],'\0',20);
+				memset(g_history_temp[*g_temp_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_hcho_time[g_history_hcho_cnt],tmp);
-				strcat(history_hcho_time[g_history_hcho_cnt]," ");
+				strcpy(g_history_temp[*g_temp_cnt].time,tmp);
+				strcat(g_history_temp[*g_temp_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_hcho_time[g_history_hcho_cnt],tmp);
+				strcat(g_history_temp[*g_temp_cnt].time,tmp);
 				
-				memset(history_shidu_time[g_history_shidu_cnt],'\0',20);
+				memset(g_history_hcho[*g_hcho_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_shidu_time[g_history_shidu_cnt],tmp);
-				strcat(history_shidu_time[g_history_shidu_cnt]," ");
+				strcpy(g_history_hcho[*g_hcho_cnt].time,tmp);
+				strcat(g_history_hcho[*g_hcho_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_shidu_time[g_history_shidu_cnt],tmp);
+				strcat(g_history_hcho[*g_hcho_cnt].time,tmp);
 				
-				memset(history_temp_time[g_history_temp_cnt],'\0',20);
+				memset(g_history_shidu[*g_shidu_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_temp_time[g_history_temp_cnt],tmp);
-				strcat(history_temp_time[g_history_temp_cnt]," ");
+				strcpy(g_history_shidu[*g_shidu_cnt].time,tmp);
+				strcat(g_history_shidu[*g_shidu_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_temp_time[g_history_temp_cnt],tmp);
+				strcat(g_history_shidu[*g_shidu_cnt].time,tmp);
 				
-				memset(history_pm25_time[g_history_pm25_cnt],'\0',20);
+				memset(g_history_pm25[*g_pm25_cnt].time,'\0',20);
 				memcpy(tmp,file_list[j],10);
-				strcpy(history_pm25_time[g_history_pm25_cnt],tmp);
-				strcat(history_pm25_time[g_history_pm25_cnt]," ");
+				strcpy(g_history_pm25[*g_pm25_cnt].time,tmp);
+				strcat(g_history_pm25[*g_pm25_cnt].time," ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
-				strcat(history_pm25_time[g_history_pm25_cnt],tmp);
+				strcat(g_history_pm25[*g_pm25_cnt].time,tmp);
 			}
 			cnt++;
 		}
@@ -1956,361 +1993,134 @@ void load_history(const char *name)
 }
 
 void show_history(int fd_lcd,const char *name,char *id,int offset)
-{
-	#if 0
-	DIR *d = NULL;
-	struct dirent *de = NULL;
-	char file_list[512][15];
-	int i=0,j=0,m=0,cnt=0;	
-	char *line=NULL;
-	char file_path[32]={0};
-	int len;
-	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
-	char mon_j[3]={0},mon_m[3]={0};
-	char day_j[3]={0},day_m[3]={0};	
-	char history_time[8][20];
-	char history_data[8][10];
-	d = opendir(name);
-	if(d == 0)
-	{
-		printf("open failed %s , %s",name,strerror(errno));
-		return;
-	}
-	
-	while((de = readdir(d))!=0)
-	{
-		if(strncmp(de->d_name,".",strlen("."))==0||strncmp(de->d_name,"..",strlen(".."))==0)
-			continue;
-		//printf(LCD_PROCESS"==> %s\n",de->d_name);
-		memset(file_list[i],'\0',15);
-		strcpy(file_list[i],de->d_name);
-		i++;
-	}	
-	closedir(d);
-	//compare year
-	for(j=0;j<i-1;j++)
-	{
-		memcpy(year_j,file_list[j],4);
-		for(m=j+1;m<i;m++)
-		{
-			memcpy(year_m,file_list[m],4);
-			if(atoi(year_j)<atoi(year_m))
-			{
-				strcpy(tmp_file,file_list[j]);
-				strcpy(file_list[j],file_list[m]);
-				strcpy(file_list[m],tmp_file);
-			}
-		}
-	}
-	for(j=0;j<i-1;j++)
-	{
-		memcpy(year_j,file_list[j],4);
-		memcpy(mon_j,file_list[j]+5,2);
-		for(m=j+1;m<i;m++)
-		{
-			memcpy(year_m,file_list[m],4);
-			memcpy(mon_m,file_list[m]+5,2);
-			if((atoi(mon_j)<atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
-			{
-				strcpy(tmp_file,file_list[j]);
-				strcpy(file_list[j],file_list[m]);
-				strcpy(file_list[m],tmp_file);
-			}
-		}
-	}
-	for(j=0;j<i-1;j++)
-	{
-		memcpy(year_j,file_list[j],4);
-		memcpy(mon_j,file_list[j]+5,2);
-		memcpy(day_j,file_list[j]+8,2);
-		for(m=j+1;m<i;m++)
-		{
-			memcpy(year_m,file_list[m],4);
-			memcpy(mon_m,file_list[m]+5,2);
-			memcpy(day_m,file_list[m]+8,2);
-			//printf(LCD_PROCESS"year_j %s,mon_j %s,day_j %s %d <> year_m %s,mon_m %s,day_m %s %d\n",year_j,mon_j,day_j,atoi(day_j),year_m,mon_m,day_m,atoi(day_m));
-			if((atoi(day_j)<atoi(day_m)) && (atoi(mon_j)==atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
-			{
-				strcpy(tmp_file,file_list[j]);
-				strcpy(file_list[j],file_list[m]);
-				strcpy(file_list[m],tmp_file);
-			}
-		}
-	}
-	strcpy(file_path,"/home/user/history/");
-	strcat(file_path,file_list[0]);	
-	printf(LCD_PROCESS"==> %s id %s\n",file_path,id);
-	FILE *fp = fopen(file_path, "r");
-	i=0;
-	m=0;
-	if(fp==NULL)
-	{
-		printf(LCD_PROCESS"can not open %s\n",file_path);
-		return ;
-	}	
-	while(getline(&line, &len, fp) != -1) 
-	{
-		i++;
-		printf(LCD_PROCESS"i is %d\n",i);
-	}
-	
-	fseek(fp,0L,SEEK_SET);
-	if(i>(14+offset*2))
-		m=i-14-offset*2;
-	else
-		m=0;
-	printf(LCD_PROCESS"m is %d\n",m);
-	i=0;
-	while (getline(&line, &len, fp) != -1) 
-	{
-		if(i<m)
-		{
-			i++;
-			continue;
-		}
-		printf(LCD_PROCESS"<line> %s \n",line);
-		if((i%2)!=0)
-		{
-			//get co,co2,hcho,pm25,shidu,temp
-			char *data=doit_data(line,id);
-			if(data!=NULL)
-			{
-				memset(history_data[cnt],'\0',20);
-				//strcpy(history_data[cnt],data);					
-				sprintf(history_data[cnt],"%04d",atoi(data));
-				free(data);
-				printf(LCD_PROCESS"<Data %d>%s\n",cnt,history_data[cnt]);
-				printf(LCD_PROCESS"<time 00>%s\n",history_time[0]);
-				cnt++;
-				if(cnt==7)
-					break;
-			}
-		}
-		else
-		{
-			char tmp[11]={0};
-			memset(history_time[cnt],'\0',20);
-			memcpy(tmp,file_list[0],10);
-			strcpy(history_time[cnt],tmp);
-			strcat(history_time[cnt]," ");
-			memset(tmp,'\0',11);
-			memcpy(tmp,line,5);
-			strcat(history_time[cnt],tmp);
-			printf(LCD_PROCESS"<time %d>%s\n",cnt,history_time[cnt]);
-			printf(LCD_PROCESS"<time 0>%s\n",history_time[0]);
-		}
-		i++;
-	}
-	free(line);
-	fclose(fp);
-	#endif
+{	
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
-		if((g_history_co_cnt-offset-7)>0)
+//		printf("g_co_cnt %d\n",*g_co_cnt);
+		if((*g_co_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_CO_TIME1,history_co_time[g_history_co_cnt-offset-1],strlen(history_co_time[g_history_co_cnt-offset-1]));
-			write_string(fd_lcd,VAR_CO_DATA1,history_co_data[g_history_co_cnt-offset-1],strlen(history_co_data[g_history_co_cnt-offset-1]));
-			write_string(fd_lcd,VAR_CO_TIME2,history_co_time[g_history_co_cnt-offset-2],strlen(history_co_time[g_history_co_cnt-offset-2]));
-			write_string(fd_lcd,VAR_CO_DATA2,history_co_data[g_history_co_cnt-offset-2],strlen(history_co_data[g_history_co_cnt-offset-2]));
-			write_string(fd_lcd,VAR_CO_TIME3,history_co_time[g_history_co_cnt-offset-3],strlen(history_co_time[g_history_co_cnt-offset-3]));
-			write_string(fd_lcd,VAR_CO_DATA3,history_co_data[g_history_co_cnt-offset-3],strlen(history_co_data[g_history_co_cnt-offset-3]));
-			write_string(fd_lcd,VAR_CO_TIME4,history_co_time[g_history_co_cnt-offset-4],strlen(history_co_time[g_history_co_cnt-offset-4]));
-			write_string(fd_lcd,VAR_CO_DATA4,history_co_data[g_history_co_cnt-offset-4],strlen(history_co_data[g_history_co_cnt-offset-4]));
-			write_string(fd_lcd,VAR_CO_TIME5,history_co_time[g_history_co_cnt-offset-5],strlen(history_co_time[g_history_co_cnt-offset-5]));
-			write_string(fd_lcd,VAR_CO_DATA5,history_co_data[g_history_co_cnt-offset-5],strlen(history_co_data[g_history_co_cnt-offset-5]));
-			write_string(fd_lcd,VAR_CO_TIME6,history_co_time[g_history_co_cnt-offset-6],strlen(history_co_time[g_history_co_cnt-offset-6]));
-			write_string(fd_lcd,VAR_CO_DATA6,history_co_data[g_history_co_cnt-offset-6],strlen(history_co_data[g_history_co_cnt-offset-6]));
-			write_string(fd_lcd,VAR_CO_TIME7,history_co_time[g_history_co_cnt-offset-7],strlen(history_co_time[g_history_co_cnt-offset-7]));
-			write_string(fd_lcd,VAR_CO_DATA7,history_co_data[g_history_co_cnt-offset-7],strlen(history_co_data[g_history_co_cnt-offset-7]));
+			write_string(fd_lcd,VAR_CO_TIME1,g_history_co[*g_co_cnt-offset-1].time,strlen(g_history_co[*g_co_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_CO_DATA1,g_history_co[*g_co_cnt-offset-1].data,strlen(g_history_co[*g_co_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_CO_TIME2,g_history_co[*g_co_cnt-offset-2].time,strlen(g_history_co[*g_co_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_CO_DATA2,g_history_co[*g_co_cnt-offset-2].data,strlen(g_history_co[*g_co_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_CO_TIME3,g_history_co[*g_co_cnt-offset-3].time,strlen(g_history_co[*g_co_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_CO_DATA3,g_history_co[*g_co_cnt-offset-3].data,strlen(g_history_co[*g_co_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_CO_TIME4,g_history_co[*g_co_cnt-offset-4].time,strlen(g_history_co[*g_co_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_CO_DATA4,g_history_co[*g_co_cnt-offset-4].data,strlen(g_history_co[*g_co_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_CO_TIME5,g_history_co[*g_co_cnt-offset-5].time,strlen(g_history_co[*g_co_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_CO_DATA5,g_history_co[*g_co_cnt-offset-5].data,strlen(g_history_co[*g_co_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_CO_TIME6,g_history_co[*g_co_cnt-offset-6].time,strlen(g_history_co[*g_co_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_CO_DATA6,g_history_co[*g_co_cnt-offset-6].data,strlen(g_history_co[*g_co_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_CO_TIME7,g_history_co[*g_co_cnt-offset-7].time,strlen(g_history_co[*g_co_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_CO_DATA7,g_history_co[*g_co_cnt-offset-7].data,strlen(g_history_co[*g_co_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
-		if((g_history_co2_cnt-offset-7)>0)
+//		printf("g_co2_cnt %d\n",*g_co2_cnt);
+		if((*g_co2_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_CO2_TIME1,history_co2_time[g_history_co2_cnt-offset-1],strlen(history_co2_time[g_history_co2_cnt-offset-1]));
-			write_string(fd_lcd,VAR_CO2_DATA1,history_co2_data[g_history_co2_cnt-offset-1],strlen(history_co2_data[g_history_co2_cnt-offset-1]));
-			write_string(fd_lcd,VAR_CO2_TIME2,history_co2_time[g_history_co2_cnt-offset-2],strlen(history_co2_time[g_history_co2_cnt-offset-2]));
-			write_string(fd_lcd,VAR_CO2_DATA2,history_co2_data[g_history_co2_cnt-offset-2],strlen(history_co2_data[g_history_co2_cnt-offset-2]));
-			write_string(fd_lcd,VAR_CO2_TIME3,history_co2_time[g_history_co2_cnt-offset-3],strlen(history_co2_time[g_history_co2_cnt-offset-3]));
-			write_string(fd_lcd,VAR_CO2_DATA3,history_co2_data[g_history_co2_cnt-offset-3],strlen(history_co2_data[g_history_co2_cnt-offset-3]));
-			write_string(fd_lcd,VAR_CO2_TIME4,history_co2_time[g_history_co2_cnt-offset-4],strlen(history_co2_time[g_history_co2_cnt-offset-4]));
-			write_string(fd_lcd,VAR_CO2_DATA4,history_co2_data[g_history_co2_cnt-offset-4],strlen(history_co2_data[g_history_co2_cnt-offset-4]));
-			write_string(fd_lcd,VAR_CO2_TIME5,history_co2_time[g_history_co2_cnt-offset-5],strlen(history_co2_time[g_history_co2_cnt-offset-5]));
-			write_string(fd_lcd,VAR_CO2_DATA5,history_co2_data[g_history_co2_cnt-offset-5],strlen(history_co2_data[g_history_co2_cnt-offset-5]));
-			write_string(fd_lcd,VAR_CO2_TIME6,history_co2_time[g_history_co2_cnt-offset-6],strlen(history_co2_time[g_history_co2_cnt-offset-6]));
-			write_string(fd_lcd,VAR_CO2_DATA6,history_co2_data[g_history_co2_cnt-offset-6],strlen(history_co2_data[g_history_co2_cnt-offset-6]));
-			write_string(fd_lcd,VAR_CO2_TIME7,history_co2_time[g_history_co2_cnt-offset-7],strlen(history_co2_time[g_history_co2_cnt-offset-7]));
-			write_string(fd_lcd,VAR_CO2_DATA7,history_co2_data[g_history_co2_cnt-offset-7],strlen(history_co2_data[g_history_co2_cnt-offset-7]));
+			write_string(fd_lcd,VAR_CO2_TIME1,g_history_co2[*g_co2_cnt-offset-1].time,strlen(g_history_co2[*g_co2_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_CO2_DATA1,g_history_co2[*g_co2_cnt-offset-1].data,strlen(g_history_co2[*g_co2_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_CO2_TIME2,g_history_co2[*g_co2_cnt-offset-2].time,strlen(g_history_co2[*g_co2_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_CO2_DATA2,g_history_co2[*g_co2_cnt-offset-2].data,strlen(g_history_co2[*g_co2_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_CO2_TIME3,g_history_co2[*g_co2_cnt-offset-3].time,strlen(g_history_co2[*g_co2_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_CO2_DATA3,g_history_co2[*g_co2_cnt-offset-3].data,strlen(g_history_co2[*g_co2_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_CO2_TIME4,g_history_co2[*g_co2_cnt-offset-4].time,strlen(g_history_co2[*g_co2_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_CO2_DATA4,g_history_co2[*g_co2_cnt-offset-4].data,strlen(g_history_co2[*g_co2_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_CO2_TIME5,g_history_co2[*g_co2_cnt-offset-5].time,strlen(g_history_co2[*g_co2_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_CO2_DATA5,g_history_co2[*g_co2_cnt-offset-5].data,strlen(g_history_co2[*g_co2_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_CO2_TIME6,g_history_co2[*g_co2_cnt-offset-6].time,strlen(g_history_co2[*g_co2_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_CO2_DATA6,g_history_co2[*g_co2_cnt-offset-6].data,strlen(g_history_co2[*g_co2_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_CO2_TIME7,g_history_co2[*g_co2_cnt-offset-7].time,strlen(g_history_co2[*g_co2_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_CO2_DATA7,g_history_co2[*g_co2_cnt-offset-7].data,strlen(g_history_co2[*g_co2_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
 	{
-		if((g_history_hcho_cnt-offset-7)>0)
+//		printf("g_co_cnt %d\n",*g_hcho_cnt);
+		if((*g_hcho_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_HCHO_TIME1,history_hcho_time[g_history_hcho_cnt-offset-1],strlen(history_hcho_time[g_history_hcho_cnt-offset-1]));
-			write_string(fd_lcd,VAR_HCHO_DATA1,history_hcho_data[g_history_hcho_cnt-offset-1],strlen(history_hcho_data[g_history_hcho_cnt-offset-1]));
-			write_string(fd_lcd,VAR_HCHO_TIME2,history_hcho_time[g_history_hcho_cnt-offset-2],strlen(history_hcho_time[g_history_hcho_cnt-offset-2]));
-			write_string(fd_lcd,VAR_HCHO_DATA2,history_hcho_data[g_history_hcho_cnt-offset-2],strlen(history_hcho_data[g_history_hcho_cnt-offset-2]));
-			write_string(fd_lcd,VAR_HCHO_TIME3,history_hcho_time[g_history_hcho_cnt-offset-3],strlen(history_hcho_time[g_history_hcho_cnt-offset-3]));
-			write_string(fd_lcd,VAR_HCHO_DATA3,history_hcho_data[g_history_hcho_cnt-offset-3],strlen(history_hcho_data[g_history_hcho_cnt-offset-3]));
-			write_string(fd_lcd,VAR_HCHO_TIME4,history_hcho_time[g_history_hcho_cnt-offset-4],strlen(history_hcho_time[g_history_hcho_cnt-offset-4]));
-			write_string(fd_lcd,VAR_HCHO_DATA4,history_hcho_data[g_history_hcho_cnt-offset-4],strlen(history_hcho_data[g_history_hcho_cnt-offset-4]));
-			write_string(fd_lcd,VAR_HCHO_TIME5,history_hcho_time[g_history_hcho_cnt-offset-5],strlen(history_hcho_time[g_history_hcho_cnt-offset-5]));
-			write_string(fd_lcd,VAR_HCHO_DATA5,history_hcho_data[g_history_hcho_cnt-offset-5],strlen(history_hcho_data[g_history_hcho_cnt-offset-5]));
-			write_string(fd_lcd,VAR_HCHO_TIME6,history_hcho_time[g_history_hcho_cnt-offset-6],strlen(history_hcho_time[g_history_hcho_cnt-offset-6]));
-			write_string(fd_lcd,VAR_HCHO_DATA6,history_hcho_data[g_history_hcho_cnt-offset-6],strlen(history_hcho_data[g_history_hcho_cnt-offset-6]));
-			write_string(fd_lcd,VAR_HCHO_TIME7,history_hcho_time[g_history_hcho_cnt-offset-7],strlen(history_hcho_time[g_history_hcho_cnt-offset-7]));
-			write_string(fd_lcd,VAR_HCHO_DATA7,history_hcho_data[g_history_hcho_cnt-offset-7],strlen(history_hcho_data[g_history_hcho_cnt-offset-7]));
+			write_string(fd_lcd,VAR_HCHO_TIME1,g_history_hcho[*g_hcho_cnt-offset-1].time,strlen(g_history_hcho[*g_hcho_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_HCHO_DATA1,g_history_hcho[*g_hcho_cnt-offset-1].data,strlen(g_history_hcho[*g_hcho_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_HCHO_TIME2,g_history_hcho[*g_hcho_cnt-offset-2].time,strlen(g_history_hcho[*g_hcho_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_HCHO_DATA2,g_history_hcho[*g_hcho_cnt-offset-2].data,strlen(g_history_hcho[*g_hcho_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_HCHO_TIME3,g_history_hcho[*g_hcho_cnt-offset-3].time,strlen(g_history_hcho[*g_hcho_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_HCHO_DATA3,g_history_hcho[*g_hcho_cnt-offset-3].data,strlen(g_history_hcho[*g_hcho_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_HCHO_TIME4,g_history_hcho[*g_hcho_cnt-offset-4].time,strlen(g_history_hcho[*g_hcho_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_HCHO_DATA4,g_history_hcho[*g_hcho_cnt-offset-4].data,strlen(g_history_hcho[*g_hcho_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_HCHO_TIME5,g_history_hcho[*g_hcho_cnt-offset-5].time,strlen(g_history_hcho[*g_hcho_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_HCHO_DATA5,g_history_hcho[*g_hcho_cnt-offset-5].data,strlen(g_history_hcho[*g_hcho_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_HCHO_TIME6,g_history_hcho[*g_hcho_cnt-offset-6].time,strlen(g_history_hcho[*g_hcho_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_HCHO_DATA6,g_history_hcho[*g_hcho_cnt-offset-6].data,strlen(g_history_hcho[*g_hcho_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_HCHO_TIME7,g_history_hcho[*g_hcho_cnt-offset-7].time,strlen(g_history_hcho[*g_hcho_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_HCHO_DATA7,g_history_hcho[*g_hcho_cnt-offset-7].data,strlen(g_history_hcho[*g_hcho_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
 	{
-		if((g_history_shidu_cnt-offset-7)>0)
+//		printf("g_shidu_cnt %d\n",*g_shidu_cnt);
+		if((*g_shidu_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_SHIDU_TIME1,history_shidu_time[g_history_shidu_cnt-offset-1],strlen(history_shidu_time[g_history_shidu_cnt-offset-1]));
-			write_string(fd_lcd,VAR_SHIDU_DATA1,history_shidu_data[g_history_shidu_cnt-offset-1],strlen(history_shidu_data[g_history_shidu_cnt-offset-1]));
-			write_string(fd_lcd,VAR_SHIDU_TIME2,history_shidu_time[g_history_shidu_cnt-offset-2],strlen(history_shidu_time[g_history_shidu_cnt-offset-2]));
-			write_string(fd_lcd,VAR_SHIDU_DATA2,history_shidu_data[g_history_shidu_cnt-offset-2],strlen(history_shidu_data[g_history_shidu_cnt-offset-2]));
-			write_string(fd_lcd,VAR_SHIDU_TIME3,history_shidu_time[g_history_shidu_cnt-offset-3],strlen(history_shidu_time[g_history_shidu_cnt-offset-3]));
-			write_string(fd_lcd,VAR_SHIDU_DATA3,history_shidu_data[g_history_shidu_cnt-offset-3],strlen(history_shidu_data[g_history_shidu_cnt-offset-3]));
-			write_string(fd_lcd,VAR_SHIDU_TIME4,history_shidu_time[g_history_shidu_cnt-offset-4],strlen(history_shidu_time[g_history_shidu_cnt-offset-4]));
-			write_string(fd_lcd,VAR_SHIDU_DATA4,history_shidu_data[g_history_shidu_cnt-offset-4],strlen(history_shidu_data[g_history_shidu_cnt-offset-4]));
-			write_string(fd_lcd,VAR_SHIDU_TIME5,history_shidu_time[g_history_shidu_cnt-offset-5],strlen(history_shidu_time[g_history_shidu_cnt-offset-5]));
-			write_string(fd_lcd,VAR_SHIDU_DATA5,history_shidu_data[g_history_shidu_cnt-offset-5],strlen(history_shidu_data[g_history_shidu_cnt-offset-5]));
-			write_string(fd_lcd,VAR_SHIDU_TIME6,history_shidu_time[g_history_shidu_cnt-offset-6],strlen(history_shidu_time[g_history_shidu_cnt-offset-6]));
-			write_string(fd_lcd,VAR_SHIDU_DATA6,history_shidu_data[g_history_shidu_cnt-offset-6],strlen(history_shidu_data[g_history_shidu_cnt-offset-6]));
-			write_string(fd_lcd,VAR_SHIDU_TIME7,history_shidu_time[g_history_shidu_cnt-offset-7],strlen(history_shidu_time[g_history_shidu_cnt-offset-7]));
-			write_string(fd_lcd,VAR_SHIDU_DATA7,history_shidu_data[g_history_shidu_cnt-offset-7],strlen(history_shidu_data[g_history_shidu_cnt-offset-7]));
+			write_string(fd_lcd,VAR_SHIDU_TIME1,g_history_shidu[*g_shidu_cnt-offset-1].time,strlen(g_history_shidu[*g_shidu_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA1,g_history_shidu[*g_shidu_cnt-offset-1].data,strlen(g_history_shidu[*g_shidu_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME2,g_history_shidu[*g_shidu_cnt-offset-2].time,strlen(g_history_shidu[*g_shidu_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA2,g_history_shidu[*g_shidu_cnt-offset-2].data,strlen(g_history_shidu[*g_shidu_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME3,g_history_shidu[*g_shidu_cnt-offset-3].time,strlen(g_history_shidu[*g_shidu_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA3,g_history_shidu[*g_shidu_cnt-offset-3].data,strlen(g_history_shidu[*g_shidu_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME4,g_history_shidu[*g_shidu_cnt-offset-4].time,strlen(g_history_shidu[*g_shidu_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA4,g_history_shidu[*g_shidu_cnt-offset-4].data,strlen(g_history_shidu[*g_shidu_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME5,g_history_shidu[*g_shidu_cnt-offset-5].time,strlen(g_history_shidu[*g_shidu_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA5,g_history_shidu[*g_shidu_cnt-offset-5].data,strlen(g_history_shidu[*g_shidu_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME6,g_history_shidu[*g_shidu_cnt-offset-6].time,strlen(g_history_shidu[*g_shidu_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA6,g_history_shidu[*g_shidu_cnt-offset-6].data,strlen(g_history_shidu[*g_shidu_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_SHIDU_TIME7,g_history_shidu[*g_shidu_cnt-offset-7].time,strlen(g_history_shidu[*g_shidu_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_SHIDU_DATA7,g_history_shidu[*g_shidu_cnt-offset-7].data,strlen(g_history_shidu[*g_shidu_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
 	{
-		if((g_history_temp_cnt-offset-7)>0)
+//		printf("g_temp_cnt %d\n",*g_temp_cnt);
+		if((*g_temp_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_TEMP_TIME1,history_temp_time[g_history_temp_cnt-offset-1],strlen(history_temp_time[g_history_temp_cnt-offset-1]));
-			write_string(fd_lcd,VAR_TEMP_DATA1,history_temp_data[g_history_temp_cnt-offset-1],strlen(history_temp_data[g_history_temp_cnt-offset-1]));
-			write_string(fd_lcd,VAR_TEMP_TIME2,history_temp_time[g_history_temp_cnt-offset-2],strlen(history_temp_time[g_history_temp_cnt-offset-2]));
-			write_string(fd_lcd,VAR_TEMP_DATA2,history_temp_data[g_history_temp_cnt-offset-2],strlen(history_temp_data[g_history_temp_cnt-offset-2]));
-			write_string(fd_lcd,VAR_TEMP_TIME3,history_temp_time[g_history_temp_cnt-offset-3],strlen(history_temp_time[g_history_temp_cnt-offset-3]));
-			write_string(fd_lcd,VAR_TEMP_DATA3,history_temp_data[g_history_temp_cnt-offset-3],strlen(history_temp_data[g_history_temp_cnt-offset-3]));
-			write_string(fd_lcd,VAR_TEMP_TIME4,history_temp_time[g_history_temp_cnt-offset-4],strlen(history_temp_time[g_history_temp_cnt-offset-4]));
-			write_string(fd_lcd,VAR_TEMP_DATA4,history_temp_data[g_history_temp_cnt-offset-4],strlen(history_temp_data[g_history_temp_cnt-offset-4]));
-			write_string(fd_lcd,VAR_TEMP_TIME5,history_temp_time[g_history_temp_cnt-offset-5],strlen(history_temp_time[g_history_temp_cnt-offset-5]));
-			write_string(fd_lcd,VAR_TEMP_DATA5,history_temp_data[g_history_temp_cnt-offset-5],strlen(history_temp_data[g_history_temp_cnt-offset-5]));
-			write_string(fd_lcd,VAR_TEMP_TIME6,history_temp_time[g_history_temp_cnt-offset-6],strlen(history_temp_time[g_history_temp_cnt-offset-6]));
-			write_string(fd_lcd,VAR_TEMP_DATA6,history_temp_data[g_history_temp_cnt-offset-6],strlen(history_temp_data[g_history_temp_cnt-offset-6]));
-			write_string(fd_lcd,VAR_TEMP_TIME7,history_temp_time[g_history_temp_cnt-offset-7],strlen(history_temp_time[g_history_temp_cnt-offset-7]));
-			write_string(fd_lcd,VAR_TEMP_DATA7,history_temp_data[g_history_temp_cnt-offset-7],strlen(history_temp_data[g_history_temp_cnt-offset-7]));
+			write_string(fd_lcd,VAR_TEMP_TIME1,g_history_temp[*g_temp_cnt-offset-1].time,strlen(g_history_temp[*g_temp_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_TEMP_DATA1,g_history_temp[*g_temp_cnt-offset-1].data,strlen(g_history_temp[*g_temp_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_TEMP_TIME2,g_history_temp[*g_temp_cnt-offset-2].time,strlen(g_history_temp[*g_temp_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_TEMP_DATA2,g_history_temp[*g_temp_cnt-offset-2].data,strlen(g_history_temp[*g_temp_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_TEMP_TIME3,g_history_temp[*g_temp_cnt-offset-3].time,strlen(g_history_temp[*g_temp_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_TEMP_DATA3,g_history_temp[*g_temp_cnt-offset-3].data,strlen(g_history_temp[*g_temp_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_TEMP_TIME4,g_history_temp[*g_temp_cnt-offset-4].time,strlen(g_history_temp[*g_temp_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_TEMP_DATA4,g_history_temp[*g_temp_cnt-offset-4].data,strlen(g_history_temp[*g_temp_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_TEMP_TIME5,g_history_temp[*g_temp_cnt-offset-5].time,strlen(g_history_temp[*g_temp_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_TEMP_DATA5,g_history_temp[*g_temp_cnt-offset-5].data,strlen(g_history_temp[*g_temp_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_TEMP_TIME6,g_history_temp[*g_temp_cnt-offset-6].time,strlen(g_history_temp[*g_temp_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_TEMP_DATA6,g_history_temp[*g_temp_cnt-offset-6].data,strlen(g_history_temp[*g_temp_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_TEMP_TIME7,g_history_temp[*g_temp_cnt-offset-7].time,strlen(g_history_temp[*g_temp_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_TEMP_DATA7,g_history_temp[*g_temp_cnt-offset-7].data,strlen(g_history_temp[*g_temp_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
 	{
-		if((g_history_pm25_cnt-offset-7)>0)
+//		printf("g_pm25_cnt %d\n",*g_pm25_cnt);
+		if((*g_pm25_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_PM25_TIME1,history_pm25_time[g_history_pm25_cnt-offset-1],strlen(history_pm25_time[g_history_pm25_cnt-offset-1]));
-			write_string(fd_lcd,VAR_PM25_DATA1,history_pm25_data[g_history_pm25_cnt-offset-1],strlen(history_pm25_data[g_history_pm25_cnt-offset-1]));
-			write_string(fd_lcd,VAR_PM25_TIME2,history_pm25_time[g_history_pm25_cnt-offset-2],strlen(history_pm25_time[g_history_pm25_cnt-offset-2]));
-			write_string(fd_lcd,VAR_PM25_DATA2,history_pm25_data[g_history_pm25_cnt-offset-2],strlen(history_pm25_data[g_history_pm25_cnt-offset-2]));
-			write_string(fd_lcd,VAR_PM25_TIME3,history_pm25_time[g_history_pm25_cnt-offset-3],strlen(history_pm25_time[g_history_pm25_cnt-offset-3]));
-			write_string(fd_lcd,VAR_PM25_DATA3,history_pm25_data[g_history_pm25_cnt-offset-3],strlen(history_pm25_data[g_history_pm25_cnt-offset-3]));
-			write_string(fd_lcd,VAR_PM25_TIME4,history_pm25_time[g_history_pm25_cnt-offset-4],strlen(history_pm25_time[g_history_pm25_cnt-offset-4]));
-			write_string(fd_lcd,VAR_PM25_DATA4,history_pm25_data[g_history_pm25_cnt-offset-4],strlen(history_pm25_data[g_history_pm25_cnt-offset-4]));
-			write_string(fd_lcd,VAR_PM25_TIME5,history_pm25_time[g_history_pm25_cnt-offset-5],strlen(history_pm25_time[g_history_pm25_cnt-offset-5]));
-			write_string(fd_lcd,VAR_PM25_DATA5,history_pm25_data[g_history_pm25_cnt-offset-5],strlen(history_pm25_data[g_history_pm25_cnt-offset-5]));
-			write_string(fd_lcd,VAR_PM25_TIME6,history_pm25_time[g_history_pm25_cnt-offset-6],strlen(history_pm25_time[g_history_pm25_cnt-offset-6]));
-			write_string(fd_lcd,VAR_PM25_DATA6,history_pm25_data[g_history_pm25_cnt-offset-6],strlen(history_pm25_data[g_history_pm25_cnt-offset-6]));
-			write_string(fd_lcd,VAR_PM25_TIME7,history_pm25_time[g_history_pm25_cnt-offset-7],strlen(history_pm25_time[g_history_pm25_cnt-offset-7]));
-			write_string(fd_lcd,VAR_PM25_DATA7,history_pm25_data[g_history_pm25_cnt-offset-7],strlen(history_pm25_data[g_history_pm25_cnt-offset-7]));
+			write_string(fd_lcd,VAR_PM25_TIME1,g_history_pm25[*g_pm25_cnt-offset-1].time,strlen(g_history_pm25[*g_pm25_cnt-offset-1].time));
+			write_string(fd_lcd,VAR_PM25_DATA1,g_history_pm25[*g_pm25_cnt-offset-1].data,strlen(g_history_pm25[*g_pm25_cnt-offset-1].data));
+			write_string(fd_lcd,VAR_PM25_TIME2,g_history_pm25[*g_pm25_cnt-offset-2].time,strlen(g_history_pm25[*g_pm25_cnt-offset-2].time));
+			write_string(fd_lcd,VAR_PM25_DATA2,g_history_pm25[*g_pm25_cnt-offset-2].data,strlen(g_history_pm25[*g_pm25_cnt-offset-2].data));
+			write_string(fd_lcd,VAR_PM25_TIME3,g_history_pm25[*g_pm25_cnt-offset-3].time,strlen(g_history_pm25[*g_pm25_cnt-offset-3].time));
+			write_string(fd_lcd,VAR_PM25_DATA3,g_history_pm25[*g_pm25_cnt-offset-3].data,strlen(g_history_pm25[*g_pm25_cnt-offset-3].data));
+			write_string(fd_lcd,VAR_PM25_TIME4,g_history_pm25[*g_pm25_cnt-offset-4].time,strlen(g_history_pm25[*g_pm25_cnt-offset-4].time));
+			write_string(fd_lcd,VAR_PM25_DATA4,g_history_pm25[*g_pm25_cnt-offset-4].data,strlen(g_history_pm25[*g_pm25_cnt-offset-4].data));
+			write_string(fd_lcd,VAR_PM25_TIME5,g_history_pm25[*g_pm25_cnt-offset-5].time,strlen(g_history_pm25[*g_pm25_cnt-offset-5].time));
+			write_string(fd_lcd,VAR_PM25_DATA5,g_history_pm25[*g_pm25_cnt-offset-5].data,strlen(g_history_pm25[*g_pm25_cnt-offset-5].data));
+			write_string(fd_lcd,VAR_PM25_TIME6,g_history_pm25[*g_pm25_cnt-offset-6].time,strlen(g_history_pm25[*g_pm25_cnt-offset-6].time));
+			write_string(fd_lcd,VAR_PM25_DATA6,g_history_pm25[*g_pm25_cnt-offset-6].data,strlen(g_history_pm25[*g_pm25_cnt-offset-6].data));
+			write_string(fd_lcd,VAR_PM25_TIME7,g_history_pm25[*g_pm25_cnt-offset-7].time,strlen(g_history_pm25[*g_pm25_cnt-offset-7].time));
+			write_string(fd_lcd,VAR_PM25_DATA7,g_history_pm25[*g_pm25_cnt-offset-7].data,strlen(g_history_pm25[*g_pm25_cnt-offset-7].data));
 		}
 	}
-	#if 0
-	else if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
-	{
-		write_string(fd_lcd,VAR_CO2_TIME7,history_time[0],strlen(history_time[0]));
-		write_string(fd_lcd,VAR_CO2_DATA7,history_data[0],strlen(history_data[0]));
-		write_string(fd_lcd,VAR_CO2_TIME6,history_time[1],strlen(history_time[1]));
-		write_string(fd_lcd,VAR_CO2_DATA6,history_data[1],strlen(history_data[1]));
-		write_string(fd_lcd,VAR_CO2_TIME5,history_time[2],strlen(history_time[2]));
-		write_string(fd_lcd,VAR_CO2_DATA5,history_data[2],strlen(history_data[2]));
-		write_string(fd_lcd,VAR_CO2_TIME4,history_time[3],strlen(history_time[3]));
-		write_string(fd_lcd,VAR_CO2_DATA4,history_data[3],strlen(history_data[3]));
-		write_string(fd_lcd,VAR_CO2_TIME3,history_time[4],strlen(history_time[4]));
-		write_string(fd_lcd,VAR_CO2_DATA3,history_data[4],strlen(history_data[4]));
-		write_string(fd_lcd,VAR_CO2_TIME2,history_time[5],strlen(history_time[5]));
-		write_string(fd_lcd,VAR_CO2_DATA2,history_data[5],strlen(history_data[5]));
-		write_string(fd_lcd,VAR_CO2_TIME1,history_time[6],strlen(history_time[6]));
-		write_string(fd_lcd,VAR_CO2_DATA1,history_data[6],strlen(history_data[6]));
-	}
-	else if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
-	{
-		write_string(fd_lcd,VAR_HCHO_TIME1,history_time[0],strlen(history_time[0]));
-		write_string(fd_lcd,VAR_HCHO_DATA1,history_data[0],strlen(history_data[0]));
-		write_string(fd_lcd,VAR_HCHO_TIME2,history_time[1],strlen(history_time[1]));
-		write_string(fd_lcd,VAR_HCHO_DATA2,history_data[1],strlen(history_data[1]));
-		write_string(fd_lcd,VAR_HCHO_TIME3,history_time[2],strlen(history_time[2]));
-		write_string(fd_lcd,VAR_HCHO_DATA3,history_data[2],strlen(history_data[2]));
-		write_string(fd_lcd,VAR_HCHO_TIME4,history_time[3],strlen(history_time[3]));
-		write_string(fd_lcd,VAR_HCHO_DATA4,history_data[3],strlen(history_data[3]));
-		write_string(fd_lcd,VAR_HCHO_TIME5,history_time[4],strlen(history_time[4]));
-		write_string(fd_lcd,VAR_HCHO_DATA5,history_data[4],strlen(history_data[4]));
-		write_string(fd_lcd,VAR_HCHO_TIME6,history_time[5],strlen(history_time[5]));
-		write_string(fd_lcd,VAR_HCHO_DATA6,history_data[5],strlen(history_data[5]));
-		write_string(fd_lcd,VAR_HCHO_TIME7,history_time[6],strlen(history_time[6]));
-		write_string(fd_lcd,VAR_HCHO_DATA7,history_data[6],strlen(history_data[6]));
-	}
-	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
-	{
-		write_string(fd_lcd,VAR_TEMP_TIME1,history_time[0],strlen(history_time[0]));
-		write_string(fd_lcd,VAR_TEMP_DATA1,history_data[0],strlen(history_data[0]));
-		write_string(fd_lcd,VAR_TEMP_TIME2,history_time[1],strlen(history_time[1]));
-		write_string(fd_lcd,VAR_TEMP_DATA2,history_data[1],strlen(history_data[1]));
-		write_string(fd_lcd,VAR_TEMP_TIME3,history_time[2],strlen(history_time[2]));
-		write_string(fd_lcd,VAR_TEMP_DATA3,history_data[2],strlen(history_data[2]));
-		write_string(fd_lcd,VAR_TEMP_TIME4,history_time[3],strlen(history_time[3]));
-		write_string(fd_lcd,VAR_TEMP_DATA4,history_data[3],strlen(history_data[3]));
-		write_string(fd_lcd,VAR_TEMP_TIME5,history_time[4],strlen(history_time[4]));
-		write_string(fd_lcd,VAR_TEMP_DATA5,history_data[4],strlen(history_data[4]));
-		write_string(fd_lcd,VAR_TEMP_TIME6,history_time[5],strlen(history_time[5]));
-		write_string(fd_lcd,VAR_TEMP_DATA6,history_data[5],strlen(history_data[5]));
-		write_string(fd_lcd,VAR_TEMP_TIME7,history_time[6],strlen(history_time[6]));
-		write_string(fd_lcd,VAR_TEMP_DATA7,history_data[6],strlen(history_data[6]));
-	}
-	else if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
-	{
-		write_string(fd_lcd,VAR_SHIDU_TIME1,history_time[0],strlen(history_time[0]));
-		write_string(fd_lcd,VAR_SHIDU_DATA1,history_data[0],strlen(history_data[0]));
-		write_string(fd_lcd,VAR_SHIDU_TIME2,history_time[1],strlen(history_time[1]));
-		write_string(fd_lcd,VAR_SHIDU_DATA2,history_data[1],strlen(history_data[1]));
-		write_string(fd_lcd,VAR_SHIDU_TIME3,history_time[2],strlen(history_time[2]));
-		write_string(fd_lcd,VAR_SHIDU_DATA3,history_data[2],strlen(history_data[2]));
-		write_string(fd_lcd,VAR_SHIDU_TIME4,history_time[3],strlen(history_time[3]));
-		write_string(fd_lcd,VAR_SHIDU_DATA4,history_data[3],strlen(history_data[3]));
-		write_string(fd_lcd,VAR_SHIDU_TIME5,history_time[4],strlen(history_time[4]));
-		write_string(fd_lcd,VAR_SHIDU_DATA5,history_data[4],strlen(history_data[4]));
-		write_string(fd_lcd,VAR_SHIDU_TIME6,history_time[5],strlen(history_time[5]));
-		write_string(fd_lcd,VAR_SHIDU_DATA6,history_data[5],strlen(history_data[5]));
-		write_string(fd_lcd,VAR_SHIDU_TIME7,history_time[6],strlen(history_time[6]));
-		write_string(fd_lcd,VAR_SHIDU_DATA7,history_data[6],strlen(history_data[6]));
-	}
-	else if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
-	{
-		write_string(fd_lcd,VAR_PM25_TIME1,history_time[0],strlen(history_time[0]));
-		write_string(fd_lcd,VAR_PM25_DATA1,history_data[0],strlen(history_data[0]));
-		write_string(fd_lcd,VAR_PM25_TIME2,history_time[1],strlen(history_time[1]));
-		write_string(fd_lcd,VAR_PM25_DATA2,history_data[1],strlen(history_data[1]));
-		write_string(fd_lcd,VAR_PM25_TIME3,history_time[2],strlen(history_time[2]));
-		write_string(fd_lcd,VAR_PM25_DATA3,history_data[2],strlen(history_data[2]));
-		write_string(fd_lcd,VAR_PM25_TIME4,history_time[3],strlen(history_time[3]));
-		write_string(fd_lcd,VAR_PM25_DATA4,history_data[3],strlen(history_data[3]));
-		write_string(fd_lcd,VAR_PM25_TIME5,history_time[4],strlen(history_time[4]));
-		write_string(fd_lcd,VAR_PM25_DATA5,history_data[4],strlen(history_data[4]));
-		write_string(fd_lcd,VAR_PM25_TIME6,history_time[5],strlen(history_time[5]));
-		write_string(fd_lcd,VAR_PM25_DATA6,history_data[5],strlen(history_data[5]));
-		write_string(fd_lcd,VAR_PM25_TIME7,history_time[6],strlen(history_time[6]));
-		write_string(fd_lcd,VAR_PM25_DATA7,history_data[6],strlen(history_data[6]));
-	}
-	#endif
+
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
@@ -2788,9 +2598,79 @@ void save_sensor_alarm_info()
 }
 int main(int argc, char *argv[])
 {
-	key_t shmid; 
-	int fd_com=0,fpid,fd_lcd;
-	load_history("/home/user/history");
+	int fd_com=0,fpid,fd_lcd;	
+	long i;
+	key_t shmid;	
+	if((shmid_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_co2 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_hcho = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_shidu = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_temp = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_pm25 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_co_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_co2_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_hcho_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_temp_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_shidu_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((shmid_pm25_cnt = shmget(IPC_PRIVATE, sizeof(long), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+
+	if(fork()==0)
+	{
+		load_history("/home/user/history"/*,shmid_g_history_co_cnt,shmid_g_history_co2_cnt,shmid_g_history_hcho_cnt,
+			shmid_g_history_shidu_cnt,shmid_g_history_temp_cnt,shmid_g_history_pm25_cnt,shmid_history_co_time,
+			shmid_history_co2_time,shmid_history_hcho_time,shmid_history_shidu_time,shmid_history_temp_time,
+			shmid_history_pm25_time,shmid_history_co_data,shmid_history_co2_data,shmid_history_hcho_data,
+			shmid_history_shidu_data,shmid_history_temp_data,shmid_history_pm25_data*/);
+		return 0;
+	}
 	get_ip(ip);
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{
@@ -2859,8 +2739,22 @@ int main(int argc, char *argv[])
 	fpid=fork();
 	if(fpid==0)
 	{
+		printf(LCD_PROCESS"begin to shmat1\n");
+		g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
+		g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
+		g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
+		g_history_shidu = (struct nano *)shmat(shmid_shidu, 0, 0);
+		g_history_temp = (struct nano *)shmat(shmid_temp, 0, 0);
+		g_history_pm25 = (struct nano *)shmat(shmid_pm25, 0, 0);
+		g_co_cnt = (long *)shmat(shmid_co_cnt, 0, 0);
+		g_co2_cnt = (long *)shmat(shmid_co2_cnt, 0, 0);
+		g_hcho_cnt = (long *)shmat(shmid_hcho_cnt, 0, 0);
+		g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
+		g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
+		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+		printf(LCD_PROCESS"end to shmat\n");
 		signal(SIGALRM, set_upload_flag);
-		alarm(1);
+		alarm(600);
 		while(1)
 		{
 			get_uart(fd_lcd,fd_com);
@@ -2871,6 +2765,20 @@ int main(int argc, char *argv[])
 		fpid=fork();
 		if(fpid==0)
 		{
+			printf(LCD_PROCESS"begin to shmat1\n");
+			g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
+			g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
+			g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
+			g_history_shidu = (struct nano *)shmat(shmid_shidu, 0, 0);
+			g_history_temp = (struct nano *)shmat(shmid_temp, 0, 0);
+			g_history_pm25 = (struct nano *)shmat(shmid_pm25, 0, 0);
+			g_co_cnt = (long *)shmat(shmid_co_cnt, 0, 0);
+			g_co2_cnt = (long *)shmat(shmid_co2_cnt, 0, 0);
+			g_hcho_cnt = (long *)shmat(shmid_hcho_cnt, 0, 0);
+			g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
+			g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
+			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+			printf(LCD_PROCESS"end to shmat\n");
 			while(1)
 			{
 				lcd_loop(fd_lcd);
