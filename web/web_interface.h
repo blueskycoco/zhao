@@ -18,6 +18,7 @@
 #define TYPE_DGRAM_WARNING				"4"
 #define TYPE_DGRAM_SYNC					"5"
 #define TYPE_DGRAM_ASK_RE_DATA			"6"
+#define TYPE_DGRAM_CLEAR_WARNING		"8"
 #define TYPE_DEVICE_TRANS_WIFI			"2"
 #define TYPE_DEVICE_TRANS_GPRS			"1"
 #define TYPE_DEVICE_TRANS_3G			"3"

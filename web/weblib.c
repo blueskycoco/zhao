@@ -618,6 +618,26 @@ char *add_item(char *old,char *id,char *text)
 		free(old);
 	return out;
 }
+char *rm_item(char *old,char *id)
+{
+	cJSON *root;
+	char *out;
+	if(old!=NULL)
+		root=cJSON_Parse(old);
+	else
+		root=cJSON_CreateObject();	
+	cJSON *data;
+	data=cJSON_GetObjectItem(root,id);
+	if(data)
+	{
+		cJSON_DeleteItemFromObject(root, id);
+	}
+	out=cJSON_PrintUnformatted(root);	
+	cJSON_Delete(root);
+	if(old)
+		free(old);
+	return out;
+}
 char *add_obj(char *old,char *id,char *pad)
 {
 	cJSON *root,*fmt;
