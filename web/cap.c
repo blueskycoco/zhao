@@ -1706,25 +1706,26 @@ unsigned short input_handle(int fd_lcd,char *input)
 			}
 			char *file_path=(char *)malloc(256);
 			memset(file_path,'\0',256);
-			int year=2015,mon=11,day=23,hour=9,min=36,sec=12,cod=34;
-			sprintf(time,"%04d-%02d-%02d %02d:%02d:%02d",year,mon,day,hour,min,sec);
-			sprintf(co,"0.%02d",cod);
-			write_string(fd_lcd,0x0006,time,sizeof(time));
-			write_string(fd_lcd,0x0018,co,sizeof(co));				
+			//int year=2015,mon=11,day=23,hour=9,min=36,sec=12,cod=34;
+			//sprintf(time,"%04d-%02d-%02d %02d:%02d:%02d",year,mon,day,hour,min,sec);
+			//sprintf(co,"0.%02d",cod);
+			//write_string(fd_lcd,0x0148,time,sizeof(time));
+			//write_string(fd_lcd,0x0149,co,sizeof(co));				
 			printf(LCD_PROCESS"cur is %s\n",cur_date);
 			strcpy(file_path,FILE_PATH);
-			//strcat(file_path,date_buf);
+			strcat(file_path,date_buf);
 			printf(LCD_PROCESS"to open %s\r\n",file_path);
 			history_fp = fopen(file_path, "r");
 			if(history_fp!=NULL)
 			{
 				if(fgets(line,512,history_fp))
 				{
-					char tmp[17]={'\0'};
-					memcpy(tmp,cur_date,10);
-					strcat(tmp,line);
-					printf(LCD_PROCESS"date %s\n",tmp);
-					write_string(fd_lcd,VAR_CO_YEAR1,tmp,sizeof(tmp));
+					//char tmp[17]={'\0'};
+					//memcpy(tmp,cur_date,10);
+					//strcat(tmp,line);
+					//printf(LCD_PROCESS"date %s\n",tmp);
+					write_string(fd_lcd,VAR_CO_TIME1,cur_date,strlen(cur_date));
+					write_string(fd_lcd,VAR_CO_DATA1,cur_date,strlen(cur_date));
 				}
 				else
 					printf(LCD_PROCESS"fgets failed\n");
