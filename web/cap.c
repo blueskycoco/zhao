@@ -1669,6 +1669,149 @@ void write_string(int fd,unsigned int addr,char *data,int len)
 }
 #define LCD_PROCESS "[LCD_PROCESS]"
 FILE *history_fp=NULL;
+void list_dir(int fd_lcd,const char *name)
+{
+	DIR *d = NULL;
+	struct dirent *de = NULL;
+	char file_list[512][15];
+	int i=0,j=0,m=0;
+	
+	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
+	char mon_j[3]={0},mon_m[3]={0};
+	char day_j[3]={0},day_m[3]={0};
+	d = opendir(name);
+	if(d == 0)
+	{
+		printf("open failed %s , %s",name,strerror(errno));
+		return;
+	}
+	
+	while((de = readdir(d))!=0)
+	{
+		if(strncmp(de->d_name,".",strlen("."))==0||strncmp(de->d_name,"..",strlen(".."))==0)
+			continue;
+		//printf(LCD_PROCESS"==> %s\n",de->d_name);
+		memset(file_list[i],'\0',15);
+		strcpy(file_list[i],de->d_name);
+		i++;
+	}	
+	closedir(d);
+	//compare year
+	for(j=0;j<i-1;j++)
+	{
+		memcpy(year_j,file_list[j],4);
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_m,file_list[m],4);
+			if(atoi(year_j)<atoi(year_m))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{
+		memcpy(year_j,file_list[j],4);
+		memcpy(mon_j,file_list[j]+5,2);
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			if((atoi(mon_j)<atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{
+		memcpy(year_j,file_list[j],4);
+		memcpy(mon_j,file_list[j]+5,2);
+		memcpy(day_j,file_list[j]+8,2);
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			memcpy(day_m,file_list[m]+8,2);
+			//printf(LCD_PROCESS"year_j %s,mon_j %s,day_j %s %d <> year_m %s,mon_m %s,day_m %s %d\n",year_j,mon_j,day_j,atoi(day_j),year_m,mon_m,day_m,atoi(day_m));
+			if((atoi(day_j)<atoi(day_m)) && (atoi(mon_j)==atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	int cnt=0,cnt_co=0;
+	char history_time[100000][20];
+	char history_data[100000][10];
+	for(j=0;j<i;j++)
+	{
+		char *line=NULL;
+		char file_path[32]={0};
+		int len;
+		printf(LCD_PROCESS"==> %s\n",file_list[j]);
+		strcpy(file_path,"/home/user/history/");
+		strcat(file_path,file_list[j]);
+		FILE *fp = fopen(file_path, "r");
+		while (getline(&line, &len, fp) != -1) 
+		{
+			if((cnt%2)!=0)
+			{
+				//get co,co2,hcho,pm25,shidu,temp
+				char *co=doit_data(line,ID_CAP_CO);
+				if(co!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_data[cnt_co],'\0',20);
+					strcpy(history_data[cnt_co],co);
+					free(co);
+					cnt_co++;
+				}
+			}
+			else
+			{
+				char tmp[11]={0};
+				memset(history_time[cnt_co],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_time[cnt_co],tmp);
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_time[cnt_co],tmp);
+			}
+			cnt++;
+		}
+		fclose(fp);
+	}
+	printf(LCD_PROCESS"==>cnt %d,page %d\n",cnt_co,cnt_co/7);
+	printf(LCD_PROCESS"history_time %s\n",history_time[0]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[1]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[2]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[3]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[4]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[5]);
+	printf(LCD_PROCESS"history_time %s\n",history_time[6]);
+	
+	write_string(fd_lcd,VAR_CO_TIME1,history_time[0],strlen(history_time[0]));
+	write_string(fd_lcd,VAR_CO_DATA1,history_data[0],strlen(history_data[0]));
+	write_string(fd_lcd,VAR_CO_TIME2,history_time[1],strlen(history_time[1]));
+	write_string(fd_lcd,VAR_CO_DATA2,history_data[1],strlen(history_data[1]));
+	write_string(fd_lcd,VAR_CO_TIME3,history_time[2],strlen(history_time[2]));
+	write_string(fd_lcd,VAR_CO_DATA3,history_data[2],strlen(history_data[2]));
+	write_string(fd_lcd,VAR_CO_TIME4,history_time[3],strlen(history_time[3]));
+	write_string(fd_lcd,VAR_CO_DATA4,history_data[3],strlen(history_data[3]));
+	write_string(fd_lcd,VAR_CO_TIME5,history_time[4],strlen(history_time[4]));
+	write_string(fd_lcd,VAR_CO_DATA5,history_data[4],strlen(history_data[4]));
+	write_string(fd_lcd,VAR_CO_TIME6,history_time[5],strlen(history_time[5]));
+	write_string(fd_lcd,VAR_CO_DATA6,history_data[5],strlen(history_data[5]));
+	write_string(fd_lcd,VAR_CO_TIME7,history_time[6],strlen(history_time[6]));
+	write_string(fd_lcd,VAR_CO_DATA7,history_data[6],strlen(history_data[6]));
+	//begin to update lcd 
+}
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
@@ -1712,8 +1855,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 			//write_string(fd_lcd,0x0148,time,sizeof(time));
 			//write_string(fd_lcd,0x0149,co,sizeof(co));				
 			printf(LCD_PROCESS"cur is %s\n",cur_date);
+			list_dir(fd_lcd,"/home/user/history");
 			strcpy(file_path,FILE_PATH);
-			strcat(file_path,date_buf);
+			//strcat(file_path,date_buf);
 			printf(LCD_PROCESS"to open %s\r\n",file_path);
 			history_fp = fopen(file_path, "r");
 			if(history_fp!=NULL)
