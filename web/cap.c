@@ -1779,6 +1779,7 @@ void list_dir(int fd_lcd,const char *name)
 				memset(history_time[cnt_co],'\0',20);
 				memcpy(tmp,file_list[j],10);
 				strcpy(history_time[cnt_co],tmp);
+				strcat(history_time[cnt_co],"    ");
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
 				strcat(history_time[cnt_co],tmp);
@@ -1788,13 +1789,13 @@ void list_dir(int fd_lcd,const char *name)
 		fclose(fp);
 	}
 	printf(LCD_PROCESS"==>cnt %d,page %d\n",cnt_co,cnt_co/7);
-	printf(LCD_PROCESS"history_time %s\n",history_time[0]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[1]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[2]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[3]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[4]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[5]);
-	printf(LCD_PROCESS"history_time %s\n",history_time[6]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[0],history_data[0]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[1],history_data[1]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[2],history_data[2]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[3],history_data[3]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[4],history_data[4]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[5],history_data[5]);
+	printf(LCD_PROCESS"history_time %s,%s\n",history_time[6],history_data[6]);
 	
 	write_string(fd_lcd,VAR_CO_TIME1,history_time[0],strlen(history_time[0]));
 	write_string(fd_lcd,VAR_CO_DATA1,history_data[0],strlen(history_data[0]));
