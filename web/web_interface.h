@@ -233,6 +233,18 @@
 #define TOUCH_LOGIN_HISTORY			0x012e
 #define USER_NAME_ADDR				0x048d
 #define USER_PWD_ADDR				0x0497
+#define TOUCH_WIFI_HANDLE			0x0140
+#define WIFI_AP_NAME_ADDR			0x01c2
+#define WIFI_AP_PWD_ADDR			0x01a8
+#define TOUCH_TIME_SET_MANUL		0x0142
+#define TOUCH_TIME_SET_AUTO			0x0143
+#define TIME_YEAR_ADDR				0x01af
+#define TIME_MON_ADDR				0x01b3
+#define TIME_DAY_ADDR				0x01b5
+#define TIME_HOUR_ADDR				0x01b7
+#define TIME_MIN_ADDR				0x01b9
+#define TIME_SECONDS_ADDR			0x01bb
+#define TOUCH_SET_TIME				0x0132
 
 #define RET_MAIN_CO			0x0109
 #define RET_MAIN_CO2		0x0111
