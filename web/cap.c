@@ -59,6 +59,8 @@ void write_string(int fd,unsigned int addr,char *data,int len);
 void dump_curr_time(int fd);
 void save_sensor_alarm_info();
 void clear_buf(int fd,int addr,int len);
+void lcd_on(int page);
+
 int g_upload=0;
 char ip[20]={0};
 char cur_date[15]={0};
@@ -3232,7 +3234,7 @@ void lcd_off(int a)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
 	write(fd_lcd,cmd,6);
-	switch_pic(fd_lcd,2);
+	switch_pic(fd_lcd,1);
 	lcd_state=0;
 	printf("lcd off\n");
 }
