@@ -138,21 +138,28 @@ char *send_web_post(char *url,char *buf,int timeout)
 	{
 		rcv=(char *)malloc(256);
 		memset(rcv,'\0',256);
-		char *gprs_string=(char *)malloc(strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
-		memset(gprs_string,'\0',strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
-		strcpy(gprs_string,"/saveData/airmessage/messMgr.do?JSONStr=");
+		char *gprs_string=(char *)malloc(strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
+		memset(gprs_string,'\0',strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
+		strcpy(gprs_string,"POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n");
+		sprintf(length_string,"Content-Length:%d\r\n\r\nJSONStr=",strlen(buf)+8);
+		strcat(gprs_string,length_string);
 		strcat(gprs_string,buf);
-		strcat(gprs_string,"\nHTTP/ 1.1\nhost:101.200.182.92");
 		write(fd_gprs, gprs_string, strlen(gprs_string));	
 		i=0;
 		while(1)
 		{
 			if(read(fd_gprs, &ch, 1)==1)
 			{
-				rcv[i++]=ch;
 				//rt_kprintf("%c",ch);
 				if(ch=='}'||ch=='k')
+				{
+					rcv[i++]=ch;
 					break;
+				}
+				else if(ch=='{')
+					i=0;
+				rcv[i]=ch;
+				i++;
 			}
 			else
 			{
