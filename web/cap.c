@@ -122,25 +122,26 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	return CRC;
 }
 #define UPLOAD_PROCESS "[UPLOAD_PROCESS]"
-char *send_web_post(char *url,char *buf,int timeout)
+void send_web_post(char *url,char *buf,int timeout,char **out)
 {
 	char request[1024]={0};
 	char length_string[30]={0};
 	int result=0,i,ltimeout=0;
-	char *rcv=NULL,ch;
+	char rcv[512]={0},ch;
 	pthread_mutex_lock(&mutex);
 	if(send_by_wifi)
 	{		
 		sprintf(request,"JSONStr=%s",buf);
 		printf(UPLOAD_PROCESS"send web %s\n",request);
-		rcv=http_post(url,request,timeout);
+		*out=http_post(url,request,timeout);
 	}
 	else
 	{
-		rcv=(char *)malloc(256);
-		memset(rcv,'\0',256);
-		char *gprs_string=(char *)malloc(strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
-		memset(gprs_string,'\0',strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
+		//rcv=(char *)malloc(256);
+		//memset(rcv,'\0',256);
+		//char *gprs_string=(char *)malloc(strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
+		//memset(gprs_string,'\0',strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
+		char gprs_string[1024]={0};
 		strcpy(gprs_string,"POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n");
 		sprintf(length_string,"Content-Length:%d\r\n\r\nJSONStr=",strlen(buf)+8);
 		strcat(gprs_string,length_string);
@@ -152,13 +153,30 @@ char *send_web_post(char *url,char *buf,int timeout)
 			if(read(fd_gprs, &ch, 1)==1)
 			{
 				//rt_kprintf("%c",ch);
-				if(ch=='}'||ch=='k')
+				if(ch=='}')
 				{
 					rcv[i++]=ch;
+					*out=(char *)malloc(i+1);
+					memset(*out,'\0',i+1);
+					memcpy(*out,rcv,i);//strcpy(*out,rcv);
 					break;
 				}
 				else if(ch=='{')
 					i=0;
+				else if(ch=='o')
+				{
+					if(read(fd_gprs,&ch,1)==1)
+					if(ch=='k')
+					{
+						*out=(char *)malloc(3);
+						memset(*out,'\0',3);
+						strcpy(*out,"ok");
+						memset(rcv,'\0',512);
+						strcpy(rcv,"ok");
+						break;
+					}
+				}
+				
 				rcv[i]=ch;
 				i++;
 			}
@@ -171,22 +189,20 @@ char *send_web_post(char *url,char *buf,int timeout)
 					if(ltimeout>=timeout*1000)
 					{
 						printf("gprs timeout\n");						
-						free(gprs_string);
-						free(rcv);
-						rcv=NULL;
-						return NULL;
+						*out=NULL;
+						return;
 					}
 				}
 			}
 		}		
-		free(gprs_string);
+		//free(gprs_string);
 	}
 	if(rcv!=NULL)
 		printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	pthread_mutex_unlock(&mutex);
-	return rcv;
+	return;
 }
 char *send_web_get(char *url,char *buf,int timeout)
 {
@@ -346,13 +362,15 @@ void resend_history_done(char *begin,char *end)
 	resend_done=add_item(resend_done,ID_DEVICE_PORT,"9517");
 	resend_done=add_item(resend_done,ID_RE_START_TIME,begin);
 	resend_done=add_item(resend_done,ID_RE_STOP_TIME,end);
-	char *rcv=send_web_post(URL,resend_done,9);
+	char *rcv=NULL;
+	send_web_post(URL,resend_done,9,&rcv);
 	free(resend_done);
 	resend_done=NULL;
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
 		free(rcv);
+		rcv=NULL;
 	}	
 }
 void resend_history(char *date_begin,char *date_end)
@@ -429,19 +447,21 @@ void resend_history(char *date_begin,char *date_end)
 							line[strlen(line)-1]='\0';							
 							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
-								char *rcv=send_web_post(URL,line,39);
-								if(rcv!=NULL)
-								{	
-									int len1=strlen(rcv);
-									//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
-									//printf(MAIN_PROCESS"send ok\n");
-									if(strncmp(rcv,"ok",2)==0)
-									{
-										free(rcv);
-										break;
-									}
+							char *rcv=NULL;
+							send_web_post(URL,line,39,&rcv);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								//printf(MAIN_PROCESS"send ok\n");
+								if(strncmp(rcv,"ok",2)==0)
+								{
 									free(rcv);
+									break;
 								}
+								free(rcv);
+								rcv=NULL;
+							}
 							}
 						}
 					}
@@ -452,19 +472,21 @@ void resend_history(char *date_begin,char *date_end)
 							line[strlen(line)-1]='\0';
 							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
-								char *rcv=send_web_post(URL,line,9);
-								if(rcv!=NULL)
-								{	
-									int len1=strlen(rcv);
-									//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
-									//printf(MAIN_PROCESS"send ok\n");
-									if(strncmp(rcv,"ok",2)==0)
-									{
-										free(rcv);
-										break;
-									}
+							char *rcv=NULL;
+							send_web_post(URL,line,9,&rcv);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								//printf(MAIN_PROCESS"send ok\n");
+								if(strncmp(rcv,"ok",2)==0)
+								{
 									free(rcv);
+									break;
 								}
+								free(rcv);
+								rcv=NULL;
+							}
 							}
 						}
 					}
@@ -540,7 +562,7 @@ void sync_server(int fd,int resend)
 		}
 	}
 #endif
-	rcv=send_web_post(URL,sync_message,9);
+	send_web_post(URL,sync_message,9,&rcv);
 	free(sync_message);
 	//free(out1);
 	if(rcv!=NULL&&strlen(rcv)!=0)
@@ -552,7 +574,7 @@ void sync_server(int fd,int resend)
 		char *tmp=NULL;
 		if(resend)
 		{
-
+			
 			starttime=doit_data(rcv,(char *)"101");
 			tmp=doit_data(rcv,(char *)"102");
 			if(starttime!=NULL && tmp!=NULL)
@@ -598,9 +620,10 @@ void sync_server(int fd,int resend)
 			//}
 		}
 		free(rcv);
-		}
-		return ;
+		rcv=NULL;
 	}
+	return ;
+}
 
 	void get_ip(char *ip)
 	{
@@ -719,13 +742,14 @@ void sync_server(int fd,int resend)
 												if(warnning_msg!=NULL)
 												{
 													warnning_msg=add_item(warnning_msg,ID_DEVICE_CAP_TIME,date);
-													rcv=send_web_post(URL,warnning_msg,9);
+													send_web_post(URL,warnning_msg,9,&rcv);
 													free(warnning_msg);
 													warnning_msg=NULL;
 													if(rcv!=NULL)
 													{	
 														int len=strlen(rcv);
 														free(rcv);
+														rcv=NULL;
 													}	
 												}
 												can_send=1;
@@ -830,7 +854,7 @@ void sync_server(int fd,int resend)
 															int temp=1;
 															for(i=0;i<to_check[i+7];i++)
 																temp*=10;
-															value=(float((to_check[i+5]<<8|to_check[i+6])))/((float)temp);
+															value=((float)(to_check[i+5]<<8|to_check[i+6]))/((float)temp);
 														}
 													}	
 													else
@@ -911,13 +935,14 @@ void sync_server(int fd,int resend)
 									{
 										g_upload=0;
 										//printf(SUB_PROCESS"send web %s",post_message);
-										rcv=send_web_post(URL,post_message,9);
-										if(rcv!=NULL)
-										{	
-											int len=strlen(rcv);
-											//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-											//printf(SUB_PROCESS"send ok\n");
-											free(rcv);
+								send_web_post(URL,post_message,9,&rcv);
+								if(rcv!=NULL)
+								{	
+									int len=strlen(rcv);
+									//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+									//printf(SUB_PROCESS"send ok\n");
+									free(rcv);
+									rcv=NULL;
 										}			
 									}
 									free(post_message);
