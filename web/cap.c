@@ -109,6 +109,21 @@ sensor_times sensortimes;
 char history_co_time[100000][20];
 char history_co_data[100000][10];
 long g_history_co_cnt=0;
+char history_co2_time[100000][20];
+char history_co2_data[100000][10];
+long g_history_co2_cnt=0;
+char history_hcho_time[100000][20];
+char history_hcho_data[100000][10];
+long g_history_hcho_cnt=0;
+char history_shidu_time[100000][20];
+char history_shidu_data[100000][10];
+long g_history_shidu_cnt=0;
+char history_temp_time[100000][20];
+char history_temp_data[100000][10];
+long g_history_temp_cnt=0;
+char history_pm25_time[100000][20];
+char history_pm25_data[100000][10];
+long g_history_pm25_cnt=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -999,7 +1014,63 @@ void send_server_save_local(char *date,char *message,char save)
 {
 	char *rcv = NULL;
 	if(save)
+	{
 		save_to_file(date,message);
+		char *data=doit_data(message,ID_CAP_CO);
+		if(data!=NULL)
+		{
+			memset(history_co_data[g_history_co_cnt],'\0',10);
+			strcpy(history_co_data[g_history_co_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_co_cnt++;
+		}
+		data=doit_data(message,ID_CAP_CO2);
+		if(data!=NULL)
+		{
+			memset(history_co2_data[g_history_co2_cnt],'\0',10);
+			strcpy(history_co2_data[g_history_co2_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_co2_cnt++;
+		}
+		data=doit_data(message,ID_CAP_SHI_DU);
+		if(data!=NULL)
+		{
+			memset(history_shidu_data[g_history_shidu_cnt],'\0',10);
+			strcpy(history_shidu_data[g_history_shidu_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_shidu_cnt++;
+		}
+		data=doit_data(message,ID_CAP_HCHO);
+		if(data!=NULL)
+		{
+			memset(history_hcho_data[g_history_hcho_cnt],'\0',10);
+			strcpy(history_hcho_data[g_history_hcho_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_hcho_cnt++;
+		}
+		data=doit_data(message,ID_CAP_TEMPERATURE);
+		if(data!=NULL)
+		{
+			memset(history_temp_data[g_history_temp_cnt],'\0',10);
+			strcpy(history_temp_data[g_history_temp_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_temp_cnt++;
+		}
+		data=doit_data(message,ID_CAP_PM_25);
+		if(data!=NULL)
+		{
+			memset(history_pm25_data[g_history_pm25_cnt],'\0',10);
+			strcpy(history_pm25_data[g_history_pm25_cnt],data);					
+			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+			free(data);
+			g_history_pm25_cnt++;
+		}
+	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
 	{	
@@ -1764,15 +1835,65 @@ void load_history(const char *name)
 			if((cnt%2)!=0)
 			{
 				//get co,co2,hcho,pm25,shidu,temp
-				char *co=doit_data(line,ID_CAP_CO);
-				if(co!=NULL)
+				char *data=doit_data(line,ID_CAP_CO);
+				if(data!=NULL)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
 					memset(history_co_data[g_history_co_cnt],'\0',10);
-					//strcpy(history_data[cnt_co],co);					
-					sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
-					free(co);
+					strcpy(history_co_data[g_history_co_cnt],data);					
+					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					free(data);
 					g_history_co_cnt++;
+				}
+				data=doit_data(line,ID_CAP_CO2);
+				if(data!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_co2_data[g_history_co2_cnt],'\0',10);
+					//strcpy(history_co2_data[g_history_co2_cnt],data);					
+					sprintf(history_co2_data[g_history_co2_cnt],"%04d",atoi(data));
+					free(data);
+					g_history_co2_cnt++;
+				}
+				data=doit_data(line,ID_CAP_HCHO);
+				if(data!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_hcho_data[g_history_hcho_cnt],'\0',10);
+					strcpy(history_hcho_data[g_history_hcho_cnt],data);					
+					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					free(data);
+					g_history_hcho_cnt++;
+				}
+				data=doit_data(line,ID_CAP_SHI_DU);
+				if(data!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_shidu_data[g_history_shidu_cnt],'\0',10);
+					strcpy(history_shidu_data[g_history_shidu_cnt],data);					
+					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					free(data);
+					g_history_shidu_cnt++;
+				}
+				data=doit_data(line,ID_CAP_TEMPERATURE);
+				if(data!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_temp_data[g_history_temp_cnt],'\0',10);
+					strcpy(history_temp_data[g_history_temp_cnt],data);					
+					//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
+					free(data);
+					g_history_temp_cnt++;
+				}
+				data=doit_data(line,ID_CAP_PM_25);
+				if(data!=NULL)
+				{
+					//printf(LCD_PROCESS"<co>%s\n",co);
+					memset(history_pm25_data[g_history_pm25_cnt],'\0',10);
+					//strcpy(history_pm25_data[g_history_pm25_cnt],data);					
+					sprintf(history_pm25_data[g_history_pm25_cnt],"%03d",atoi(data));
+					free(data);
+					g_history_pm25_cnt++;
 				}
 			}
 			else
@@ -1785,6 +1906,46 @@ void load_history(const char *name)
 				memset(tmp,'\0',11);
 				memcpy(tmp,line,5);
 				strcat(history_co_time[g_history_co_cnt],tmp);
+				
+				memset(history_co2_time[g_history_co2_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_co2_time[g_history_co2_cnt],tmp);
+				strcat(history_co2_time[g_history_co2_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_co2_time[g_history_co2_cnt],tmp);
+				
+				memset(history_hcho_time[g_history_hcho_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_hcho_time[g_history_hcho_cnt],tmp);
+				strcat(history_hcho_time[g_history_hcho_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_hcho_time[g_history_hcho_cnt],tmp);
+				
+				memset(history_shidu_time[g_history_shidu_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_shidu_time[g_history_shidu_cnt],tmp);
+				strcat(history_shidu_time[g_history_shidu_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_shidu_time[g_history_shidu_cnt],tmp);
+				
+				memset(history_temp_time[g_history_temp_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_temp_time[g_history_temp_cnt],tmp);
+				strcat(history_temp_time[g_history_temp_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_temp_time[g_history_temp_cnt],tmp);
+				
+				memset(history_pm25_time[g_history_pm25_cnt],'\0',20);
+				memcpy(tmp,file_list[j],10);
+				strcpy(history_pm25_time[g_history_pm25_cnt],tmp);
+				strcat(history_pm25_time[g_history_pm25_cnt]," ");
+				memset(tmp,'\0',11);
+				memcpy(tmp,line,5);
+				strcat(history_pm25_time[g_history_pm25_cnt],tmp);
 			}
 			cnt++;
 		}
@@ -1945,20 +2106,123 @@ void show_history(int fd_lcd,const char *name,char *id,int offset)
 	#endif
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
-		write_string(fd_lcd,VAR_CO_TIME1,history_co_time[g_history_co_cnt-offset-1],strlen(history_co_time[g_history_co_cnt-offset-1]));
-		write_string(fd_lcd,VAR_CO_DATA1,history_co_data[g_history_co_cnt-offset-1],strlen(history_co_data[g_history_co_cnt-offset-1]));
-		write_string(fd_lcd,VAR_CO_TIME2,history_co_time[g_history_co_cnt-offset-2],strlen(history_co_time[g_history_co_cnt-offset-2]));
-		write_string(fd_lcd,VAR_CO_DATA2,history_co_data[g_history_co_cnt-offset-2],strlen(history_co_data[g_history_co_cnt-offset-2]));
-		write_string(fd_lcd,VAR_CO_TIME3,history_co_time[g_history_co_cnt-offset-3],strlen(history_co_time[g_history_co_cnt-offset-3]));
-		write_string(fd_lcd,VAR_CO_DATA3,history_co_data[g_history_co_cnt-offset-3],strlen(history_co_data[g_history_co_cnt-offset-3]));
-		write_string(fd_lcd,VAR_CO_TIME4,history_co_time[g_history_co_cnt-offset-4],strlen(history_co_time[g_history_co_cnt-offset-4]));
-		write_string(fd_lcd,VAR_CO_DATA4,history_co_data[g_history_co_cnt-offset-4],strlen(history_co_data[g_history_co_cnt-offset-4]));
-		write_string(fd_lcd,VAR_CO_TIME5,history_co_time[g_history_co_cnt-offset-5],strlen(history_co_time[g_history_co_cnt-offset-5]));
-		write_string(fd_lcd,VAR_CO_DATA5,history_co_data[g_history_co_cnt-offset-5],strlen(history_co_data[g_history_co_cnt-offset-5]));
-		write_string(fd_lcd,VAR_CO_TIME6,history_co_time[g_history_co_cnt-offset-6],strlen(history_co_time[g_history_co_cnt-offset-6]));
-		write_string(fd_lcd,VAR_CO_DATA6,history_co_data[g_history_co_cnt-offset-6],strlen(history_co_data[g_history_co_cnt-offset-6]));
-		write_string(fd_lcd,VAR_CO_TIME7,history_co_time[g_history_co_cnt-offset-7],strlen(history_co_time[g_history_co_cnt-offset-7]));
-		write_string(fd_lcd,VAR_CO_DATA7,history_co_data[g_history_co_cnt-offset-7],strlen(history_co_data[g_history_co_cnt-offset-7]));
+		if((g_history_co_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_CO_TIME1,history_co_time[g_history_co_cnt-offset-1],strlen(history_co_time[g_history_co_cnt-offset-1]));
+			write_string(fd_lcd,VAR_CO_DATA1,history_co_data[g_history_co_cnt-offset-1],strlen(history_co_data[g_history_co_cnt-offset-1]));
+			write_string(fd_lcd,VAR_CO_TIME2,history_co_time[g_history_co_cnt-offset-2],strlen(history_co_time[g_history_co_cnt-offset-2]));
+			write_string(fd_lcd,VAR_CO_DATA2,history_co_data[g_history_co_cnt-offset-2],strlen(history_co_data[g_history_co_cnt-offset-2]));
+			write_string(fd_lcd,VAR_CO_TIME3,history_co_time[g_history_co_cnt-offset-3],strlen(history_co_time[g_history_co_cnt-offset-3]));
+			write_string(fd_lcd,VAR_CO_DATA3,history_co_data[g_history_co_cnt-offset-3],strlen(history_co_data[g_history_co_cnt-offset-3]));
+			write_string(fd_lcd,VAR_CO_TIME4,history_co_time[g_history_co_cnt-offset-4],strlen(history_co_time[g_history_co_cnt-offset-4]));
+			write_string(fd_lcd,VAR_CO_DATA4,history_co_data[g_history_co_cnt-offset-4],strlen(history_co_data[g_history_co_cnt-offset-4]));
+			write_string(fd_lcd,VAR_CO_TIME5,history_co_time[g_history_co_cnt-offset-5],strlen(history_co_time[g_history_co_cnt-offset-5]));
+			write_string(fd_lcd,VAR_CO_DATA5,history_co_data[g_history_co_cnt-offset-5],strlen(history_co_data[g_history_co_cnt-offset-5]));
+			write_string(fd_lcd,VAR_CO_TIME6,history_co_time[g_history_co_cnt-offset-6],strlen(history_co_time[g_history_co_cnt-offset-6]));
+			write_string(fd_lcd,VAR_CO_DATA6,history_co_data[g_history_co_cnt-offset-6],strlen(history_co_data[g_history_co_cnt-offset-6]));
+			write_string(fd_lcd,VAR_CO_TIME7,history_co_time[g_history_co_cnt-offset-7],strlen(history_co_time[g_history_co_cnt-offset-7]));
+			write_string(fd_lcd,VAR_CO_DATA7,history_co_data[g_history_co_cnt-offset-7],strlen(history_co_data[g_history_co_cnt-offset-7]));
+		}
+	}
+	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
+	{
+		if((g_history_co2_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_CO2_TIME1,history_co2_time[g_history_co2_cnt-offset-1],strlen(history_co2_time[g_history_co2_cnt-offset-1]));
+			write_string(fd_lcd,VAR_CO2_DATA1,history_co2_data[g_history_co2_cnt-offset-1],strlen(history_co2_data[g_history_co2_cnt-offset-1]));
+			write_string(fd_lcd,VAR_CO2_TIME2,history_co2_time[g_history_co2_cnt-offset-2],strlen(history_co2_time[g_history_co2_cnt-offset-2]));
+			write_string(fd_lcd,VAR_CO2_DATA2,history_co2_data[g_history_co2_cnt-offset-2],strlen(history_co2_data[g_history_co2_cnt-offset-2]));
+			write_string(fd_lcd,VAR_CO2_TIME3,history_co2_time[g_history_co2_cnt-offset-3],strlen(history_co2_time[g_history_co2_cnt-offset-3]));
+			write_string(fd_lcd,VAR_CO2_DATA3,history_co2_data[g_history_co2_cnt-offset-3],strlen(history_co2_data[g_history_co2_cnt-offset-3]));
+			write_string(fd_lcd,VAR_CO2_TIME4,history_co2_time[g_history_co2_cnt-offset-4],strlen(history_co2_time[g_history_co2_cnt-offset-4]));
+			write_string(fd_lcd,VAR_CO2_DATA4,history_co2_data[g_history_co2_cnt-offset-4],strlen(history_co2_data[g_history_co2_cnt-offset-4]));
+			write_string(fd_lcd,VAR_CO2_TIME5,history_co2_time[g_history_co2_cnt-offset-5],strlen(history_co2_time[g_history_co2_cnt-offset-5]));
+			write_string(fd_lcd,VAR_CO2_DATA5,history_co2_data[g_history_co2_cnt-offset-5],strlen(history_co2_data[g_history_co2_cnt-offset-5]));
+			write_string(fd_lcd,VAR_CO2_TIME6,history_co2_time[g_history_co2_cnt-offset-6],strlen(history_co2_time[g_history_co2_cnt-offset-6]));
+			write_string(fd_lcd,VAR_CO2_DATA6,history_co2_data[g_history_co2_cnt-offset-6],strlen(history_co2_data[g_history_co2_cnt-offset-6]));
+			write_string(fd_lcd,VAR_CO2_TIME7,history_co2_time[g_history_co2_cnt-offset-7],strlen(history_co2_time[g_history_co2_cnt-offset-7]));
+			write_string(fd_lcd,VAR_CO2_DATA7,history_co2_data[g_history_co2_cnt-offset-7],strlen(history_co2_data[g_history_co2_cnt-offset-7]));
+		}
+	}
+	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
+	{
+		if((g_history_hcho_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_HCHO_TIME1,history_hcho_time[g_history_hcho_cnt-offset-1],strlen(history_hcho_time[g_history_hcho_cnt-offset-1]));
+			write_string(fd_lcd,VAR_HCHO_DATA1,history_hcho_data[g_history_hcho_cnt-offset-1],strlen(history_hcho_data[g_history_hcho_cnt-offset-1]));
+			write_string(fd_lcd,VAR_HCHO_TIME2,history_hcho_time[g_history_hcho_cnt-offset-2],strlen(history_hcho_time[g_history_hcho_cnt-offset-2]));
+			write_string(fd_lcd,VAR_HCHO_DATA2,history_hcho_data[g_history_hcho_cnt-offset-2],strlen(history_hcho_data[g_history_hcho_cnt-offset-2]));
+			write_string(fd_lcd,VAR_HCHO_TIME3,history_hcho_time[g_history_hcho_cnt-offset-3],strlen(history_hcho_time[g_history_hcho_cnt-offset-3]));
+			write_string(fd_lcd,VAR_HCHO_DATA3,history_hcho_data[g_history_hcho_cnt-offset-3],strlen(history_hcho_data[g_history_hcho_cnt-offset-3]));
+			write_string(fd_lcd,VAR_HCHO_TIME4,history_hcho_time[g_history_hcho_cnt-offset-4],strlen(history_hcho_time[g_history_hcho_cnt-offset-4]));
+			write_string(fd_lcd,VAR_HCHO_DATA4,history_hcho_data[g_history_hcho_cnt-offset-4],strlen(history_hcho_data[g_history_hcho_cnt-offset-4]));
+			write_string(fd_lcd,VAR_HCHO_TIME5,history_hcho_time[g_history_hcho_cnt-offset-5],strlen(history_hcho_time[g_history_hcho_cnt-offset-5]));
+			write_string(fd_lcd,VAR_HCHO_DATA5,history_hcho_data[g_history_hcho_cnt-offset-5],strlen(history_hcho_data[g_history_hcho_cnt-offset-5]));
+			write_string(fd_lcd,VAR_HCHO_TIME6,history_hcho_time[g_history_hcho_cnt-offset-6],strlen(history_hcho_time[g_history_hcho_cnt-offset-6]));
+			write_string(fd_lcd,VAR_HCHO_DATA6,history_hcho_data[g_history_hcho_cnt-offset-6],strlen(history_hcho_data[g_history_hcho_cnt-offset-6]));
+			write_string(fd_lcd,VAR_HCHO_TIME7,history_hcho_time[g_history_hcho_cnt-offset-7],strlen(history_hcho_time[g_history_hcho_cnt-offset-7]));
+			write_string(fd_lcd,VAR_HCHO_DATA7,history_hcho_data[g_history_hcho_cnt-offset-7],strlen(history_hcho_data[g_history_hcho_cnt-offset-7]));
+		}
+	}
+	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
+	{
+		if((g_history_shidu_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_SHIDU_TIME1,history_shidu_time[g_history_shidu_cnt-offset-1],strlen(history_shidu_time[g_history_shidu_cnt-offset-1]));
+			write_string(fd_lcd,VAR_SHIDU_DATA1,history_shidu_data[g_history_shidu_cnt-offset-1],strlen(history_shidu_data[g_history_shidu_cnt-offset-1]));
+			write_string(fd_lcd,VAR_SHIDU_TIME2,history_shidu_time[g_history_shidu_cnt-offset-2],strlen(history_shidu_time[g_history_shidu_cnt-offset-2]));
+			write_string(fd_lcd,VAR_SHIDU_DATA2,history_shidu_data[g_history_shidu_cnt-offset-2],strlen(history_shidu_data[g_history_shidu_cnt-offset-2]));
+			write_string(fd_lcd,VAR_SHIDU_TIME3,history_shidu_time[g_history_shidu_cnt-offset-3],strlen(history_shidu_time[g_history_shidu_cnt-offset-3]));
+			write_string(fd_lcd,VAR_SHIDU_DATA3,history_shidu_data[g_history_shidu_cnt-offset-3],strlen(history_shidu_data[g_history_shidu_cnt-offset-3]));
+			write_string(fd_lcd,VAR_SHIDU_TIME4,history_shidu_time[g_history_shidu_cnt-offset-4],strlen(history_shidu_time[g_history_shidu_cnt-offset-4]));
+			write_string(fd_lcd,VAR_SHIDU_DATA4,history_shidu_data[g_history_shidu_cnt-offset-4],strlen(history_shidu_data[g_history_shidu_cnt-offset-4]));
+			write_string(fd_lcd,VAR_SHIDU_TIME5,history_shidu_time[g_history_shidu_cnt-offset-5],strlen(history_shidu_time[g_history_shidu_cnt-offset-5]));
+			write_string(fd_lcd,VAR_SHIDU_DATA5,history_shidu_data[g_history_shidu_cnt-offset-5],strlen(history_shidu_data[g_history_shidu_cnt-offset-5]));
+			write_string(fd_lcd,VAR_SHIDU_TIME6,history_shidu_time[g_history_shidu_cnt-offset-6],strlen(history_shidu_time[g_history_shidu_cnt-offset-6]));
+			write_string(fd_lcd,VAR_SHIDU_DATA6,history_shidu_data[g_history_shidu_cnt-offset-6],strlen(history_shidu_data[g_history_shidu_cnt-offset-6]));
+			write_string(fd_lcd,VAR_SHIDU_TIME7,history_shidu_time[g_history_shidu_cnt-offset-7],strlen(history_shidu_time[g_history_shidu_cnt-offset-7]));
+			write_string(fd_lcd,VAR_SHIDU_DATA7,history_shidu_data[g_history_shidu_cnt-offset-7],strlen(history_shidu_data[g_history_shidu_cnt-offset-7]));
+		}
+	}
+	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
+	{
+		if((g_history_temp_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_TEMP_TIME1,history_temp_time[g_history_temp_cnt-offset-1],strlen(history_temp_time[g_history_temp_cnt-offset-1]));
+			write_string(fd_lcd,VAR_TEMP_DATA1,history_temp_data[g_history_temp_cnt-offset-1],strlen(history_temp_data[g_history_temp_cnt-offset-1]));
+			write_string(fd_lcd,VAR_TEMP_TIME2,history_temp_time[g_history_temp_cnt-offset-2],strlen(history_temp_time[g_history_temp_cnt-offset-2]));
+			write_string(fd_lcd,VAR_TEMP_DATA2,history_temp_data[g_history_temp_cnt-offset-2],strlen(history_temp_data[g_history_temp_cnt-offset-2]));
+			write_string(fd_lcd,VAR_TEMP_TIME3,history_temp_time[g_history_temp_cnt-offset-3],strlen(history_temp_time[g_history_temp_cnt-offset-3]));
+			write_string(fd_lcd,VAR_TEMP_DATA3,history_temp_data[g_history_temp_cnt-offset-3],strlen(history_temp_data[g_history_temp_cnt-offset-3]));
+			write_string(fd_lcd,VAR_TEMP_TIME4,history_temp_time[g_history_temp_cnt-offset-4],strlen(history_temp_time[g_history_temp_cnt-offset-4]));
+			write_string(fd_lcd,VAR_TEMP_DATA4,history_temp_data[g_history_temp_cnt-offset-4],strlen(history_temp_data[g_history_temp_cnt-offset-4]));
+			write_string(fd_lcd,VAR_TEMP_TIME5,history_temp_time[g_history_temp_cnt-offset-5],strlen(history_temp_time[g_history_temp_cnt-offset-5]));
+			write_string(fd_lcd,VAR_TEMP_DATA5,history_temp_data[g_history_temp_cnt-offset-5],strlen(history_temp_data[g_history_temp_cnt-offset-5]));
+			write_string(fd_lcd,VAR_TEMP_TIME6,history_temp_time[g_history_temp_cnt-offset-6],strlen(history_temp_time[g_history_temp_cnt-offset-6]));
+			write_string(fd_lcd,VAR_TEMP_DATA6,history_temp_data[g_history_temp_cnt-offset-6],strlen(history_temp_data[g_history_temp_cnt-offset-6]));
+			write_string(fd_lcd,VAR_TEMP_TIME7,history_temp_time[g_history_temp_cnt-offset-7],strlen(history_temp_time[g_history_temp_cnt-offset-7]));
+			write_string(fd_lcd,VAR_TEMP_DATA7,history_temp_data[g_history_temp_cnt-offset-7],strlen(history_temp_data[g_history_temp_cnt-offset-7]));
+		}
+	}
+	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
+	{
+		if((g_history_pm25_cnt-offset-7)>0)
+		{
+			write_string(fd_lcd,VAR_PM25_TIME1,history_pm25_time[g_history_pm25_cnt-offset-1],strlen(history_pm25_time[g_history_pm25_cnt-offset-1]));
+			write_string(fd_lcd,VAR_PM25_DATA1,history_pm25_data[g_history_pm25_cnt-offset-1],strlen(history_pm25_data[g_history_pm25_cnt-offset-1]));
+			write_string(fd_lcd,VAR_PM25_TIME2,history_pm25_time[g_history_pm25_cnt-offset-2],strlen(history_pm25_time[g_history_pm25_cnt-offset-2]));
+			write_string(fd_lcd,VAR_PM25_DATA2,history_pm25_data[g_history_pm25_cnt-offset-2],strlen(history_pm25_data[g_history_pm25_cnt-offset-2]));
+			write_string(fd_lcd,VAR_PM25_TIME3,history_pm25_time[g_history_pm25_cnt-offset-3],strlen(history_pm25_time[g_history_pm25_cnt-offset-3]));
+			write_string(fd_lcd,VAR_PM25_DATA3,history_pm25_data[g_history_pm25_cnt-offset-3],strlen(history_pm25_data[g_history_pm25_cnt-offset-3]));
+			write_string(fd_lcd,VAR_PM25_TIME4,history_pm25_time[g_history_pm25_cnt-offset-4],strlen(history_pm25_time[g_history_pm25_cnt-offset-4]));
+			write_string(fd_lcd,VAR_PM25_DATA4,history_pm25_data[g_history_pm25_cnt-offset-4],strlen(history_pm25_data[g_history_pm25_cnt-offset-4]));
+			write_string(fd_lcd,VAR_PM25_TIME5,history_pm25_time[g_history_pm25_cnt-offset-5],strlen(history_pm25_time[g_history_pm25_cnt-offset-5]));
+			write_string(fd_lcd,VAR_PM25_DATA5,history_pm25_data[g_history_pm25_cnt-offset-5],strlen(history_pm25_data[g_history_pm25_cnt-offset-5]));
+			write_string(fd_lcd,VAR_PM25_TIME6,history_pm25_time[g_history_pm25_cnt-offset-6],strlen(history_pm25_time[g_history_pm25_cnt-offset-6]));
+			write_string(fd_lcd,VAR_PM25_DATA6,history_pm25_data[g_history_pm25_cnt-offset-6],strlen(history_pm25_data[g_history_pm25_cnt-offset-6]));
+			write_string(fd_lcd,VAR_PM25_TIME7,history_pm25_time[g_history_pm25_cnt-offset-7],strlen(history_pm25_time[g_history_pm25_cnt-offset-7]));
+			write_string(fd_lcd,VAR_PM25_DATA7,history_pm25_data[g_history_pm25_cnt-offset-7],strlen(history_pm25_data[g_history_pm25_cnt-offset-7]));
+		}
 	}
 	#if 0
 	else if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
@@ -2051,7 +2315,12 @@ void show_history(int fd_lcd,const char *name,char *id,int offset)
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
-	static int begin=0;
+	static int begin_co=0;
+	static int begin_co2=0;
+	static int begin_hcho=0;
+	static int begin_temp=0;
+	static int begin_shidu=0;
+	static int begin_pm25=0;
 	char * line = NULL;
 	char date1[32]={0};
 	char date2[32]={0};
@@ -2066,21 +2335,64 @@ unsigned short input_handle(int fd_lcd,char *input)
 	data=input[4]<<8|input[5];
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(addr==TOUCH_DETAIL_CO && (TOUCH_DETAIL_CO-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
+		begin_co=0;
+	}
 	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);	
+		begin_co2=0;
+	}	
 	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
+		begin_hcho=0;
+	}	
 	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
+		begin_shidu=0;
+	}	
 	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
+		begin_temp=0;
+	}	
 	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
-	show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
+	{
+		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
+		begin_pm25=0;
+	}	
 	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
 	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,begin);
-		begin+=7;
+		begin_co+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,begin_co);
+	}
+	else if(addr==TOUCH_UPDATE_CO2 && (TOUCH_UPDATE_CO2-0x100)==data)
+	{
+		begin_co2+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,begin_co2);
+	}
+	else if(addr==TOUCH_UPDATE_HCHO && (TOUCH_UPDATE_HCHO-0x100)==data)
+	{
+		begin_hcho+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,begin_hcho);
+	}
+	else if(addr==TOUCH_UPDATE_TEMP && (TOUCH_UPDATE_TEMP-0x100)==data)
+	{
+		begin_temp+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,begin_temp);
+	}
+	else if(addr==TOUCH_UPDATE_SHIDU&& (TOUCH_UPDATE_SHIDU-0x100)==data)
+	{
+		begin_shidu+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,begin_shidu);
+	}
+	else if(addr==TOUCH_UPDATE_PM25 && (TOUCH_UPDATE_PM25-0x100)==data)
+	{
+		begin_pm25+=7;
+		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,begin_pm25);
 	}
 #if 0
 	switch(addr)
