@@ -96,19 +96,19 @@
 #define ID_DEVICE_INFO					"212"
 #define ID_DEVICE_STATUS				"213"
 
-#define MAX_CO		900
-#define MIN_CO		100
-#define MAX_CO2		900
-#define MIN_CO2		100
-#define MAX_HCHO	900
-#define MIN_HCHO	100
-#define MAX_SHIDU	900
-#define MIN_SHIDU	100
-#define MAX_TEMP	900
-#define MIN_TEMP	100
-#define MAX_PM25	900
-#define MIN_PM25	100
-
+#define MAX_CO		200
+#define MIN_CO		0
+#define MAX_CO2		10000
+#define MIN_CO2		300
+#define MAX_HCHO	3
+#define MIN_HCHO	0
+#define MAX_SHIDU	90
+#define MIN_SHIDU	0
+#define MAX_TEMP	50
+#define MIN_TEMP	(-20)
+#define MAX_PM25	1000
+#define MIN_PM25	0
+#define MAX_COUNT_TIMES 12
 #define STATE_LOGO			0
 #define STATE_MAIN			1
 #define STATE_DETAIL_CO		2
