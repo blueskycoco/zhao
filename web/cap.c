@@ -2413,7 +2413,7 @@ void manul_set_time(int fd)
 			printf("year %s \nmon %s\nday %s\nhour %s\nmin %s\nseconds %s\n",year,mon,day,hour,min,second);
 			server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
 			server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
-			server_time[5]=atoi(year);server_time[6]=atoi(mon);
+			server_time[5]=atoi(year)-2000;server_time[6]=atoi(mon);
 			server_time[7]=atoi(day);server_time[8]=atoi(hour);
 			server_time[9]=atoi(min);server_time[10]=atoi(second);
 			int crc=CRC_check(server_time,11);
