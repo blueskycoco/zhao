@@ -700,10 +700,14 @@ void sync_server(int fd,int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
+					clear_buf(fd_lcd,VAR_USER_NAME_ADDR,40);
+					clear_buf(fd_lcd,VAR_USER_PLACE_ADDR,60);
+					clear_buf(fd_lcd,VAR_USER_ADDR_ADDR,40);
+					clear_buf(fd_lcd,VAR_USER_PHONE_ADDR,40);
+					clear_buf(fd_lcd,VAR_USER_CONTRACT_ADDR,40);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
-					clear_buf(fd_lcd,VAR_USER_NAME_ADDR,40);
 					write_string(fd_lcd,VAR_USER_NAME_ADDR,cmd,strlen(cmd));
 					printf("user_name:%s\n",user_name);
 					free(user_name);
@@ -711,7 +715,6 @@ void sync_server(int fd,int resend,int set_local)
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
-					clear_buf(fd_lcd,VAR_USER_PLACE_ADDR,60);
 					write_string(fd_lcd,VAR_USER_PLACE_ADDR,cmd,strlen(cmd));
 					printf("user_place:%s\n",user_place);
 					free(user_place);
@@ -720,7 +723,6 @@ void sync_server(int fd,int resend,int set_local)
 				{
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
-					clear_buf(fd_lcd,VAR_USER_ADDR_ADDR,40);
 					write_string(fd_lcd,VAR_USER_ADDR_ADDR,cmd,strlen(cmd));					
 					printf("user_addr:%s\n",user_addr);
 					free(user_addr);
@@ -728,7 +730,6 @@ void sync_server(int fd,int resend,int set_local)
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
-					clear_buf(fd_lcd,VAR_USER_PHONE_ADDR,40);
 					write_string(fd_lcd,VAR_USER_PHONE_ADDR,cmd,strlen(cmd));					
 					printf("user_phone:%s\n",user_phone);
 					free(user_phone);
@@ -736,7 +737,6 @@ void sync_server(int fd,int resend,int set_local)
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
-					clear_buf(fd_lcd,VAR_USER_CONTRACT_ADDR,40);
 					write_string(fd_lcd,VAR_USER_CONTRACT_ADDR,cmd,strlen(cmd));
 					printf("user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
@@ -2498,9 +2498,9 @@ void wifi_handle(int fd)
 		sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
 		printf("exec %s\n",cmd);
 		system(cmd);
-		//sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
-		//printf("exec %s\n",cmd);
-		//system(cmd);
+		sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
+		printf("exec %s\n",cmd);
+		system(cmd);
 		sprintf(cmd,"wpa_cli -ira0 save_config");
 		printf("exec %s\n",cmd);		
 		system(cmd);
