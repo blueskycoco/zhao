@@ -2498,9 +2498,9 @@ void wifi_handle(int fd)
 		sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
 		printf("exec %s\n",cmd);
 		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
-		printf("exec %s\n",cmd);
-		system(cmd);
+		//sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
+		//printf("exec %s\n",cmd);
+		//system(cmd);
 		sprintf(cmd,"wpa_cli -ira0 save_config");
 		printf("exec %s\n",cmd);		
 		system(cmd);
