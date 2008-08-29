@@ -142,24 +142,28 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 		//char *gprs_string=(char *)malloc(strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
 		//memset(gprs_string,'\0',strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
 		char gprs_string[1024]={0};
+		int j=0;
 		strcpy(gprs_string,"POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n");
 		sprintf(length_string,"Content-Length:%d\r\n\r\nJSONStr=",strlen(buf)+8);
 		strcat(gprs_string,length_string);
 		strcat(gprs_string,buf);
+		for(j=0;j<3;j++){
+		printf(UPLOAD_PROCESS"send gprs %s\n",gprs_string);
 		write(fd_gprs, gprs_string, strlen(gprs_string));	
 		i=0;
 		while(1)
 		{
 			if(read(fd_gprs, &ch, 1)==1)
 			{
-				//rt_kprintf("%c",ch);
+				printf("%c",ch);
 				if(ch=='}')
 				{
 					rcv[i++]=ch;
 					*out=(char *)malloc(i+1);
 					memset(*out,'\0',i+1);
 					memcpy(*out,rcv,i);//strcpy(*out,rcv);
-					break;
+					pthread_mutex_unlock(&mutex);
+					return;
 				}
 				else if(ch=='{')
 					i=0;
@@ -173,7 +177,8 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 						strcpy(*out,"ok");
 						memset(rcv,'\0',512);
 						strcpy(rcv,"ok");
-						break;
+						pthread_mutex_unlock(&mutex);
+						return;
 					}
 				}
 				
@@ -188,13 +193,20 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 					usleep(1000);
 					if(ltimeout>=timeout*1000)
 					{
-						printf("gprs timeout\n");						
+						printf("gprs timeout %d\n",j);						
 						*out=NULL;
-						return;
+						ltimeout=0;
+						if(j==2)
+						{
+							pthread_mutex_unlock(&mutex);
+							return;
+						}
+						break;
 					}
 				}
 			}
-		}		
+		}	
+		}	
 		//free(gprs_string);
 	}
 	if(rcv!=NULL)
@@ -753,12 +765,6 @@ void sync_server(int fd,int resend)
 													}	
 												}
 												can_send=1;
-												if(g_upload)
-												{
-													save_to_file(date,post_message);
-													//compare 6 sensor max & min 
-
-												}
 											}
 											break;
 										case ERROR_BYTE:
@@ -933,6 +939,7 @@ void sync_server(int fd,int resend)
 									can_send=0;
 									if(g_upload)
 									{
+								save_to_file(date,post_message);
 										g_upload=0;
 										//printf(SUB_PROCESS"send web %s",post_message);
 								send_web_post(URL,post_message,9,&rcv);
