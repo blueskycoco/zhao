@@ -1813,16 +1813,24 @@ void draw_curve(int fd,int *data,int len)
 		cmd[5+i]=(data[i]&0xff00)>>8;
 		cmd[6+i]=data[i]&0x00ff;
 	}
+	for(i=0;i<len*2+5;i++)
+		printf("%02x ",cmd[i]);
+	printf("\n<len %d>\n",len);
 	write(fd,cmd,len*2+5);
+	free(cmd);
 }
 void show_curve(int fd,char *id,int offset)
 {
+	int buf[7]={0};
+	int i;
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
 		//printf("g_co_cnt %d\n",*g_co_cnt);
 		if((*g_co_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_co+*g_co_cnt-offset-1,7);
+			//draw_curve(fd,g_history_co[*g_co_cnt-offset-1].data,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_co[*g_co_cnt-offset-i+1].data);
 		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
@@ -1830,7 +1838,9 @@ void show_curve(int fd,char *id,int offset)
 		//printf("g_co2_cnt %d\n",*g_co2_cnt);
 		if((*g_co2_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_co2+*g_co2_cnt-offset-1,7);
+			//draw_curve(fd,g_history_co2+*g_co2_cnt-offset-1,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_co2[*g_co2_cnt-offset-i+1].data);
 		}
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
@@ -1838,7 +1848,9 @@ void show_curve(int fd,char *id,int offset)
 		//printf("g_co_cnt %d\n",*g_hcho_cnt);
 		if((*g_hcho_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_hcho+*g_hcho_cnt-offset-1,7);
+			//draw_curve(fd,g_history_hcho+*g_hcho_cnt-offset-1,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_hcho[*g_hcho_cnt-offset-i+1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
@@ -1846,7 +1858,9 @@ void show_curve(int fd,char *id,int offset)
 		//printf("g_shidu_cnt %d\n",*g_shidu_cnt);
 		if((*g_shidu_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_shidu+*g_shidu_cnt-offset-1,7);
+			//draw_curve(fd,g_history_shidu+*g_shidu_cnt-offset-1,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_shidu[*g_shidu_cnt-offset-i+1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
@@ -1854,7 +1868,9 @@ void show_curve(int fd,char *id,int offset)
 		//printf("g_temp_cnt %d\n",*g_temp_cnt);
 		if((*g_temp_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_temp+*g_temp_cnt-offset-1,7);
+			//draw_curve(fd,g_history_temp+*g_temp_cnt-offset-1,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_temp[*g_temp_cnt-offset-i+1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
@@ -1862,9 +1878,12 @@ void show_curve(int fd,char *id,int offset)
 		//printf("g_pm25_cnt %d\n",*g_pm25_cnt);
 		if((*g_pm25_cnt-offset-7)>0)
 		{
-			draw_curve(fd,g_history_pm25+*g_pm25_cnt-offset-1,7);
+			//draw_curve(fd,g_history_pm25+*g_pm25_cnt-offset-1,7);
+			for(i=0;i<7;i++)
+				buf[i]=atoi(g_history_pm25[*g_pm25_cnt-offset-i+1].data);
 		}
 	}
+	draw_curve(fd,buf,7);
 }
 int read_dgus(int fd,int addr,char len,char *out)
 {
@@ -2002,8 +2021,8 @@ void wifi_handle(int fd)
 	char cmd[256]={0};
 	int i;
 	FILE *fp;
-	clear_buf(fd,WIFI_AP_NAME_ADDR,20);
-	clear_buf(fd,WIFI_AP_PWD_ADDR,20);
+	//clear_buf(fd,WIFI_AP_NAME_ADDR,20);
+	//clear_buf(fd,WIFI_AP_PWD_ADDR,20);
 	if(read_dgus(fd,WIFI_AP_NAME_ADDR,10,ap_name) && read_dgus(fd,WIFI_AP_PWD_ADDR,10,ap_passwd))
 	{
 		printf("AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
@@ -2014,14 +2033,15 @@ void wifi_handle(int fd)
 			{
 				memset(ret,0,256);
 				fread(ret,sizeof(char),sizeof(ret),fp);
-				printf("wpa_cli -ira0 get_network return %s\n",ret);
-				if(strlen(ret)==strlen("FAIL") && strncmp(ret,"FAIL",strlen("FAIL"))==0)
+				pclose(fp);
+				printf("wpa_cli -ira0 get_network return %s %d\n",ret,strlen(ret));
+				if(strstr(ret,"FAIL")!=NULL)
 					break;
-				if(strlen(ret)==strlen(ap_name) && strncmp(ret,ap_name,strlen(ret))==0)
+				if(strstr(ret,ap_name)!=NULL)
 					break;					
 			}
 		}
-		if(strlen(ret)==strlen("FAIL") && strncmp(ret,"FAIL",strlen("FAIL"))==0)
+		if(strstr(ret,"FAIL")!=NULL)
 		{
 			memset(cmd,0,256);
 			sprintf(cmd,"wpa_cli -ira0 add_network");
@@ -2029,21 +2049,33 @@ void wifi_handle(int fd)
 			{
 				memset(ret,0,256);
 				fread(ret,sizeof(char),sizeof(ret),fp);
+				pclose(fp);
+				ret[strlen(ret)-1]='\0';
 				printf("add_network return %s\n",ret);
 				i=atoi(ret);
 			}
 		}
-		sprintf(cmd,"wpa_cli -ira0 set_network %d ssid %s",i,ap_name);
-		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 set_network %d psk %s",i,ap_passwd);
+		printf("i is %d\n",i);
+		sprintf(cmd,"wpa_cli -ira0 set_network %d key_mgmt WPA-PSK",i);
+		printf("exec %s\n",cmd);
+		system(cmd);	
+		sprintf(cmd,"wpa_cli -ira0 set_network %d psk '%s'",i,ap_passwd);
+		printf("exec %s\n",cmd);
+		system(cmd);		
+		sprintf(cmd,"wpa_cli -ira0 set_network %d ssid '%s'",i,ap_name);
+		printf("exec %s\n",cmd);
 		system(cmd);
 		sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
+		printf("exec %s\n",cmd);
 		system(cmd);
 		sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
+		printf("exec %s\n",cmd);
 		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 save_network");
-		system(cmd);
+		sprintf(cmd,"wpa_cli -ira0 save_config");
+		printf("exec %s\n",cmd);
+		//system(cmd);
 		sprintf(cmd,"udhcpc -i ra0");
+		printf("exec %s\n",cmd);
 		system(cmd);
 	}
 }
@@ -2206,6 +2238,11 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_WIFI_HANDLE&& (TOUCH_WIFI_HANDLE-0x100)==data)
 	{//WiFi Passwd changed
 		wifi_handle(fd_lcd);
+	}
+	else if(addr==TOUCH_WIFI_ENTER && (TOUCH_WIFI_ENTER-0x100)==data)
+	{//enter wifi passwd setting
+		clear_buf(fd_lcd,WIFI_AP_NAME_ADDR,20);
+		clear_buf(fd_lcd,WIFI_AP_PWD_ADDR,20);
 	}
 	else if(addr==TOUCH_TIME_SET_MANUL && (TOUCH_TIME_SET_MANUL-0x100)==data)
 	{//manul set time

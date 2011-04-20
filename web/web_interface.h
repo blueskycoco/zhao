@@ -246,6 +246,7 @@
 #define TIME_SECONDS_ADDR			0x01bb
 #define TOUCH_SET_TIME				0x0132
 #define TOUCH_LIST_DISPLAY			0x0498
+#define TOUCH_WIFI_ENTER			0x013e
 
 #define RET_MAIN_CO			0x0109
 #define RET_MAIN_CO2		0x0111
