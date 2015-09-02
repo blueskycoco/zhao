@@ -1,14 +1,14 @@
-Í¬²½·þÎñÆ÷Êý¾Ý£º http://101.200.182.92:8080/mango/synData
+åŒæ­¥æœåŠ¡å™¨æ•°æ®ï¼š http://101.200.182.92:8080/mango/synData
 
-Êý¾Ý±¨ÎÄhttp://101.200.182.92:8080/mango/test?a="²ÎÊý"
+æ•°æ®æŠ¥æ–‡http://101.200.182.92:8080/mango/test?a="å‚æ•°"
 
-Ñ¯ÎÊ²¹·¢ £¨²»ÐèÒª²¹·¢£© http://101.200.182.92:8080/mango/checkDataNo
-Ñ¯ÎÊ²¹·¢ £¨ÐèÒª²¹·¢£©  http://101.200.182.92:8080/mango/checkDataYes
+è¯¢é—®è¡¥å‘ ï¼ˆä¸éœ€è¦è¡¥å‘ï¼‰ http://101.200.182.92:8080/mango/checkDataNo
+è¯¢é—®è¡¥å‘ ï¼ˆéœ€è¦è¡¥å‘ï¼‰  http://101.200.182.92:8080/mango/checkDataYes
 
-1 ¶¨Ê±²É¼¯£¬·þÎñÆ÷»Ø 200 »òÕß ok +
-2 Í¬²½£¬·þÎñÆ÷»Ø{ÓÃ»§ÐÅÏ¢£¬²É¼¯ÐÅÏ¢£¬·þÎñÆ÷Ê±¼ä ¾ßÌå¼ûÎÄµµ
-3 Ñ¯ÎÊ²¹·¢ÐÅÏ¢£¬·þÎñÆ÷»Øok¾Í²»ÓÃ½âÎöjson£¬·ñÔò½âÎöjson·µ»ØÊ±¼ä¶ÎÊý¾Ý
-post£¬utf8
+1 å®šæ—¶é‡‡é›†ï¼ŒæœåŠ¡å™¨å›ž 200 æˆ–è€… ok +
+2 åŒæ­¥ï¼ŒæœåŠ¡å™¨å›ž{ç”¨æˆ·ä¿¡æ¯ï¼Œé‡‡é›†ä¿¡æ¯ï¼ŒæœåŠ¡å™¨æ—¶é—´ å…·ä½“è§æ–‡æ¡£
+3 è¯¢é—®è¡¥å‘ä¿¡æ¯ï¼ŒæœåŠ¡å™¨å›žokå°±ä¸ç”¨è§£æžjsonï¼Œå¦åˆ™è§£æžjsonè¿”å›žæ—¶é—´æ®µæ•°æ®
+postï¼Œutf8
 
-¿´¿Í»§¶Ë·¢ÉÏÈ¥µÄÊý¾Ý
+çœ‹å®¢æˆ·ç«¯å‘ä¸ŠåŽ»çš„æ•°æ®
 http://101.200.182.92/mango/history

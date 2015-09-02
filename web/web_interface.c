@@ -31,7 +31,7 @@ int send_msg(int msgid,unsigned char msg_type,unsigned char id,unsigned char *te
 	}
 	printf(LOG_PREFX"send msg done\n");
 }
-int send_web(int msgid,char *url,char *char *post_message,int timeout)
+int send_web(int msgid,char *url,char *post_message,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
