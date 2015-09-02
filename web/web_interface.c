@@ -31,12 +31,19 @@ int send_msg(int msgid,unsigned char msg_type,unsigned char id,unsigned char *te
 	}
 	printf(LOG_PREFX"send msg done\n");
 }
-int send_web(int msgid,char *url,char *post_message,int timeout)
+char *send_web(char *url,char *post_message,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
-	printf(LOG_PREFX"send web %s %s\n",url,post_message);
-	char *rcv=http_post(url,post_message,timeout);
+	sprintf(request,"%s?a=%s",url,post_message);
+	printf(LOG_PREFX"send web %s\n",request);
+	//char *rcv=http_post(url,post_message,timeout);
+	char *rcv=http_get(request,timeout);
+	if(rcv!=NULL)
+		printf(LOG_PREFX"rcv %s\n",rcv);
+	else
+		printf(LOG_PREFX"no rcv got\n");
+#if 0
 	if(rcv!=NULL)
 	{
 		printf("%s\n",rcv);
@@ -44,124 +51,132 @@ int send_web(int msgid,char *url,char *post_message,int timeout)
 		if(res)
 		{
 			printf(LOG_PREFX"code is %d\n",res);
-				result=1;
-				if(strstr(url,"achieve")!=0)
+			result=1;
+			if(strstr(url,"achieve")!=0)
+			{
+				char *data=doit_data(rcv,"data");
+				if(data)
 				{
-					char *data=doit_data(rcv,"data");
-					if(data)
-					{
-						send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
-						free(data);
-					}
+					send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
+					free(data);
 				}
+			}
 		}
 		free(rcv);
 	}
 	return result;
+#endif
+	return rcv;
 }
-void get_param(char *input,char *message,char *commandid,int *websiteid,int *timeout,char *lampcode,char *text)
+//"192.168.1.23;7865;60;0.2321;61;2.2321;2015-08-21 14:30;3"
+void get_param(char *input,char *ipaddr,char *port,char *id0,char *data0,char *id1,char *data1,char *time,int *websiteid,int *timeout)
 {
-	int j=0;
-	int i=strlen(input)-1;
-	memset(lampcode,'\0',sizeof(lampcode));
-	memset(text,'\0',sizeof(text));
-	strcpy(text,"message=");
-	strcpy(lampcode,"lampCode=");
-	memset(message,'\0',sizeof(message));
-	memset(commandid,'\0',sizeof(commandid)); 				
-	strcpy(message,"message=");
-	strcpy(commandid,"commandId=");
-	*timeout=-1;
-	*websiteid=-1;
-	//01;w;s;1;12345678;9f5d7b29-1c03-4c29-90af-ae7cd354b6ae;2;3
+	int i=0,j=0;
+	while(input[i]!=';' && input[i]!='\0')
+		ipaddr[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		port[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		id0[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		data0[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		id1[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		data1[j++]=input[i++];
+	i++;
+	j=0;
+	while(input[i]!=';' &&input[i]!='\0')
+		time[j++]=input[i++];
+	i++;
+	*websiteid=input[i]-48;
 	*timeout=atoi(strrchr(input,';')+1);
-	 while(input[i]!=';' && i>0)
-	 	i--;
-	 i--;
-	 *websiteid=input[i]-48;
-	 i=i-2;
-	 j=i;
-	 while(input[i]!=';' && i>0)
-	 	i--;
-	 memcpy(commandid+strlen("commandId="),input+i+1,j-i);	 
-	 memcpy(message+strlen("message="),input,i);
-	 i--;
-	 j=i;
-	 while(input[i]!=';' && i>0)
-	 	i--;
-	 memcpy(lampcode+strlen("lampCode="),input+i+1,j-i);	
-	 //i--;
-	 //j=i;
-	 //while(input[i]!=';' && i>0)
-	 //	i--;
-	 memcpy(text+strlen("message="),input,i);
 }
-int get_server_cmd(int msgid,char *url,char *lampcode)
+int ask_re_send(int msgid,char *url)
+{
+
+}
+int sync_server(int msgid,char *url)
+{
+
+}
+int upload_data(int msgid,char *url,char *ipaddr,char *port,char *id0,char *data0,char *id1,char *data1,char *time,int timeout)
 {
 	int result=0;
 	char text_out[512]={0};
-	char request[1024]={0};
-	strcpy(request,url);
-	strcat(request,lampcode);
-	char *rcv=http_get(request,10);
-	printf(LOG_PREFX"===> %s\n",request);
+	char *post_message=NULL,*rcv=NULL;
+	//get device uid,ip,port,cap data,cap time send to server
+	post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+	post_message=add_item(post_message,ID_DEVICE_UID,g_lampcode);
+	post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ipaddr);//"192.168.1.63");
+	post_message=add_item(post_message,ID_DEVICE_PORT,port);//"6547");
+	post_message=add_item(post_message,id0,data0);
+	post_message=add_item(post_message,id1,data1);
+	post_message=add_item(post_message,ID_DEVICE_CAP_TIME,time);
+	printf(LOG_PREFX"<post>%s\n",post_message);
+	rcv=send_web(url,post_message,timeout);
+	free(post_message);
 	if(rcv!=NULL)
 	{
-		printf("<=== %s\n",rcv);
-			
-			char *commandid=doit(rcv,"commondId");
-			char *message=doit(rcv,"message");
-			memset(text_out,'\0',sizeof(text_out));
-			
-			if(message && commandid)
+		printf(LOG_PREFX"<=== %s\n",rcv);
+		if(strncmp(rcv,"ok",strlen("ok"))==0 ||strncmp(rcv,"200",strlen("200"))==0) 
+		{
+			printf(LOG_PREFX"send ok\n");
+			result=1;
+		}
+		#if 0
+		char *commandid=doit(rcv,"commondId");
+		char *message=doit(rcv,"message");
+		memset(text_out,'\0',sizeof(text_out));
+
+		if(message && commandid)
+		{
+			result=1;
+			if(message[strlen(message)-1]==';')
 			{
-				result=1;
-				if(message[strlen(message)-1]==';')
-				{
-					strcpy(text_out,strchr(message,';')+1);
-					strcat(text_out,"w;s;");
-				}
-				else
-				{
-					int i=0;
-					while(message[i]!=';' && message[i]!='\0')
-						i++;
-					memcpy(text_out,message+i+1,3);
-					strcat(text_out,"w;");			
-					strcat(text_out,message+i+1+3);
-					strcat(text_out,";");
-				}
-				strcat(text_out,lampcode);
-				strcat(text_out,";");
-				strcat(text_out,commandid);			
-				send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,text_out);
+				strcpy(text_out,strchr(message,';')+1);
+				strcat(text_out,"w;s;");
 			}
-			if(message)
-				free(message);
-			if(commandid)
-				free(commandid);		
+			else
+			{
+				int i=0;
+				while(message[i]!=';' && message[i]!='\0')
+					i++;
+				memcpy(text_out,message+i+1,3);
+				strcat(text_out,"w;");			
+				strcat(text_out,message+i+1+3);
+				strcat(text_out,";");
+			}
+			strcat(text_out,lampcode);
+			strcat(text_out,";");
+			strcat(text_out,commandid);			
+			send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,text_out);
+		}
+		if(message)
+			free(message);
+		if(commandid)
+			free(commandid);	
+		#endif
 		free(rcv);
 	}
 	return result;
 }
 int main(int argc, char *argv[])
 {
-
 	pid_t fpid;	
 	int status;
 	int msgid = -1;
-	unsigned char *rec_result=NULL;
-	char res[256]={0};
-	char record_file[256]={0};
-	char playback_file[256]={0};
 	struct msg_st data;	
-	char err_msg[256]={0};
-	char text_out[256]={0};
-	char last_check=0;
-	char file_name[256]={0};
-	char operation=0;//0 for read ,1 for write
-	int offs=0;
-	int len;
 	char *url0;
 	key_t shmid,shmidc;  
 
@@ -175,9 +190,9 @@ int main(int argc, char *argv[])
 		printf(LOG_PREFX"msgid %d\n",msgid);	
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{
-        fprintf(stderr, LOG_PREFX"Create Share Memory Error:%s/n/a", strerror(errno));  
-        exit(1);  
-    }  
+		fprintf(stderr, LOG_PREFX"Create Share Memory Error:%s/n/a", strerror(errno));  
+		exit(1);  
+	}  
 	shmidc = shmget(IPC_PRIVATE, 256, PERM);
 	url0 = (char *)shmat(shmid, 0, 0);
 	g_lampcode = (char *)shmat(shmidc, 0, 0);
@@ -190,7 +205,7 @@ int main(int argc, char *argv[])
 		{
 			if(strlen(url)!=0 && strlen(lampcode)!=0)
 			{
-				if(!get_server_cmd(msgid,url,lampcode))
+				//if(!get_server_cmd(msgid,url,lampcode))
 					sleep(1);
 			}
 			else
@@ -202,9 +217,13 @@ int main(int argc, char *argv[])
 	}
 	else if(fpid>0)
 	{
-		char lampcode[256]={0};
-		char text[256]={0};
-		char commandid[256]={0};
+		char ipaddr[256]={0};
+		char port[256]={0};
+		char id0[256]={0};
+		char id1[256]={0};
+		char data0[256]={0};
+		char data1[256]={0};
+		char time[256]={0};
 		char errorMsg[256]={0};
 		int websiteid=0;
 		int timeout=0;
@@ -220,6 +239,7 @@ int main(int argc, char *argv[])
 				strcpy(errorMsg,data.text);
 				if(data.id==MAIN_TO_WEB)
 				{
+					printf(LOG_PREFX"<<web>> %s\n",data.text);
 					if(data.text[0]=='f' && data.text[1]=='f')
 					{
 						int m=3;
@@ -249,31 +269,22 @@ int main(int argc, char *argv[])
 					}
 					else
 					{
-						memset(message,0,256);
-						memset(commandid,0,256);
-						memset(lampcode,0,256);
-						memset(text,0,256);
-						get_param(data.text,message,commandid,&websiteid,&timeout,lampcode,text);
-						printf(LOG_PREFX"input %s\nmessage %s\ncommandid %s\nwebsiteid %d\ntimeout %d\nlampcode %s\ntext %s\n",
-							data.text,message,commandid,websiteid,timeout,lampcode,text);
-						if(strstr(g_url[websiteid],"synch")!=0||strstr(g_url[websiteid],"achieve")!=0)
-						{
-							if(send_web(msgid,g_url[websiteid],lampcode,text,timeout))
-								strcat(errorMsg,";done");
-							else
-								strcat(errorMsg,";failed");
-
-						}
+						memset(data0,0,256);
+						memset(id0,0,256);
+						memset(data1,0,256);
+						memset(id1,0,256);
+						memset(time,0,256);
+						memset(ipaddr,0,256);
+						memset(port,0,256);
+						get_param(data.text,ipaddr,port,id0,data0,id1,data1,time,&websiteid,&timeout);
+						printf(LOG_PREFX"input %s\nipaddr %s\nport %s\nid0 %s\ndata0 %s\nid1 %s\ndata1 %s\ntime %s\nwebsiteid %d\ntimeout %d\n",
+								data.text,ipaddr,port,id0,data0,id1,data1,time,websiteid,timeout);
+						if(upload_data(msgid,g_url[websiteid],ipaddr,port,id0,data0,id1,data1,time,timeout))
+							strcpy(errorMsg,"send data ok\n");
 						else
-						{
-							if(send_web(msgid,g_url[websiteid],commandid,message,timeout))
-								strcat(errorMsg,";done");
-							else
-								strcat(errorMsg,";failed");
-						}
-							//if(strstr(g_url[websiteid],"achieve")!=0)
-							//send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,errorMsg);
-						
+							strcpy(errorMsg,"send data failed\n");
+						send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,errorMsg);
+
 					}
 				}
 				else
@@ -291,7 +302,7 @@ int main(int argc, char *argv[])
 					sleep(1);
 				}
 				//else
-					//printf(LOG_PREFX"msgid %d\n",msgid);
+				//printf(LOG_PREFX"msgid %d\n",msgid);
 			}	
 		}
 	}

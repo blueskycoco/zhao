@@ -382,8 +382,11 @@ static char *http_parse_result(const char*lpbuf)
         return NULL;  
     }  
     if(atoi(ptmp + 9)!=200){  
-        printf(LOG_PREFX"result:\n%s\n",lpbuf);  
-        return NULL;  
+		if(strstr(ptmp,"ok")==NULL)
+        {
+        	printf(LOG_PREFX"result:\n%s\n",lpbuf);  
+        	return NULL;  
+		}
     }  
   
     ptmp = (char*)strstr(lpbuf,"\r\n\r\n");  
@@ -429,13 +432,13 @@ char * http_post(const char *url,const char *post_str,int timeout){
         return NULL;  
     }  
        
-    sprintf(lpbuf,HTTP_POST,file,host_addr,port,strlen(post_str),post_str);  
+    sprintf(lpbuf,HTTP_POST,file,host_addr,port,(int)strlen(post_str),post_str);  
   
     if(http_tcpclient_send(socket_fd,lpbuf,strlen(lpbuf),timeout) < 0){  
         printf(LOG_PREFX"http_tcpclient_send failed..\n");  
         return NULL;  
     }  
-    printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
+    //printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
   
     /*it's time to recv from server*/  
     if(http_tcpclient_recv(socket_fd,lpbuf,timeout) <= 0){  
@@ -469,7 +472,7 @@ char * http_get(const char *url,int timeout)
         printf(LOG_PREFX"http_parse_url failed!\n");  
         return NULL;  
     }  
-    printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
+    //printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
   
     socket_fd =  http_tcpclient_create(host_addr,port,timeout);  
     if(socket_fd < 0){  
@@ -544,7 +547,7 @@ char *doit(char *text,const char *item_str)
 }
 char *doit_data(char *text,const char *item_str)
 {
-	char *out=NULL;cJSON *json,*item_json;
+	char *out=NULL;cJSON *item_json;
 	
 	item_json=cJSON_Parse(text);
 	if (!item_json) {printf(LOG_PREFX"Error before: [%s]\n",cJSON_GetErrorPtr());}
@@ -560,9 +563,36 @@ char *doit_data(char *text,const char *item_str)
 		}
  		else
 			printf(LOG_PREFX"get %s failed\n",item_str);
- 		cJSON_Delete(json);	
+ 		cJSON_Delete(item_json);	
 	}
 	return out;
 }
 
-
+char *add_item(char *old,char *id,char *text)
+{
+	cJSON *root;
+	char *out;
+	if(old!=NULL)
+		root=cJSON_Parse(old);
+	else
+		root=cJSON_CreateObject();	
+	cJSON_AddItemToObject(root, id, cJSON_CreateString(text));
+	out=cJSON_Print(root);	
+	cJSON_Delete(root);
+	if(old)
+		free(old);
+	return out;
+}
+char *add_obj(char *old,char *id,char *pad)
+{
+	cJSON *root,*fmt;
+	char *out;
+	root=cJSON_Parse(old);
+	fmt=cJSON_Parse(pad);
+	cJSON_AddItemToObject(root, id, fmt);
+	out=cJSON_Print(root);
+	cJSON_Delete(root);
+	cJSON_Delete(fmt);
+	free(pad);
+	return out;
+}
