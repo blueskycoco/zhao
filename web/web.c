@@ -91,22 +91,25 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
-		rcv[len-1]='\0';
-		printf(LOG_PREFX"<=== %s\n",rcv+1);
+		//rcv[len-1]='\0';
+		printf(LOG_PREFX"<=== %s\n",rcv);
 		//if(strncmp(rcv,"ok",strlen("ok"))==0 ||strncmp(rcv,"200",strlen("200"))==0) 
 		{
 			printf(LOG_PREFX"send ok\n");
-			char *starttime=NULL,*tmp=NULL;
+			char *starttime=NULL;
+			char *tmp=NULL;
 			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
 			if(atoi(type)==5)
 			{
-				starttime=doit_data(rcv+1,"210");
-				tmp=doit_data(rcv+1,"211");
+				starttime=doit_data(rcv,(char *)"210");
+				tmp=doit_data(rcv,(char *)"211");
+				printf("201 %s\r\n",doit(rcv,"201"));
+				printf("202 %s\r\n",doit(rcv,"202"));
 			}
 			else if(atoi(type)==6)
 			{
-				starttime=doit_data(rcv,"101");
-				tmp=doit_data(rcv,"102");
+				starttime=doit_data(rcv,(char *)"101");
+				tmp=doit_data(rcv,(char *)"102");
 			}
 			if(starttime!=NULL)
 			{

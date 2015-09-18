@@ -530,7 +530,7 @@ char *doit(char *text,const char *item_str)
 	else
 	{
 		//out=cJSON_Print(json);
-		item_json = cJSON_GetObjectItem(json, "data");
+		item_json = cJSON_GetObjectItem(json, item_str);
 		if (item_json)
 		{
 			cJSON *data;
@@ -552,7 +552,7 @@ char *doit(char *text,const char *item_str)
 	}
 	return out;
 }
-char *doit_data(char *text,const char *item_str)
+char *doit_data(char *text,char *item_str)
 {
 	char *out=NULL;cJSON *item_json;
 
@@ -560,13 +560,16 @@ char *doit_data(char *text,const char *item_str)
 	if (!item_json) {printf(LOG_PREFX"Error before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
-		if (item_json)
-		{	 		    
-			int nLen = strlen(item_json->valuestring);
-			printf("%s ,%d %s\n",item_str,nLen,item_json->valuestring);					
+	 		 
+		cJSON *data;
+		data=cJSON_GetObjectItem(item_json,item_str);
+		if(data)
+		{
+			int nLen = strlen(data->valuestring);
+			printf("%s ,%d %s\n",item_str,nLen,data->valuestring);					
 			out=(char *)malloc(nLen+1);
 			memset(out,'\0',nLen+1);
-			memcpy(out,item_json->valuestring,nLen);
+			memcpy(out,data->valuestring,nLen);
 		}
 		else
 			printf(LOG_PREFX"get %s failed\n",item_str);
