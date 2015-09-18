@@ -378,7 +378,7 @@ static char *http_parse_result(const char*lpbuf)
 	char *response = NULL;  
 	ptmp = (char*)strstr(lpbuf,"HTTP/1.1");  
 	if(!ptmp){  
-		printf(LOG_PREFX"http/1.1 not faind\n");  
+		printf(LOG_PREFX"http/1.1 not faind\n%s\n",lpbuf);  
 		return NULL;  
 	}  
 	if(atoi(ptmp + 9)!=200)
@@ -494,7 +494,7 @@ char * http_get(const char *url,int timeout)
 		return NULL;  
 	}  
 	//printf(LOG_PREFX"GET Sent:\n%s\n",lpbuf);  
-
+	memset(lpbuf,0,BUFFER_SIZE*4);
 	if(http_tcpclient_recv(socket_fd,lpbuf,timeout) <= 0){  
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  

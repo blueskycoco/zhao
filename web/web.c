@@ -12,40 +12,171 @@
 #include <string.h>  
 #include "cJSON.h"
 #include "weblib.h"
+#include "web_interface.h"
+
+char *send_web(char *url,char *post_message,int timeout)
+{
+	char request[1024]={0};
+	int result=0;
+	sprintf(request,"%s?JSONStr=%s",url,post_message);
+	printf(LOG_PREFX"send web %s\n",request);
+	//char *rcv=http_post(url,post_message,timeout);
+	char *rcv=http_get(request,timeout);
+	if(rcv!=NULL)
+		printf(LOG_PREFX"rcv %s\n",rcv);
+	else
+		printf(LOG_PREFX"no rcv got\n");
+#if 0
+	if(rcv!=NULL)
+	{
+		printf("%s\n",rcv);
+		char res=doit_ack(rcv,"success");
+		if(res)
+		{
+			printf(LOG_PREFX"code is %d\n",res);
+			result=1;
+			if(strstr(url,"achieve")!=0)
+			{
+				char *data=doit_data(rcv,"data");
+				if(data)
+				{
+					send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
+					free(data);
+				}
+			}
+		}
+		free(rcv);
+	}
+	return result;
+#endif
+	return rcv;
+}
+
+int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0,char *data0,char *id1,char *data1,char *time,int timeout)
+{
+	int result=0,i,j;
+	char text_out[512]={0};
+	char *post_message=NULL,*rcv=NULL;
+	//get device uid,ip,port,cap data,cap time send to server
+	post_message=add_item(NULL,ID_DGRAM_TYPE,type);
+	post_message=add_item(post_message,ID_DEVICE_UID,uid);
+	post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ipaddr);//"192.168.1.63");
+	post_message=add_item(post_message,ID_DEVICE_PORT,port);//"6547");
+	if(atoi(type)==2)
+	{	
+		post_message=add_item(post_message,id0,data0);
+		post_message=add_item(post_message,id1,data1);
+		post_message=add_item(post_message,ID_DEVICE_CAP_TIME,time);
+	}
+	printf(LOG_PREFX"<GET>%s\n",post_message);
+	j=0;
+	for(i=0;i<strlen(post_message);i++)
+	{
+		if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
+			j++;
+	}
+	char *out1=malloc(strlen(post_message)-j+1);
+	memset(out1,'\0',strlen(post_message)-j+1);
+	j=0;
+	for(i=0;i<strlen(post_message);i++)
+	{
+		if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+		{
+			out1[j++]=post_message[i];
+		}
+	}
+	rcv=send_web(url,out1,timeout);
+	free(post_message);
+	free(out1);
+	if(rcv!=NULL)
+	{
+		printf(LOG_PREFX"<=== %s\n",rcv);
+		//if(strncmp(rcv,"ok",strlen("ok"))==0 ||strncmp(rcv,"200",strlen("200"))==0) 
+		{
+			printf(LOG_PREFX"send ok\n");
+			char *starttime=NULL,*tmp=NULL;
+			if(atoi(type)==5)
+			{
+				starttime=doit(rcv,"210");
+				tmp=doit(rcv,"211");
+			}
+			else if(atoi(type)==6)
+			{
+				starttime=doit(rcv,"101");
+				tmp=doit(rcv,"102");
+			}
+			if(starttime!=NULL)
+			{
+				printf("%s\r\n",starttime);
+				free(starttime);
+			}
+			if(tmp!=NULL)
+			{
+				printf("%s\r\n",tmp);
+				free(tmp);
+			}
+			result=1;
+		}
+		#if 0
+		char *commandid=doit(rcv,"commondId");
+		char *message=doit(rcv,"message");
+		memset(text_out,'\0',sizeof(text_out));
+
+		if(message && commandid)
+		{
+			result=1;
+			if(message[strlen(message)-1]==';')
+			{
+				strcpy(text_out,strchr(message,';')+1);
+				strcat(text_out,"w;s;");
+			}
+			else
+			{
+				int i=0;
+				while(message[i]!=';' && message[i]!='\0')
+					i++;
+				memcpy(text_out,message+i+1,3);
+				strcat(text_out,"w;");			
+				strcat(text_out,message+i+1+3);
+				strcat(text_out,";");
+			}
+			strcat(text_out,lampcode);
+			strcat(text_out,";");
+			strcat(text_out,commandid);			
+			send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,text_out);
+		}
+		if(message)
+			free(message);
+		if(commandid)
+			free(commandid);	
+		#endif
+		free(rcv);
+	}
+	return result;
+}
 
 //get cmd http://101.200.236.69:8080/lamp/lamp/commond/wait?lampCode=aaaa
 //ack http://101.200.236.69:8080/lamp/lamp/commond/response?commondId=f1d51484-8daf-47a3-a490-f56461d3ce23&isSuccess=true
 int main(int argc,char *argv[])
 {
-	char *res=NULL;
-	char *rcv=http_get(argv[2]/*"http://101.200.236.69:8080/lamp/lamp/commond/wait?lampCode=aaaa"*/,atoi(argv[1]));
-	if(rcv!=NULL)
+	if(atoi(argv[1])==2)
 	{
-		printf("%s\n",rcv);
-		res=doit(rcv,"code");
-		if(res)
-		{
-			printf(LOG_PREFX"code is %s\n",res);
-			free(res);
-		}
-		free(rcv);
+		printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nid0 %s\ndata0 %s\nid1 %s\ndata1 %s\ntime %s\nurl %s\ntimeout %d\n",
+			argv[1],argv[2],argv[3],argv[4],argv[5],argv[6],argv[7],argv[8],argv[9],argv[10],atoi(argv[11]));		
+		if(upload_data(argv[1],argv[2],argv[10],argv[3],argv[4],argv[5],argv[6],argv[7],argv[8],argv[9],atoi(argv[11])))
+			printf("send data ok\n");
+		else
+			printf("send data failed\n");
 	}
-	rcv=http_get("http://101.200.236.69:8080/lamp/lamp/commond/response?commondId=f1d51484-8daf-47a3-a490-f56461d3ce23&isSuccess=true",atoi(argv[1]));
-	if(rcv!=NULL)
+	else
 	{
-		printf("%s\n",rcv);
-		res=doit(rcv,"errorMsg");
-		if(res)
-		{
-			printf(LOG_PREFX"errorMsg is %s\n",res);
-			free(res);
-		}
-		free(rcv);
+		printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nurl %s\ntimeout %d\n",
+			argv[1],argv[2],argv[3],argv[4],argv[5],atoi(argv[6]));		
+		if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],NULL,NULL,NULL,NULL,NULL,atoi(argv[6])))
+			printf("send data ok\n");
+		else
+			printf("send data failed\n");
 	}
-	//rcv=http_post("http://101.200.236.69:8080/lamp/device/register","macAddress=xxxx");
-	//printf("%s\n",rcv);
-	//free(rcv);
 	return 0;
-	//return htpp_get(argc,argv);
 }
 
