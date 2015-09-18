@@ -89,21 +89,24 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 	free(post_message);
 	free(out1);
 	if(rcv!=NULL)
-	{
-		printf(LOG_PREFX"<=== %s\n",rcv);
+	{	
+		int len=strlen(rcv);
+		rcv[len-1]='\0';
+		printf(LOG_PREFX"<=== %s\n",rcv+1);
 		//if(strncmp(rcv,"ok",strlen("ok"))==0 ||strncmp(rcv,"200",strlen("200"))==0) 
 		{
 			printf(LOG_PREFX"send ok\n");
 			char *starttime=NULL,*tmp=NULL;
+			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
 			if(atoi(type)==5)
 			{
-				starttime=doit(rcv,"210");
-				tmp=doit(rcv,"211");
+				starttime=doit_data(rcv+1,"210");
+				tmp=doit_data(rcv+1,"211");
 			}
 			else if(atoi(type)==6)
 			{
-				starttime=doit(rcv,"101");
-				tmp=doit(rcv,"102");
+				starttime=doit_data(rcv,"101");
+				tmp=doit_data(rcv,"102");
 			}
 			if(starttime!=NULL)
 			{
