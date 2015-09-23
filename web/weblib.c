@@ -509,7 +509,7 @@ char doit_ack(char *text,const char *item_str)
 	char result=0;cJSON *json,*item_json;
 
 	json=cJSON_Parse(text);
-	if (!json) {printf(LOG_PREFX"Error before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!json) {printf(LOG_PREFX"Error ack before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 		item_json=cJSON_GetObjectItem(json,item_str);
@@ -526,7 +526,7 @@ char *doit(char *text,const char *item_str)
 	char *out=NULL;cJSON *json,*item_json;
 
 	json=cJSON_Parse(text);
-	if (!json) {printf(LOG_PREFX"Error before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!json) {printf(LOG_PREFX"Error it before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 		//out=cJSON_Print(json);
@@ -557,7 +557,7 @@ char *doit_data(char *text,char *item_str)
 	char *out=NULL;cJSON *item_json;
 
 	item_json=cJSON_Parse(text);
-	if (!item_json) {printf(LOG_PREFX"Error before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!item_json) {printf(LOG_PREFX"Error data before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 	 		 
