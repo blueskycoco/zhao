@@ -1,4 +1,30 @@
-#define LOG_PREFX						"[CapSubSystem]:"
+#include <unistd.h>  
+#include <stdlib.h>  
+#include <stdio.h>  
+#include <string.h>  
+#include <errno.h>  
+#include <sys/msg.h>  
+#include <signal.h>
+#include <fnmatch.h> 
+#include <termios.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#define ETH_NAME "eth0"
+#include <linux/sockios.h>
+#include <ifaddrs.h>
+#include "cJSON.h"
+#include "weblib.h"
+#include "web_interface.h"
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
 #define ARM_TO_CAP 0xBB
@@ -7,7 +33,7 @@
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 char server_time[20]={0};
-
+char ip[20]={0};
 //*******************************************************************
 //
 // 名称: CRC_check
@@ -17,7 +43,7 @@ char server_time[20]={0};
 // 输入: Data 校验数据，Data_length 数据长度
 // 返回值: CRC 校验结果
 // ***************************************************************************
-unsigned int CRC_check(uchar *Data,uchar Data_length)
+unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 {
 	unsigned int mid=0;
 	unsigned char times=0,Data_index=0;
@@ -39,23 +65,137 @@ unsigned int CRC_check(uchar *Data,uchar Data_length)
   	}
 	return CRC;
 }
+char *send_web(char *url,char *post_message,int timeout)
+{
+	char request[1024]={0};
+	int result=0;
+	sprintf(request,"%s?JSONStr=%s",url,post_message);
+	printf(LOG_PREFX"send web %s\n",request);
+	//char *rcv=http_post(url,post_message,timeout);
+	char *rcv=http_get(request,timeout);
+	if(rcv!=NULL)
+		printf(LOG_PREFX"rcv %s\n",rcv);
+	else
+		printf(LOG_PREFX"no rcv got\n");
+#if 0
+	if(rcv!=NULL)
+	{
+		printf("%s\n",rcv);
+		char res=doit_ack(rcv,"success");
+		if(res)
+		{
+			printf(LOG_PREFX"code is %d\n",res);
+			result=1;
+			if(strstr(url,"achieve")!=0)
+			{
+				char *data=doit_data(rcv,"data");
+				if(data)
+				{
+					send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
+					free(data);
+				}
+			}
+		}
+		free(rcv);
+	}
+	return result;
+#endif
+	return rcv;
+}
+
+int GetIP_v4_and_v6_linux(int family,char *address,int size)
+{
+  struct ifaddrs *ifap0,*ifap;
+  char buf[NI_MAXHOST];
+  char *interface = "eth0";
+  struct sockaddr_in *addr4;
+  struct sockaddr_in6 *addr6;
+  int ret;
+  if(NULL == address)
+  {
+  printf("in address");  
+  return -1;
+ }
+  if(getifaddrs(&ifap0))
+  {
+		printf("getifaddrs error");  
+    return -1;
+  }
+  for(ifap = ifap0;ifap!=NULL;ifap=ifap->ifa_next)
+  {
+  
+    
+    if(strcmp(interface,ifap->ifa_name)!=0) continue; 
+    if(ifap->ifa_addr == NULL) continue;
+    if((ifap->ifa_flags & IFF_UP) == 0) continue;
+    if(family!=ifap->ifa_addr->sa_family) continue;
+
+    if(AF_INET == ifap->ifa_addr->sa_family)
+    { 
+      
+      addr4 = (struct sockaddr_in *)ifap->ifa_addr;
+      if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr4->sin_addr),buf,NI_MAXHOST))
+      {
+        if(size <=strlen(buf)) break;
+        strcpy(address,buf);
+        printf("address %s\n",address);
+        freeifaddrs(ifap0);
+        return 0;
+      }
+      else 
+	  {
+		printf("inet_ntop error\r\n");
+		break;  
+	  }
+    }
+    else if(AF_INET6 == ifap->ifa_addr->sa_family)
+    {
+      addr6 = (struct sockaddr_in6*) ifap->ifa_addr;
+      if(IN6_IS_ADDR_MULTICAST(&addr6->sin6_addr))
+      {
+        continue;
+      }
+      if(IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
+      {
+        continue;
+      }
+      if(IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr))
+      {
+        continue;
+      }
+      if(IN6_IS_ADDR_UNSPECIFIED(&addr6->sin6_addr))
+      {
+        continue;
+      }
+      if(IN6_IS_ADDR_SITELOCAL(&addr6->sin6_addr))
+      {
+        continue;
+      }
+      if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr6->sin6_addr),buf,NI_MAXHOST))
+      {
+        if(size <= strlen(buf)) break;
+        strcpy(address,buf);
+        freeifaddrs(ifap0);
+        return 0;
+      }
+      else break; 
+    } 
+  }
+  freeifaddrs(ifap0);
+  return -1;
+}
+
 void get_ip(char *ip)
 {
-	struct hostent *he;
-    char hostname[20] = {0};
-
-    gethostname(hostname,sizeof(hostname));
-    he = gethostbyname(hostname);
-    printf("hostname=%s\n",hostname);
-    printf("%s\n",inet_ntoa(*(struct in_addr*)(he->h_addr)));
-	strcpy(ip,inet_ntoa(*(struct in_addr*)(he->h_addr)));
+	GetIP_v4_and_v6_linux(AF_INET,ip,16);
+	printf("ip addrss %s\n", ip);
 	return ;
 }
 int read_uart(int fd)
 {
     int len,fs_sel,i=0,j=0,get_start=0,get_stop=0,message_len;
-	char ch[100]={0},ip[20]={0};
-	char id[32]={0},char data[32]={0},char date[32]={0},char error[32]={0};
+	char ch[100]={0};
+	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
     fd_set fs_read;
    	char *post_message=NULL,*rcv=NULL;
     struct timeval time;
@@ -64,15 +204,14 @@ int read_uart(int fd)
     FD_SET(fd,&fs_read);
     time.tv_sec = 10;
     time.tv_usec = 0;
-    if(select(fd+1,&fs_read,NULL,NULL,&time)
+    if(select(fd+1,&fs_read,NULL,NULL,&time)>0)
 	{
-		len=read(fd,&ch,100);
+		len=read(fd,ch,100);
 		for(i=0;i<len;i++)
 		{
 			printf("%02x ",ch[i]);
 		}
 		printf("\r\n");		
-		get_ip(ip);
 		post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
 		post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
 		post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
@@ -88,7 +227,7 @@ int read_uart(int fd)
 				i++;
 			if(i==len)
 				return 0;
-			if(ch[i]==START_BYTE && ch[i+1]==CAP_TO_ARM)
+			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
 			{
 				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+5]<<8|ch[ch[i+3]+6]))
 				{
@@ -157,32 +296,7 @@ int read_uart(int fd)
 	{	
 		int len=strlen(rcv);
 		printf(LOG_PREFX"<=== %s\n",rcv);
-			printf(LOG_PREFX"send ok\n");
-			char *starttime=NULL;
-			char *tmp=NULL;
-			if(atoi(type)==5)
-			{
-				starttime=doit_data(rcv,(char *)"210");
-				tmp=doit_data(rcv,(char *)"211");
-				printf("201 %s\r\n",doit(rcv,"201"));
-				printf("202 %s\r\n",doit(rcv,"202"));
-			}
-			else if(atoi(type)==6)
-			{
-				starttime=doit_data(rcv,(char *)"101");
-				tmp=doit_data(rcv,(char *)"102");
-			}
-			if(starttime!=NULL)
-			{
-				printf("%s\r\n",starttime);
-				free(starttime);
-			}
-			if(tmp!=NULL)
-			{
-				printf("%s\r\n",tmp);
-				free(tmp);
-			}
-			result=1;
+		printf(LOG_PREFX"send ok\n");
 		free(rcv);
 	}
     return len;
@@ -272,7 +386,7 @@ int open_com_port()
 		
 	fd = open( "/dev/ttySAC3", O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
-		perror("Can't Open Serial Port0");
+		perror("Can't Open Serial ttySAC3");
 		return(-1);
 	}
 	else 
@@ -295,8 +409,6 @@ int main(int argc, char *argv[])
 {
 
 	int fd_com=0;
-	char rcv_buf[512];
-
 	if((fd_com=open_com_port())<0)
 	{
 		perror("open_port error");
@@ -307,10 +419,11 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
+	get_ip(ip);
 	while(1)
 	{
 		read_uart(fd_com);
-		Sleep(30);
+		sleep(30);
 	}
 	return 0;
 }
