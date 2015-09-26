@@ -409,6 +409,7 @@ int main(int argc, char *argv[])
 {
 
 	int fd_com=0;
+	get_ip(ip);
 	if((fd_com=open_com_port())<0)
 	{
 		perror("open_port error");
@@ -419,7 +420,6 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
-	get_ip(ip);
 	while(1)
 	{
 		read_uart(fd_com);
