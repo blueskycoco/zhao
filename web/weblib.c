@@ -13,6 +13,7 @@
 #include "cJSON.h"
 #include <errno.h>
 #include "weblib.h"
+#define PORT 9517
 #if 0
 //http get 
 #define HOST "www.baidu.com"  
@@ -145,8 +146,9 @@ int htpp_get(int argc,char *argv[])
 
 static int http_tcpclient_create(const char *host, int port,int timeout){  
 	struct hostent *he;  
-	struct sockaddr_in server_addr;   
-	int socket_fd; 
+	struct sockaddr_in server_addr;
+	struct sockaddr_in addr; 
+	int socket_fd,nOptval=1; 
 	socklen_t lon; 
 	int error;
 	fd_set rset, wset;
@@ -168,7 +170,21 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	}  
 	tv.tv_usec=0;
 	tv.tv_sec = timeout;
-
+	#if 0
+	bzero(&addr,sizeof(addr));	
+	addr.sin_family = AF_INET;	
+	addr.sin_port = htons(3569);  
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);  
+	if(bind(socket_fd,(struct sockaddr *)&addr,sizeof(addr))<0){  
+		perror("bind");	
+		exit(1);  
+	}
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR,(const void *)&nOptval , sizeof(int)) < 0)
+	{
+		perror("reuse"); 
+		exit(1);  
+	}
+	#endif
 	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	if(connect(socket_fd, (struct sockaddr *)&server_addr,sizeof(struct sockaddr)) <0)
 	{
