@@ -14,13 +14,13 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <net/if_arp.h>
+//#include <net/if_arp.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #define ETH_NAME "eth0"
-#include <linux/sockios.h>
+//#include <linux/sockios.h>
 #include <ifaddrs.h>
 #include "cJSON.h"
 #include "weblib.h"
