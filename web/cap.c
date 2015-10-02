@@ -49,7 +49,7 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	unsigned char times=0,Data_index=0;
 	unsigned int CRC=0xFFFF;
 	while(Data_length)
-  	{
+	{
 		CRC=Data[Data_index]^CRC;
 		for(times=0;times<8;times++)
 		{
@@ -62,7 +62,7 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 		}
 		Data_index++;
 		Data_length--;
-  	}
+	}
 	return CRC;
 }
 char *send_web(char *url,char *post_message,int timeout)
@@ -105,84 +105,84 @@ char *send_web(char *url,char *post_message,int timeout)
 
 int GetIP_v4_and_v6_linux(int family,char *address,int size)
 {
-  struct ifaddrs *ifap0,*ifap;
-  char buf[NI_MAXHOST];
-  char *interface = "ra0";
-  struct sockaddr_in *addr4;
-  struct sockaddr_in6 *addr6;
-  int ret;
-  if(NULL == address)
-  {
-  printf("in address");  
-  return -1;
- }
-  if(getifaddrs(&ifap0))
-  {
+	struct ifaddrs *ifap0,*ifap;
+	char buf[NI_MAXHOST];
+	char *interface = "ra0";
+	struct sockaddr_in *addr4;
+	struct sockaddr_in6 *addr6;
+	int ret;
+	if(NULL == address)
+	{
+		printf("in address");  
+		return -1;
+	}
+	if(getifaddrs(&ifap0))
+	{
 		printf("getifaddrs error");  
-    return -1;
-  }
-  for(ifap = ifap0;ifap!=NULL;ifap=ifap->ifa_next)
-  {
-  
-    
-    if(strcmp(interface,ifap->ifa_name)!=0) continue; 
-    if(ifap->ifa_addr == NULL) continue;
-    if((ifap->ifa_flags & IFF_UP) == 0) continue;
-    if(family!=ifap->ifa_addr->sa_family) continue;
+		return -1;
+	}
+	for(ifap = ifap0;ifap!=NULL;ifap=ifap->ifa_next)
+	{
 
-    if(AF_INET == ifap->ifa_addr->sa_family)
-    { 
-      
-      addr4 = (struct sockaddr_in *)ifap->ifa_addr;
-      if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr4->sin_addr),buf,NI_MAXHOST))
-      {
-        if(size <=strlen(buf)) break;
-        strcpy(address,buf);
-        printf("address %s\n",address);
-        freeifaddrs(ifap0);
-        return 0;
-      }
-      else 
-	  {
-		printf("inet_ntop error\r\n");
-		break;  
-	  }
-    }
-    else if(AF_INET6 == ifap->ifa_addr->sa_family)
-    {
-      addr6 = (struct sockaddr_in6*) ifap->ifa_addr;
-      if(IN6_IS_ADDR_MULTICAST(&addr6->sin6_addr))
-      {
-        continue;
-      }
-      if(IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
-      {
-        continue;
-      }
-      if(IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr))
-      {
-        continue;
-      }
-      if(IN6_IS_ADDR_UNSPECIFIED(&addr6->sin6_addr))
-      {
-        continue;
-      }
-      if(IN6_IS_ADDR_SITELOCAL(&addr6->sin6_addr))
-      {
-        continue;
-      }
-      if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr6->sin6_addr),buf,NI_MAXHOST))
-      {
-        if(size <= strlen(buf)) break;
-        strcpy(address,buf);
-        freeifaddrs(ifap0);
-        return 0;
-      }
-      else break; 
-    } 
-  }
-  freeifaddrs(ifap0);
-  return -1;
+
+		if(strcmp(interface,ifap->ifa_name)!=0) continue; 
+		if(ifap->ifa_addr == NULL) continue;
+		if((ifap->ifa_flags & IFF_UP) == 0) continue;
+		if(family!=ifap->ifa_addr->sa_family) continue;
+
+		if(AF_INET == ifap->ifa_addr->sa_family)
+		{ 
+
+			addr4 = (struct sockaddr_in *)ifap->ifa_addr;
+			if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr4->sin_addr),buf,NI_MAXHOST))
+			{
+				if(size <=strlen(buf)) break;
+				strcpy(address,buf);
+				printf("address %s\n",address);
+				freeifaddrs(ifap0);
+				return 0;
+			}
+			else 
+			{
+				printf("inet_ntop error\r\n");
+				break;  
+			}
+		}
+		else if(AF_INET6 == ifap->ifa_addr->sa_family)
+		{
+			addr6 = (struct sockaddr_in6*) ifap->ifa_addr;
+			if(IN6_IS_ADDR_MULTICAST(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_UNSPECIFIED(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_SITELOCAL(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr6->sin6_addr),buf,NI_MAXHOST))
+			{
+				if(size <= strlen(buf)) break;
+				strcpy(address,buf);
+				freeifaddrs(ifap0);
+				return 0;
+			}
+			else break; 
+		} 
+	}
+	freeifaddrs(ifap0);
+	return -1;
 }
 
 void get_ip(char *ip)
@@ -193,18 +193,18 @@ void get_ip(char *ip)
 }
 int read_uart(int fd)
 {
-    int len,fs_sel,i=0,j=0,get_start=0,get_stop=0,message_len;
+	int len,fs_sel,i=0,j=0,get_start=0,get_stop=0,message_len;
 	char ch[100]={0};
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
-    fd_set fs_read;
-   	char *post_message=NULL,*rcv=NULL;
-    struct timeval time;
-   
-    FD_ZERO(&fs_read);
-    FD_SET(fd,&fs_read);
-    time.tv_sec = 10;
-    time.tv_usec = 0;
-    if(select(fd+1,&fs_read,NULL,NULL,&time)>0)
+	fd_set fs_read;
+	char *post_message=NULL,*rcv=NULL;
+	struct timeval time;
+
+	FD_ZERO(&fs_read);
+	FD_SET(fd,&fs_read);
+	time.tv_sec = 10;
+	time.tv_usec = 0;
+	if(select(fd+1,&fs_read,NULL,NULL,&time)>0)
 	{
 		len=read(fd,ch,100);
 		for(i=0;i<len;i++)
@@ -219,7 +219,7 @@ int read_uart(int fd)
 		i=0;
 		while(1)
 		{
-		   	memset(id,'\0',sizeof(id));
+			memset(id,'\0',sizeof(id));
 			memset(data,'\0',sizeof(data));
 			memset(date,'\0',sizeof(date));
 			memset(error,'\0',sizeof(error));
@@ -234,35 +234,35 @@ int read_uart(int fd)
 					switch(ch[2])
 					{
 						case TIME_BYTE:
-						{
-							sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[3],ch[4],ch[5],ch[6],ch[7]);
-							printf("date is %s\r\n",date);
-							post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
-						}
-						break;
+							{
+								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[3],ch[4],ch[5],ch[6],ch[7]);
+								printf("date is %s\r\n",date);
+								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
+							}
+							break;
 						case ERROR_BYTE:
-						{
-							sprintf(error,"%dth sensor possible error",ch[3]);
-							post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
-						}
-						break;
+							{
+								sprintf(error,"%dth sensor possible error",ch[3]);
+								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
+							}
+							break;
 						case RESEND_BYTE:
-						{
-							write(fd,server_time,13);
-						}
-						break;
+							{
+								write(fd,server_time,13);
+							}
+							break;
 						default:
-						{
-							/*get cap data*/
-							sprintf(id,"%d",ch[2]);
-							sprintf(data,"%d%d",ch[3],ch[4]);
-							for(j=strlen(data);j>strlen(data)-ch[5];j--)
-								data[j+1]=data[j];
-							data[j]='.';
-							printf("id %s data %s\r\n",id,data);
-							post_message=add_item(post_message,id,data);
-						}
-						break;
+							{
+								/*get cap data*/
+								sprintf(id,"%d",ch[2]);
+								sprintf(data,"%d%d",ch[3],ch[4]);
+								for(j=strlen(data);j>strlen(data)-ch[5];j--)
+									data[j+1]=data[j];
+								data[j]='.';
+								printf("id %s data %s\r\n",id,data);
+								post_message=add_item(post_message,id,data);
+							}
+							break;
 					}
 				}
 				else
@@ -272,7 +272,7 @@ int read_uart(int fd)
 				printf("wrong info %02x %02x\r\n",ch[0],ch[1]);
 			i=ch[i+3]+6;
 		}
-    }
+	}
 	j=0;
 	for(i=0;i<strlen(post_message);i++)
 	{
@@ -293,13 +293,13 @@ int read_uart(int fd)
 	free(post_message);
 	free(out1);
 	if(rcv!=NULL)
-	{	
+	{	
 		int len=strlen(rcv);
 		printf(LOG_PREFX"<=== %s\n",rcv);
 		printf(LOG_PREFX"send ok\n");
 		free(rcv);
 	}
-    return len;
+	return len;
 }
 
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
@@ -383,7 +383,7 @@ int open_com_port()
 {
 	int fd;
 	long  vdisable;
-		
+
 	fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
