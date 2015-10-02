@@ -107,7 +107,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 {
 	struct ifaddrs *ifap0,*ifap;
 	char buf[NI_MAXHOST];
-	char *interface = "ra0";
+	//char *interface = "ra0";
 	struct sockaddr_in *addr4;
 	struct sockaddr_in6 *addr6;
 	int ret;
@@ -125,7 +125,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	{
 
 
-		if(strcmp(interface,ifap->ifa_name)!=0) continue; 
+		if(strcmp(ETH_NAME,ifap->ifa_name)!=0) continue; 
 		if(ifap->ifa_addr == NULL) continue;
 		if((ifap->ifa_flags & IFF_UP) == 0) continue;
 		if(family!=ifap->ifa_addr->sa_family) continue;
