@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#define ETH_NAME "eth0"
+#define ETH_NAME "ra0"
 //#include <linux/sockios.h>
 #include <ifaddrs.h>
 #include "cJSON.h"
@@ -107,7 +107,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 {
   struct ifaddrs *ifap0,*ifap;
   char buf[NI_MAXHOST];
-  char *interface = "eth0";
+  char *interface = "ra0";
   struct sockaddr_in *addr4;
   struct sockaddr_in6 *addr6;
   int ret;
@@ -384,7 +384,7 @@ int open_com_port()
 	int fd;
 	long  vdisable;
 		
-	fd = open( "/dev/ttySAC3", O_RDWR|O_NOCTTY|O_NDELAY);
+	fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
 		return(-1);
