@@ -397,6 +397,7 @@ static char *http_parse_result(const char*lpbuf)
 		printf(LOG_PREFX"http/1.1 not faind\n%s\n",lpbuf);  
 		return NULL;  
 	}  
+	printf(LOG_PREFX"%s",lpbuf);
 	if(atoi(ptmp + 9)!=200)
 	{  
 		if(strstr(lpbuf,"ok")==NULL)

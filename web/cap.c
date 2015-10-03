@@ -35,6 +35,7 @@
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 char server_time[20]={0};
 char ip[20]={0};
+char *post_message=NULL,can_send=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -66,13 +67,13 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
-char *send_web(char *url,char *post_message,int timeout)
+char *send_web(char *url,char *buf,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
-	sprintf(request,"%s?JSONStr=%s",url,post_message);
+	sprintf(request,"%s?JSONStr=%s",url,buf);
 	printf(LOG_PREFX"send web %s\n",request);
-	//char *rcv=http_post(url,post_message,timeout);
+	//char *rcv=http_post(url,buf,timeout);
 	char *rcv=http_get(request,timeout);
 	if(rcv!=NULL)
 		printf(LOG_PREFX"rcv %s\n",rcv);
@@ -198,7 +199,7 @@ int read_uart(int fd)
 	char ch[100]={0};
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	fd_set fs_read;
-	char *post_message=NULL,*rcv=NULL;
+	char *rcv=NULL;
 	struct timeval time1;
 
 	FD_ZERO(&fs_read);
@@ -207,18 +208,56 @@ int read_uart(int fd)
 	time1.tv_usec = 0;
 	if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
 	{
-		len=read(fd,ch,100);
-		for(i=0;i<len;i++)
+		len=0;
+		j=0;
+		while(1)
+		{
+			i=read(fd,ch+len,4-len);
+			len+=i;
+			if(len==4)
+				break;
+			else if(i==0)
+			{
+				j++;
+				if(j==3)
+					break;
+				usleep(10000);
+			}	
+		}
+		printf("read message %02X ,len %d\r\n",ch[2],ch[3]);
+		message_len=ch[3];
+		len=0;
+		j=0;
+		while(1)
+		{
+			i=read(fd,ch+len+4,message_len+2-len);
+			len+=i;
+			if(len==message_len+2)
+				break;
+			else if(i==0)
+			{
+				j++;
+				if(j==3)
+					break;
+				usleep(10000);
+			}	
+		}
+		printf("body %d\r\n",len);
+		for(i=0;i<message_len+2+4;i++)
 		{
 			printf("%02x ",ch[i]);
 		}
-		printf("\r\n");		
-		post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-		post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
-		post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-		post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
+		printf("\r\n");	
+		len=message_len+2;
+		if(post_message==NULL)
+		{
+			post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+			post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+			post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
+			post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
+		}
 		i=0;
-		while(1)
+		//while(1)
 		{
 			memset(id,'\0',sizeof(id));
 			memset(data,'\0',sizeof(data));
@@ -228,22 +267,24 @@ int read_uart(int fd)
 				i++;
 			if(i>=len)
 				return 0;
+			//printf("ch[%d] %02x ,ch[%d+1],%02x\r\n",i,ch[i],i,ch[i+1]);
 			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
 			{
-				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+5]<<8|ch[ch[i+3]+6]))
+				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]))
 				{
 					switch(ch[2])
 					{
 						case TIME_BYTE:
 							{
-								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[3],ch[4],ch[5],ch[6],ch[7]);
+								sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
 								printf("date is %s\r\n",date);
 								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
+								can_send=1;
 							}
 							break;
 						case ERROR_BYTE:
 							{
-								sprintf(error,"%dth sensor possible error",ch[3]);
+								sprintf(error,"%dth sensor possible error",ch[i+3]);
 								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 							}
 							break;
@@ -255,11 +296,27 @@ int read_uart(int fd)
 						default:
 							{
 								/*get cap data*/
-								sprintf(id,"%d",ch[2]);
-								sprintf(data,"%d%d",ch[3],ch[4]);
-								for(j=strlen(data);j>strlen(data)-ch[5];j--)
-									data[j+1]=data[j];
-								data[j]='.';
+								sprintf(id,"%d",ch[i+2]);
+								sprintf(data,"%d%d",ch[i+4],ch[i+5]);
+								//printf("pre data %s %d\r\n",data,strlen(data));
+								
+								if(ch[i+6]>=strlen(data))
+								{									
+									sprintf(data,"0.%d%d",ch[i+4],ch[i+5]);
+								}
+								else if(ch[i+6]==0)
+								{									
+									sprintf(data,"%d%d.0",ch[i+4],ch[i+5]);
+								}
+								else
+								{
+									for(j=strlen(data);j>strlen(data)-ch[i+6]-1;j--)
+									{
+										data[j]=data[j-1];
+										//printf("j %d %c\r\n",j,data[j]);
+									}	
+									data[j]='.';
+								}
 								printf("id %s data %s\r\n",id,data);
 								post_message=add_item(post_message,id,data);
 							}
@@ -267,7 +324,7 @@ int read_uart(int fd)
 					}
 				}
 				else
-					printf("CRC error Get %02x <> Count %02x\r\n",(ch[len-2]<<8|ch[len-1]),CRC_check(ch,len-2));
+					printf("CRC error Get %02x <> Count %02x\r\n",(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]),CRC_check(ch,ch[i+3]+4));
 			}
 			else
 			{
@@ -276,32 +333,38 @@ int read_uart(int fd)
 			}
 			i=ch[i+3]+6;
 		}
-	
-		j=0;
-		for(i=0;i<strlen(post_message);i++)
+		if(can_send)
 		{
-			if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
-				j++;
-		}
-		char *out1=malloc(strlen(post_message)-j+1);
-		memset(out1,'\0',strlen(post_message)-j+1);
-		j=0;
-		for(i=0;i<strlen(post_message);i++)
-		{
-			if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+			can_send=0;
+			j=0;
+			for(i=0;i<strlen(post_message);i++)
 			{
-				out1[j++]=post_message[i];
+				if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
+					j++;
 			}
-		}
-		rcv=send_web(URL,out1,9);
-		free(post_message);
-		free(out1);
-		if(rcv!=NULL)
-		{	
-			int len=strlen(rcv);
-			printf(LOG_PREFX"<=== %s\n",rcv);
-			printf(LOG_PREFX"send ok\n");
-			free(rcv);
+			printf("send post_message %s",post_message);
+			char *out1=malloc(strlen(post_message)-j+1);
+			memset(out1,'\0',strlen(post_message)-j+1);
+			j=0;
+			for(i=0;i<strlen(post_message);i++)
+			{
+				if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+				{
+					out1[j++]=post_message[i];
+				}
+			}
+			printf("send web %s",out1);
+			rcv=send_web(URL,out1,9);
+			free(post_message);
+			post_message=NULL;
+			free(out1);
+			if(rcv!=NULL)
+			{	
+				int len=strlen(rcv);
+				printf(LOG_PREFX"<=== %s %d\n",rcv,len);
+				printf(LOG_PREFX"send ok\n");
+				free(rcv);
+			}
 		}
 	}
 	else
