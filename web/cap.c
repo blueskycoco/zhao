@@ -1,6 +1,7 @@
 #include <unistd.h>  
 #include <stdlib.h>  
-#include <stdio.h>  
+#include <stdio.h>
+#include <time.h>
 #include <string.h>  
 #include <errno.h>  
 #include <sys/msg.h>  
@@ -198,13 +199,13 @@ int read_uart(int fd)
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	fd_set fs_read;
 	char *post_message=NULL,*rcv=NULL;
-	struct timeval time;
+	struct timeval time1;
 
 	FD_ZERO(&fs_read);
 	FD_SET(fd,&fs_read);
-	time.tv_sec = 10;
-	time.tv_usec = 0;
-	if(select(fd+1,&fs_read,NULL,NULL,&time)>0)
+	time1.tv_sec = 10;
+	time1.tv_usec = 0;
+	if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
 	{
 		len=read(fd,ch,100);
 		for(i=0;i<len;i++)
@@ -225,7 +226,7 @@ int read_uart(int fd)
 			memset(error,'\0',sizeof(error));
 			while(ch[i]!=START_BYTE)
 				i++;
-			if(i==len)
+			if(i>=len)
 				return 0;
 			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
 			{
@@ -269,35 +270,49 @@ int read_uart(int fd)
 					printf("CRC error Get %02x <> Count %02x\r\n",(ch[len-2]<<8|ch[len-1]),CRC_check(ch,len-2));
 			}
 			else
+			{
 				printf("wrong info %02x %02x\r\n",ch[0],ch[1]);
+				return 0;
+			}
 			i=ch[i+3]+6;
 		}
-	}
-	j=0;
-	for(i=0;i<strlen(post_message);i++)
-	{
-		if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
-			j++;
-	}
-	char *out1=malloc(strlen(post_message)-j+1);
-	memset(out1,'\0',strlen(post_message)-j+1);
-	j=0;
-	for(i=0;i<strlen(post_message);i++)
-	{
-		if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+	
+		j=0;
+		for(i=0;i<strlen(post_message);i++)
 		{
-			out1[j++]=post_message[i];
+			if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
+				j++;
+		}
+		char *out1=malloc(strlen(post_message)-j+1);
+		memset(out1,'\0',strlen(post_message)-j+1);
+		j=0;
+		for(i=0;i<strlen(post_message);i++)
+		{
+			if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+			{
+				out1[j++]=post_message[i];
+			}
+		}
+		rcv=send_web(URL,out1,9);
+		free(post_message);
+		free(out1);
+		if(rcv!=NULL)
+		{	
+			int len=strlen(rcv);
+			printf(LOG_PREFX"<=== %s\n",rcv);
+			printf(LOG_PREFX"send ok\n");
+			free(rcv);
 		}
 	}
-	rcv=send_web(URL,out1,9);
-	free(post_message);
-	free(out1);
-	if(rcv!=NULL)
-	{	
-		int len=strlen(rcv);
-		printf(LOG_PREFX"<=== %s\n",rcv);
-		printf(LOG_PREFX"send ok\n");
-		free(rcv);
+	else
+	{
+		char date[128]={0};
+		time_t t;
+		time(&t);
+		struct tm *tmtt;
+		tmtt = (struct tm *)localtime(&t);
+		strftime(date, 128, "%Y:%m:%d_%H:%M:%S", tmtt);
+		printf("no data in %s\r\n",date);		
 	}
 	return len;
 }
@@ -423,7 +438,7 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 		read_uart(fd_com);
-		sleep(30);
+		//sleep(3);
 	}
 	return 0;
 }
