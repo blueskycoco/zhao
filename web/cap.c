@@ -33,6 +33,7 @@
 #define TIME_BYTE	0x01
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
+#define FILE_PATH	"/home/lili/history/"
 char server_time[20]={0};
 char ip[20]={0};
 char *post_message=NULL,can_send=0;
@@ -186,7 +187,34 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	freeifaddrs(ifap0);
 	return -1;
 }
-
+void save_to_file(char *date,char *message)
+{
+	FILE *fp;
+	char file_path[256]={0};
+	char data[512]={0};
+	strcpy(file_path,FILE_PATH);
+	memcpy(file_path,date,10);
+	strcat(file_path,".dat");
+	fp = fopen(file_path, "r");
+	if (fp == NULL)
+	{
+		fp=fopen(file_path,"w");
+	}
+	else
+	{
+		fclose(fp);
+		fp=fopen(file_path, "wb");
+		fseek(fp,0L,SEEK_END);
+	}
+	strcpy(data,date);
+	strcat(data,"\r\n");
+	fwrite(data,strlen(data),1,fp);
+	memset(data,'\0',512);
+	strcpy(data,message);
+	strcat(data,"\r\n");
+	fwrite(data,strlen(data),1,fp);
+	fclose(fp);
+}
 void get_ip(char *ip)
 {
 	GetIP_v4_and_v6_linux(AF_INET,ip,16);
@@ -361,6 +389,7 @@ int read_uart(int fd)
 					out1[j++]=post_message[i];
 				}
 			}
+			save_to_file(date,out1)
 			printf("send web %s",out1);
 			rcv=send_web(URL,out1,9);
 			free(post_message);
