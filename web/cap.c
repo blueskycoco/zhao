@@ -193,26 +193,160 @@ void save_to_file(char *date,char *message)
 	char file_path[256]={0};
 	char data[512]={0};
 	strcpy(file_path,FILE_PATH);
-	memcpy(file_path,date,10);
+	memcpy(file_path+strlen(FILE_PATH),date,10);
 	strcat(file_path,".dat");
 	fp = fopen(file_path, "r");
 	if (fp == NULL)
 	{
 		fp=fopen(file_path,"w");
+		if(fp==NULL)
+		{
+			printf("can not create %s\r\n",file_path);
+			return;
+		}	
 	}
 	else
 	{
 		fclose(fp);
-		fp=fopen(file_path, "wb");
-		fseek(fp,0L,SEEK_END);
+		fp=fopen(file_path, "a");
 	}
-	strcpy(data,date);
-	strcat(data,"\r\n");
+	strcpy(data,date+13);
+	strcat(data,"\n");
 	fwrite(data,strlen(data),1,fp);
 	memset(data,'\0',512);
 	strcpy(data,message);
-	strcat(data,"\r\n");
+	strcat(data,"\n");
 	fwrite(data,strlen(data),1,fp);
+	fclose(fp);
+}
+void resend_history(char *date_begin,char *date_end)
+{
+	FILE *fp;
+	int cnt=0,month_b,year_b,day_b,month_e,year_e,day_e,hour_e,minute_e,max_day;
+	char year_begin[5]={0};
+	char year_end[5]={0};
+	char month_begin[3]={0};
+	char month_end[3]={0};
+	char day_begin[3]={0};
+	char day_end[3]={0};
+	char hour_end[3]={0};
+	char minute_end[3]={0};
+	char file_path[256]={0};
+	char data[512]={0};
+	char date[32]={0};
+	memcpy(year_begin,date_begin,4);
+	memcpy(year_end,date_end,4);
+	memcpy(month_begin,date_begin+5,2);
+	memcpy(month_end,date_end+5,2);
+	memcpy(day_begin,date_begin+8,2);
+	memcpy(day_end,date_end+8,2);
+	memcpy(hour_end,date_end+12,2);
+	memcpy(minute_end,date_end+15,2);
+	month_b=atoi(month_begin);
+	year_b=atoi(year_begin);
+	day_b=atoi(day_begin);
+	month_e=atoi(month_end);
+	year_e=atoi(year_end);
+	day_e=atoi(day_end);
+	hour_e=atoi(hour_end);
+	minute_e=atoi(minute_end);
+	printf("year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+	while(1)
+	{
+		if(year_b<=year_e ||month_b<=month_e ||day_b<=day_e)
+		{
+			sprintf(date,"%04d-%02d-%02d",year_b,month_b,day_b);
+			strcpy(file_path,FILE_PATH);
+			memcpy(file_path+strlen(FILE_PATH),date_begin,10);
+			strcat(file_path,".dat");
+			fp = fopen(file_path, "r");
+			if (fp != NULL)
+			{
+				int read=0,tmp_i=0;
+				char * line = NULL;
+				size_t len = 0;
+				while ((read = getline(&line, &len, fp)) != -1) 
+				{				
+					if(year_b==year_e && month_b==month_e && day_b==day_e)
+					{//check time in file
+						if((tmp_i%2)==0)
+						{							
+							char local_hour[3]={0},local_minute[3]={0};
+							memcpy(local_hour,line,2);
+							memcpy(local_minute,line+3,2);
+							if((atoi(local_hour)*60+atoi(local_minute))>(hour_e*60+minute_e))
+							{
+								printf("file_time %02d:02d,end time %02d:02d",local_hour,local_minute,hour_e,minute_e);
+								free(line);
+								fclose(fp);
+								return;
+							}
+						}
+						else
+						{
+							line[strlen(line)-1]='\0';
+							printf("rsend web %s",line);
+							char *rcv=send_web(URL,line,9);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
+								printf(LOG_PREFX"send ok\n");
+								free(rcv);
+							}
+						}
+					}
+					else
+					{
+						if((tmp_i%2)!=0)
+						{						
+							line[strlen(line)-1]='\0';
+							printf("rsend web %s",line);
+							char *rcv=send_web(URL,line,9);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
+								printf(LOG_PREFX"send ok\n");
+								free(rcv);
+							}
+						}
+					}
+					tmp_i++;
+				}
+				free(line);
+				if(month_b==2)
+					max_day=28;
+				else if(month_b==1||month_b==3||month_b==5||month_b==7||month_b==8||month_b==10||month_b==12)
+					max_day=31;
+				else
+					max_day=30;
+				if(day_b==max_day)
+				{
+					if(month_b==12)
+					{
+						year_b++;
+						month_b=0;
+					}
+					else
+						month_b++;
+					day_b=0;
+				}
+				else
+					day_b++;				
+			}
+			else
+			{
+				printf("can not open %s",file_path);
+				break;
+			}
+		}
+		else
+		{
+			printf("end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+			break;
+		}
+	}
 	fclose(fp);
 }
 void get_ip(char *ip)
@@ -389,7 +523,7 @@ int read_uart(int fd)
 					out1[j++]=post_message[i];
 				}
 			}
-			save_to_file(date,out1)
+			save_to_file(date,out1);
 			printf("send web %s",out1);
 			rcv=send_web(URL,out1,9);
 			free(post_message);
