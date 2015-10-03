@@ -284,7 +284,7 @@ int read_uart(int fd)
 							break;
 						case ERROR_BYTE:
 							{
-								sprintf(error,"%dth sensor possible error",ch[i+3]);
+								sprintf(error,"%dth sensor possible error",ch[i+2]);
 								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 							}
 							break;
@@ -296,29 +296,37 @@ int read_uart(int fd)
 						default:
 							{
 								/*get cap data*/
-								sprintf(id,"%d",ch[i+2]);
-								sprintf(data,"%d%d",ch[i+4],ch[i+5]);
-								//printf("pre data %s %d\r\n",data,strlen(data));
-								
-								if(ch[i+6]>=strlen(data))
-								{									
-									sprintf(data,"0.%d%d",ch[i+4],ch[i+5]);
-								}
-								else if(ch[i+6]==0)
-								{									
-									sprintf(data,"%d%d.0",ch[i+4],ch[i+5]);
+								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
+								{
+									sprintf(error,"%dth%%20sensor%%20possible%%20error",ch[i+2]);
+									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 								}
 								else
 								{
-									for(j=strlen(data);j>strlen(data)-ch[i+6]-1;j--)
+									sprintf(id,"%d",ch[i+2]);
+									sprintf(data,"%d%d",ch[i+4],ch[i+5]);
+									//printf("pre data %s %d\r\n",data,strlen(data));
+									
+									if(ch[i+6]>=strlen(data))
+									{									
+										sprintf(data,"0.%d%d",ch[i+4],ch[i+5]);
+									}
+									else if(ch[i+6]==0)
+									{									
+										sprintf(data,"%d%d.0",ch[i+4],ch[i+5]);
+									}
+									else
 									{
-										data[j]=data[j-1];
-										//printf("j %d %c\r\n",j,data[j]);
-									}	
-									data[j]='.';
+										for(j=strlen(data);j>strlen(data)-ch[i+6]-1;j--)
+										{
+											data[j]=data[j-1];
+											//printf("j %d %c\r\n",j,data[j]);
+										}	
+										data[j]='.';
+									}
+									printf("id %s data %s\r\n",id,data);
+									post_message=add_item(post_message,id,data);
 								}
-								printf("id %s data %s\r\n",id,data);
-								post_message=add_item(post_message,id,data);
 							}
 							break;
 					}
