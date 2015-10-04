@@ -515,9 +515,9 @@ int read_uart(int fd)
 		printf(SUB_PROCESS"body %d\r\n",len);
 		for(i=0;i<message_len+2+4;i++)
 		{
-			printf(SUB_PROCESS"%02x ",ch[i]);
+			printf("%02x ",ch[i]);
 		}
-		printf(SUB_PROCESS"\r\n");	
+		printf("\r\n"SUB_PROCESS"\r\n");	
 		len=message_len+2;
 		if(post_message==NULL)
 		{
