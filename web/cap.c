@@ -1,6 +1,7 @@
 #include <unistd.h>  
 #include <stdlib.h>  
-#include <stdio.h>  
+#include <stdio.h>
+#include <time.h>
 #include <string.h>  
 #include <errno.h>  
 #include <sys/msg.h>  
@@ -32,8 +33,10 @@
 #define TIME_BYTE	0x01
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
+#define FILE_PATH	"/home/lili/history/"
 char server_time[20]={0};
 char ip[20]={0};
+char *post_message=NULL,can_send=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -65,13 +68,13 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
-char *send_web(char *url,char *post_message,int timeout)
+char *send_web(char *url,char *buf,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
-	sprintf(request,"%s?JSONStr=%s",url,post_message);
+	sprintf(request,"%s?JSONStr=%s",url,buf);
 	printf(LOG_PREFX"send web %s\n",request);
-	//char *rcv=http_post(url,post_message,timeout);
+	//char *rcv=http_post(url,buf,timeout);
 	char *rcv=http_get(request,timeout);
 	if(rcv!=NULL)
 		printf(LOG_PREFX"rcv %s\n",rcv);
@@ -107,7 +110,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 {
 	struct ifaddrs *ifap0,*ifap;
 	char buf[NI_MAXHOST];
-	char *interface = "ra0";
+	//char *interface = "ra0";
 	struct sockaddr_in *addr4;
 	struct sockaddr_in6 *addr6;
 	int ret;
@@ -125,7 +128,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	{
 
 
-		if(strcmp(interface,ifap->ifa_name)!=0) continue; 
+		if(strcmp(ETH_NAME,ifap->ifa_name)!=0) continue; 
 		if(ifap->ifa_addr == NULL) continue;
 		if((ifap->ifa_flags & IFF_UP) == 0) continue;
 		if(family!=ifap->ifa_addr->sa_family) continue;
@@ -184,7 +187,168 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	freeifaddrs(ifap0);
 	return -1;
 }
-
+void save_to_file(char *date,char *message)
+{
+	FILE *fp;
+	char file_path[256]={0};
+	char data[512]={0};
+	strcpy(file_path,FILE_PATH);
+	memcpy(file_path+strlen(FILE_PATH),date,10);
+	strcat(file_path,".dat");
+	fp = fopen(file_path, "r");
+	if (fp == NULL)
+	{
+		fp=fopen(file_path,"w");
+		if(fp==NULL)
+		{
+			printf("can not create %s\r\n",file_path);
+			return;
+		}	
+	}
+	else
+	{
+		fclose(fp);
+		fp=fopen(file_path, "a");
+	}
+	strcpy(data,date+13);
+	strcat(data,"\n");
+	fwrite(data,strlen(data),1,fp);
+	memset(data,'\0',512);
+	strcpy(data,message);
+	strcat(data,"\n");
+	fwrite(data,strlen(data),1,fp);
+	fclose(fp);
+}
+void resend_history(char *date_begin,char *date_end)
+{
+	FILE *fp;
+	int cnt=0,month_b,year_b,day_b,month_e,year_e,day_e,hour_e,minute_e,max_day;
+	char year_begin[5]={0};
+	char year_end[5]={0};
+	char month_begin[3]={0};
+	char month_end[3]={0};
+	char day_begin[3]={0};
+	char day_end[3]={0};
+	char hour_end[3]={0};
+	char minute_end[3]={0};
+	char file_path[256]={0};
+	char data[512]={0};
+	char date[32]={0};
+	memcpy(year_begin,date_begin,4);
+	memcpy(year_end,date_end,4);
+	memcpy(month_begin,date_begin+5,2);
+	memcpy(month_end,date_end+5,2);
+	memcpy(day_begin,date_begin+8,2);
+	memcpy(day_end,date_end+8,2);
+	memcpy(hour_end,date_end+12,2);
+	memcpy(minute_end,date_end+15,2);
+	month_b=atoi(month_begin);
+	year_b=atoi(year_begin);
+	day_b=atoi(day_begin);
+	month_e=atoi(month_end);
+	year_e=atoi(year_end);
+	day_e=atoi(day_end);
+	hour_e=atoi(hour_end);
+	minute_e=atoi(minute_end);
+	printf("year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+	while(1)
+	{
+		if(year_b<=year_e ||month_b<=month_e ||day_b<=day_e)
+		{
+			sprintf(date,"%04d-%02d-%02d",year_b,month_b,day_b);
+			strcpy(file_path,FILE_PATH);
+			memcpy(file_path+strlen(FILE_PATH),date_begin,10);
+			strcat(file_path,".dat");
+			fp = fopen(file_path, "r");
+			if (fp != NULL)
+			{
+				int read=0,tmp_i=0;
+				char * line = NULL;
+				size_t len = 0;
+				while ((read = getline(&line, &len, fp)) != -1) 
+				{				
+					if(year_b==year_e && month_b==month_e && day_b==day_e)
+					{//check time in file
+						if((tmp_i%2)==0)
+						{							
+							char local_hour[3]={0},local_minute[3]={0};
+							memcpy(local_hour,line,2);
+							memcpy(local_minute,line+3,2);
+							if((atoi(local_hour)*60+atoi(local_minute))>(hour_e*60+minute_e))
+							{
+								printf("file_time %02d:02d,end time %02d:02d",local_hour,local_minute,hour_e,minute_e);
+								free(line);
+								fclose(fp);
+								return;
+							}
+						}
+						else
+						{
+							line[strlen(line)-1]='\0';
+							printf("rsend web %s",line);
+							char *rcv=send_web(URL,line,9);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
+								printf(LOG_PREFX"send ok\n");
+								free(rcv);
+							}
+						}
+					}
+					else
+					{
+						if((tmp_i%2)!=0)
+						{						
+							line[strlen(line)-1]='\0';
+							printf("rsend web %s",line);
+							char *rcv=send_web(URL,line,9);
+							if(rcv!=NULL)
+							{	
+								int len1=strlen(rcv);
+								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
+								printf(LOG_PREFX"send ok\n");
+								free(rcv);
+							}
+						}
+					}
+					tmp_i++;
+				}
+				free(line);
+				if(month_b==2)
+					max_day=28;
+				else if(month_b==1||month_b==3||month_b==5||month_b==7||month_b==8||month_b==10||month_b==12)
+					max_day=31;
+				else
+					max_day=30;
+				if(day_b==max_day)
+				{
+					if(month_b==12)
+					{
+						year_b++;
+						month_b=0;
+					}
+					else
+						month_b++;
+					day_b=0;
+				}
+				else
+					day_b++;				
+			}
+			else
+			{
+				printf("can not open %s",file_path);
+				break;
+			}
+		}
+		else
+		{
+			printf("end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+			break;
+		}
+	}
+	fclose(fp);
+}
 void get_ip(char *ip)
 {
 	GetIP_v4_and_v6_linux(AF_INET,ip,16);
@@ -197,27 +361,65 @@ int read_uart(int fd)
 	char ch[100]={0};
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	fd_set fs_read;
-	char *post_message=NULL,*rcv=NULL;
-	struct timeval time;
+	char *rcv=NULL;
+	struct timeval time1;
 
 	FD_ZERO(&fs_read);
 	FD_SET(fd,&fs_read);
-	time.tv_sec = 10;
-	time.tv_usec = 0;
-	if(select(fd+1,&fs_read,NULL,NULL,&time)>0)
+	time1.tv_sec = 10;
+	time1.tv_usec = 0;
+	if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
 	{
-		len=read(fd,ch,100);
-		for(i=0;i<len;i++)
+		len=0;
+		j=0;
+		while(1)
+		{
+			i=read(fd,ch+len,4-len);
+			len+=i;
+			if(len==4)
+				break;
+			else if(i==0)
+			{
+				j++;
+				if(j==3)
+					break;
+				usleep(10000);
+			}	
+		}
+		printf("read message %02X ,len %d\r\n",ch[2],ch[3]);
+		message_len=ch[3];
+		len=0;
+		j=0;
+		while(1)
+		{
+			i=read(fd,ch+len+4,message_len+2-len);
+			len+=i;
+			if(len==message_len+2)
+				break;
+			else if(i==0)
+			{
+				j++;
+				if(j==3)
+					break;
+				usleep(10000);
+			}	
+		}
+		printf("body %d\r\n",len);
+		for(i=0;i<message_len+2+4;i++)
 		{
 			printf("%02x ",ch[i]);
 		}
-		printf("\r\n");		
-		post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-		post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
-		post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-		post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
+		printf("\r\n");	
+		len=message_len+2;
+		if(post_message==NULL)
+		{
+			post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+			post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+			post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
+			post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
+		}
 		i=0;
-		while(1)
+		//while(1)
 		{
 			memset(id,'\0',sizeof(id));
 			memset(data,'\0',sizeof(data));
@@ -225,24 +427,26 @@ int read_uart(int fd)
 			memset(error,'\0',sizeof(error));
 			while(ch[i]!=START_BYTE)
 				i++;
-			if(i==len)
+			if(i>=len)
 				return 0;
+			//printf("ch[%d] %02x ,ch[%d+1],%02x\r\n",i,ch[i],i,ch[i+1]);
 			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
 			{
-				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+5]<<8|ch[ch[i+3]+6]))
+				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]))
 				{
 					switch(ch[2])
 					{
 						case TIME_BYTE:
 							{
-								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[3],ch[4],ch[5],ch[6],ch[7]);
+								sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
 								printf("date is %s\r\n",date);
 								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
+								can_send=1;
 							}
 							break;
 						case ERROR_BYTE:
 							{
-								sprintf(error,"%dth sensor possible error",ch[3]);
+								sprintf(error,"%dth sensor possible error",ch[i+2]);
 								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 							}
 							break;
@@ -254,50 +458,95 @@ int read_uart(int fd)
 						default:
 							{
 								/*get cap data*/
-								sprintf(id,"%d",ch[2]);
-								sprintf(data,"%d%d",ch[3],ch[4]);
-								for(j=strlen(data);j>strlen(data)-ch[5];j--)
-									data[j+1]=data[j];
-								data[j]='.';
-								printf("id %s data %s\r\n",id,data);
-								post_message=add_item(post_message,id,data);
+								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
+								{
+									sprintf(error,"%dth%%20sensor%%20possible%%20error",ch[i+2]);
+									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
+								}
+								else
+								{
+									sprintf(id,"%d",ch[i+2]);
+									sprintf(data,"%d%d",ch[i+4],ch[i+5]);
+									//printf("pre data %s %d\r\n",data,strlen(data));
+									
+									if(ch[i+6]>=strlen(data))
+									{									
+										sprintf(data,"0.%d%d",ch[i+4],ch[i+5]);
+									}
+									else if(ch[i+6]==0)
+									{									
+										sprintf(data,"%d%d.0",ch[i+4],ch[i+5]);
+									}
+									else
+									{
+										for(j=strlen(data);j>strlen(data)-ch[i+6]-1;j--)
+										{
+											data[j]=data[j-1];
+											//printf("j %d %c\r\n",j,data[j]);
+										}	
+										data[j]='.';
+									}
+									printf("id %s data %s\r\n",id,data);
+									post_message=add_item(post_message,id,data);
+								}
 							}
 							break;
 					}
 				}
 				else
-					printf("CRC error Get %02x <> Count %02x\r\n",(ch[len-2]<<8|ch[len-1]),CRC_check(ch,len-2));
+					printf("CRC error Get %02x <> Count %02x\r\n",(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]),CRC_check(ch,ch[i+3]+4));
 			}
 			else
+			{
 				printf("wrong info %02x %02x\r\n",ch[0],ch[1]);
+				return 0;
+			}
 			i=ch[i+3]+6;
 		}
-	}
-	j=0;
-	for(i=0;i<strlen(post_message);i++)
-	{
-		if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
-			j++;
-	}
-	char *out1=malloc(strlen(post_message)-j+1);
-	memset(out1,'\0',strlen(post_message)-j+1);
-	j=0;
-	for(i=0;i<strlen(post_message);i++)
-	{
-		if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+		if(can_send)
 		{
-			out1[j++]=post_message[i];
+			can_send=0;
+			j=0;
+			for(i=0;i<strlen(post_message);i++)
+			{
+				if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
+					j++;
+			}
+			printf("send post_message %s",post_message);
+			char *out1=malloc(strlen(post_message)-j+1);
+			memset(out1,'\0',strlen(post_message)-j+1);
+			j=0;
+			for(i=0;i<strlen(post_message);i++)
+			{
+				if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+				{
+					out1[j++]=post_message[i];
+				}
+			}
+			save_to_file(date,out1);
+			printf("send web %s",out1);
+			rcv=send_web(URL,out1,9);
+			free(post_message);
+			post_message=NULL;
+			free(out1);
+			if(rcv!=NULL)
+			{	
+				int len=strlen(rcv);
+				printf(LOG_PREFX"<=== %s %d\n",rcv,len);
+				printf(LOG_PREFX"send ok\n");
+				free(rcv);
+			}
 		}
 	}
-	rcv=send_web(URL,out1,9);
-	free(post_message);
-	free(out1);
-	if(rcv!=NULL)
-	{	
-		int len=strlen(rcv);
-		printf(LOG_PREFX"<=== %s\n",rcv);
-		printf(LOG_PREFX"send ok\n");
-		free(rcv);
+	else
+	{
+		char date[128]={0};
+		time_t t;
+		time(&t);
+		struct tm *tmtt;
+		tmtt = (struct tm *)localtime(&t);
+		strftime(date, 128, "%Y:%m:%d_%H:%M:%S", tmtt);
+		printf("no data in %s\r\n",date);		
 	}
 	return len;
 }
@@ -423,7 +672,7 @@ int main(int argc, char *argv[])
 	while(1)
 	{
 		read_uart(fd_com);
-		sleep(30);
+		//sleep(3);
 	}
 	return 0;
 }
