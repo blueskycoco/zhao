@@ -583,7 +583,7 @@ char *doit_data(char *text,char *item_str)
 		if(data)
 		{
 			int nLen = strlen(data->valuestring);
-			printf("%s ,%d %s\n",item_str,nLen,data->valuestring);					
+			//printf("%s ,%d %s\n",item_str,nLen,data->valuestring);					
 			out=(char *)malloc(nLen+1);
 			memset(out,'\0',nLen+1);
 			memcpy(out,data->valuestring,nLen);

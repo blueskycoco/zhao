@@ -23,9 +23,19 @@
 #define ETH_NAME "ra0"
 //#include <linux/sockios.h>
 #include <ifaddrs.h>
+#include <string.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
+#include <fnmatch.h> 
+#include <signal.h>
+#include <sys/ipc.h>  
+#include <sys/shm.h>  
+#include <linux/rtc.h>
+#include <sys/time.h>
 #include "cJSON.h"
 #include "weblib.h"
 #include "web_interface.h"
+#define RTCDEV "/dev/rtc0"
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
 #define ARM_TO_CAP 0xBB
@@ -33,10 +43,13 @@
 #define TIME_BYTE	0x01
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
-#define FILE_PATH	"/home/lili/history/"
-char server_time[20]={0};
+#define FILE_PATH	"/mnt/user/history/"
+#define MAIN_PROCESS 						"[MainSystem]:"
+#define SUB_PROCESS 						"[ChildSystem]:"
+//char server_time[20]={0};
 char ip[20]={0};
 char *post_message=NULL,can_send=0;
+char *server_time;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -240,8 +253,8 @@ void resend_history(char *date_begin,char *date_end)
 	memcpy(month_end,date_end+5,2);
 	memcpy(day_begin,date_begin+8,2);
 	memcpy(day_end,date_end+8,2);
-	memcpy(hour_end,date_end+12,2);
-	memcpy(minute_end,date_end+15,2);
+	memcpy(hour_end,date_end+11,2);
+	memcpy(minute_end,date_end+14,2);
 	month_b=atoi(month_begin);
 	year_b=atoi(year_begin);
 	day_b=atoi(day_begin);
@@ -250,21 +263,25 @@ void resend_history(char *date_begin,char *date_end)
 	day_e=atoi(day_end);
 	hour_e=atoi(hour_end);
 	minute_e=atoi(minute_end);
-	printf("year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+	printf(MAIN_PROCESS"year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
 	while(1)
 	{
-		if(year_b<=year_e ||month_b<=month_e ||day_b<=day_e)
+		if(year_b<year_e || month_b<month_e || day_b<=day_e)
 		{
+			memset(file_path,'\0',256);
+			memset(date,'\0',32);
 			sprintf(date,"%04d-%02d-%02d",year_b,month_b,day_b);
 			strcpy(file_path,FILE_PATH);
-			memcpy(file_path+strlen(FILE_PATH),date_begin,10);
+			memcpy(file_path+strlen(FILE_PATH),date,10);
 			strcat(file_path,".dat");
+			printf(MAIN_PROCESS"to open %s\r\n",file_path);
 			fp = fopen(file_path, "r");
 			if (fp != NULL)
 			{
 				int read=0,tmp_i=0;
 				char * line = NULL;
 				size_t len = 0;
+				printf(MAIN_PROCESS"open file %s ok\r\n",file_path);
 				while ((read = getline(&line, &len, fp)) != -1) 
 				{				
 					if(year_b==year_e && month_b==month_e && day_b==day_e)
@@ -276,7 +293,7 @@ void resend_history(char *date_begin,char *date_end)
 							memcpy(local_minute,line+3,2);
 							if((atoi(local_hour)*60+atoi(local_minute))>(hour_e*60+minute_e))
 							{
-								printf("file_time %02d:02d,end time %02d:02d",local_hour,local_minute,hour_e,minute_e);
+								printf(MAIN_PROCESS"file_time %02d:%02d,end time %02d:%02d",atoi(local_hour),atoi(local_minute),hour_e,minute_e);
 								free(line);
 								fclose(fp);
 								return;
@@ -284,14 +301,14 @@ void resend_history(char *date_begin,char *date_end)
 						}
 						else
 						{
-							line[strlen(line)-1]='\0';
-							printf("rsend web %s",line);
-							char *rcv=send_web(URL,line,9);
+							line[strlen(line)-1]='\0';							
+							printf(MAIN_PROCESS"rsend web %s",line);
+							char *rcv=send_web(URL,line,39);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
-								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
-								printf(LOG_PREFX"send ok\n");
+								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								printf(MAIN_PROCESS"send ok\n");
 								free(rcv);
 							}
 						}
@@ -301,13 +318,13 @@ void resend_history(char *date_begin,char *date_end)
 						if((tmp_i%2)!=0)
 						{						
 							line[strlen(line)-1]='\0';
-							printf("rsend web %s",line);
+							printf(MAIN_PROCESS"rsend web %s",line);
 							char *rcv=send_web(URL,line,9);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
-								printf(LOG_PREFX"<=== %s %d\n",rcv,len1);
-								printf(LOG_PREFX"send ok\n");
+								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								printf(MAIN_PROCESS"send ok\n");
 								free(rcv);
 							}
 						}
@@ -315,7 +332,14 @@ void resend_history(char *date_begin,char *date_end)
 					tmp_i++;
 				}
 				free(line);
-				if(month_b==2)
+					
+			}
+			else
+			{
+				printf(MAIN_PROCESS"can not open %s\r\n",file_path);
+				//break;
+			}
+			if(month_b==2)
 					max_day=28;
 				else if(month_b==1||month_b==3||month_b==5||month_b==7||month_b==8||month_b==10||month_b==12)
 					max_day=31;
@@ -333,22 +357,106 @@ void resend_history(char *date_begin,char *date_end)
 					day_b=0;
 				}
 				else
-					day_b++;				
-			}
-			else
+					day_b++;			
+		}
+		else
+		{
+			printf(MAIN_PROCESS"end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+			break;
+		}
+	}
+	if(fp!=NULL)
+	fclose(fp);
+}
+void sync_server(int fd,int resend)
+{
+	int i,j;
+	char text_out[512]={0};
+	char *sync_message=NULL,*rcv=NULL;
+	if(resend)
+		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_ASK_RE_DATA);
+	else
+		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
+	sync_message=add_item(sync_message,ID_DEVICE_UID,"230FFEE9981283737D");
+	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
+	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
+	printf(LOG_PREFX"<sync GET>%s\n",sync_message);
+	j=0;
+	for(i=0;i<strlen(sync_message);i++)
+	{
+		if(sync_message[i]=='\n'||sync_message[i]=='\r'||sync_message[i]=='\t')
+			j++;
+	}
+	char *out1=malloc(strlen(sync_message)-j+1);
+	memset(out1,'\0',strlen(sync_message)-j+1);
+	j=0;
+	for(i=0;i<strlen(sync_message);i++)
+	{
+		if(sync_message[i]!='\r'&&sync_message[i]!='\n'&&sync_message[i]!='\t')		
+		{
+			out1[j++]=sync_message[i];
+		}
+	}
+	rcv=send_web(URL,out1,9);
+	free(sync_message);
+	free(out1);
+	if(rcv!=NULL)
+	{	
+		int len=strlen(rcv);
+		printf(MAIN_PROCESS"<=== %s\n",rcv);
+		printf(MAIN_PROCESS"send ok\n");
+		char *starttime=NULL;
+		char *tmp=NULL;
+		if(resend)
+		{
+			
+			starttime=doit_data(rcv+3,(char *)"101");
+			tmp=doit_data(rcv+3,(char *)"102");
+			if(starttime!=NULL && tmp!=NULL)
 			{
-				printf("can not open %s",file_path);
-				break;
+				printf(MAIN_PROCESS"%s\r\n",tmp);
+				printf(MAIN_PROCESS"%s\r\n",starttime);
+				resend_history(starttime,tmp);
+				free(starttime);
+				free(tmp);
 			}
 		}
 		else
 		{
-			printf("end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
-			break;
+			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
+			//if(atoi(type)==5)
+			//{
+				char year[3]={0},month[3]={0},day[3]={0},hour[3]={0},minute[3]={0},second[3]={0};
+				unsigned int crc=0;
+				starttime=doit_data(rcv+4,(char *)"104");
+				server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
+				server_time[2]=0x01;server_time[3]=0x06;
+				memcpy(year,starttime+2,2);
+				memcpy(month,starttime+5,2);
+				memcpy(day,starttime+8,2);
+				memcpy(hour,starttime+11,2);
+				memcpy(minute,starttime+14,2);
+				memcpy(second,starttime+17,2);
+				server_time[4]=atoi(year);server_time[5]=atoi(month);
+				server_time[6]=atoi(day);server_time[7]=atoi(hour);
+				server_time[8]=atoi(minute);server_time[9]=atoi(second);
+				crc=CRC_check(server_time,10);
+				server_time[10]=(crc&0xff00)>>8;server_time[11]=crc&0x00ff;
+				write(fd,server_time,12);
+				printf(MAIN_PROCESS"SERVER TIME %s\r\n",starttime);
+				//tmp=doit_data(rcv+4,(char *)"211");
+				printf(MAIN_PROCESS"211 %s\r\n",doit_data(rcv+4,"211"));
+				printf(MAIN_PROCESS"212 %s\r\n",doit_data(rcv+4,"212"));
+			//}
+			//else if(atoi(type)==6)
+			//{
+			//}
 		}
+		free(rcv);
 	}
-	fclose(fp);
+	return ;
 }
+
 void get_ip(char *ip)
 {
 	GetIP_v4_and_v6_linux(AF_INET,ip,16);
@@ -386,7 +494,7 @@ int read_uart(int fd)
 				usleep(10000);
 			}	
 		}
-		printf("read message %02X ,len %d\r\n",ch[2],ch[3]);
+		printf(SUB_PROCESS"read message %02X ,len %d\r\n",ch[2],ch[3]);
 		message_len=ch[3];
 		len=0;
 		j=0;
@@ -404,12 +512,12 @@ int read_uart(int fd)
 				usleep(10000);
 			}	
 		}
-		printf("body %d\r\n",len);
+		printf(SUB_PROCESS"body %d\r\n",len);
 		for(i=0;i<message_len+2+4;i++)
 		{
-			printf("%02x ",ch[i]);
+			printf(SUB_PROCESS"%02x ",ch[i]);
 		}
-		printf("\r\n");	
+		printf(SUB_PROCESS"\r\n");	
 		len=message_len+2;
 		if(post_message==NULL)
 		{
@@ -429,7 +537,7 @@ int read_uart(int fd)
 				i++;
 			if(i>=len)
 				return 0;
-			//printf("ch[%d] %02x ,ch[%d+1],%02x\r\n",i,ch[i],i,ch[i+1]);
+			//printf(SUB_PROCESS"ch[%d] %02x ,ch[%d+1],%02x\r\n",i,ch[i],i,ch[i+1]);
 			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
 			{
 				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]))
@@ -439,7 +547,7 @@ int read_uart(int fd)
 						case TIME_BYTE:
 							{
 								sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
-								printf("date is %s\r\n",date);
+								printf(SUB_PROCESS"date is %s\r\n",date);
 								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 								can_send=1;
 							}
@@ -486,7 +594,7 @@ int read_uart(int fd)
 										}	
 										data[j]='.';
 									}
-									printf("id %s data %s\r\n",id,data);
+									printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 									post_message=add_item(post_message,id,data);
 								}
 							}
@@ -494,11 +602,11 @@ int read_uart(int fd)
 					}
 				}
 				else
-					printf("CRC error Get %02x <> Count %02x\r\n",(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]),CRC_check(ch,ch[i+3]+4));
+					printf(SUB_PROCESS"CRC error Get %02x <> Count %02x\r\n",(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]),CRC_check(ch,ch[i+3]+4));
 			}
 			else
 			{
-				printf("wrong info %02x %02x\r\n",ch[0],ch[1]);
+				printf(SUB_PROCESS"wrong info %02x %02x\r\n",ch[0],ch[1]);
 				return 0;
 			}
 			i=ch[i+3]+6;
@@ -512,7 +620,7 @@ int read_uart(int fd)
 				if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
 					j++;
 			}
-			printf("send post_message %s",post_message);
+			printf(SUB_PROCESS"send post_message %s",post_message);
 			char *out1=malloc(strlen(post_message)-j+1);
 			memset(out1,'\0',strlen(post_message)-j+1);
 			j=0;
@@ -524,7 +632,7 @@ int read_uart(int fd)
 				}
 			}
 			save_to_file(date,out1);
-			printf("send web %s",out1);
+			printf(SUB_PROCESS"send web %s",out1);
 			rcv=send_web(URL,out1,9);
 			free(post_message);
 			post_message=NULL;
@@ -532,8 +640,8 @@ int read_uart(int fd)
 			if(rcv!=NULL)
 			{	
 				int len=strlen(rcv);
-				printf(LOG_PREFX"<=== %s %d\n",rcv,len);
-				printf(LOG_PREFX"send ok\n");
+				printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+				printf(SUB_PROCESS"send ok\n");
 				free(rcv);
 			}
 		}
@@ -546,7 +654,7 @@ int read_uart(int fd)
 		struct tm *tmtt;
 		tmtt = (struct tm *)localtime(&t);
 		strftime(date, 128, "%Y:%m:%d_%H:%M:%S", tmtt);
-		printf("no data in %s\r\n",date);		
+		printf(SUB_PROCESS"no data in %s\r\n",date);		
 	}
 	return len;
 }
@@ -627,7 +735,111 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 	printf("set done!\n");
 	return 0;
 }
+void dump_curr_time(int fd)
+{
+	int retval;
+	struct rtc_time rtc_tm;
 
+	/* Read the current RTC time/date */
+	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
+	if (retval == -1) {
+	perror("RTC_RD_TIME ioctl");
+	exit(errno);
+	}
+
+	printf(MAIN_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
+	rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
+	rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+}
+/* Original work from rtc-test example */
+int set_alarm(int hour,int mintue,int sec)
+{
+	int fd, retval;
+	struct rtc_time rtc_tm;
+	unsigned long data;
+
+	fd = open(RTCDEV, O_RDONLY);
+
+	if (fd == -1) {
+	perror("RTC open (RTCDEV node missing?)");
+	exit(errno);
+	}
+
+	/* Read the current RTC time/date */
+	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
+	if (retval == -1) {
+	perror("RTC_RD_TIME ioctl");
+	exit(errno);
+	}
+
+	dump_curr_time(fd);
+
+	//if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
+	//{
+		//rtc_tm.tm_sec=sec;
+		//rtc_tm.tm_min=mintue;
+		//rtc_tm.tm_hour=hour;
+		
+		rtc_tm.tm_sec += sec;
+		if (rtc_tm.tm_sec >= 60) {
+		rtc_tm.tm_sec %= 60;
+		rtc_tm.tm_min++;
+		}
+		if (rtc_tm.tm_min == 60) {
+		rtc_tm.tm_min = 0;
+		rtc_tm.tm_hour++;
+		}
+		if (rtc_tm.tm_hour == 24)
+		rtc_tm.tm_hour = 0;
+	
+		rtc_tm.tm_min +=mintue;
+		if (rtc_tm.tm_min == 60) {
+		rtc_tm.tm_min = 0;
+		rtc_tm.tm_hour++;
+		}
+		if (rtc_tm.tm_hour == 24)
+		rtc_tm.tm_hour = 0;
+	
+		rtc_tm.tm_hour +=hour;
+		if (rtc_tm.tm_hour == 24)
+		rtc_tm.tm_hour = 0;
+		printf(MAIN_PROCESS"tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);		
+		retval = ioctl(fd, RTC_ALM_SET, &rtc_tm);
+		if (retval == -1) {
+		perror("RTC_ALM_SET ioctl");
+		exit(errno);
+		}
+
+		/* Enable alarm interrupts */
+		retval = ioctl(fd, RTC_AIE_ON, 0);
+		if (retval == -1) {
+		perror("RTC_AIE_ON ioctl");
+		exit(errno);
+		}
+
+		printf(MAIN_PROCESS"Alarm will trigger in %02d:%02d:%02d\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);
+
+		/* This blocks until the alarm ring causes an interrupt */
+		retval = read(fd, &data, sizeof(unsigned long));
+		if (retval == -1) {
+		perror("read");
+		exit(errno);
+		}
+
+		/* Disable alarm interrupts */
+		retval = ioctl(fd, RTC_AIE_OFF, 0);
+		if (retval == -1) {
+		perror("RTC_AIE_OFF ioctl");
+		exit(errno);
+		}
+		printf(MAIN_PROCESS"Alarm has triggered\n");
+	//}
+	//else
+	//	printf(MAIN_PROCESS"no alarm tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec	);
+	dump_curr_time(fd);
+	close(fd);
+	return 0;
+}
 int open_com_port()
 {
 	int fd;
@@ -656,9 +868,15 @@ int open_com_port()
 
 int main(int argc, char *argv[])
 {
-
-	int fd_com=0;
+	key_t shmid; 
+	int fd_com=0,fpid;
 	get_ip(ip);
+	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
+	{
+        fprintf(stderr, "Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }  
+	server_time = (char *)shmat(shmid, 0, 0);
 	if((fd_com=open_com_port())<0)
 	{
 		perror("open_port error");
@@ -669,10 +887,22 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
-	while(1)
+	fpid=fork();
+	if(fpid==0)
 	{
-		read_uart(fd_com);
-		//sleep(3);
+		while(1)
+		{
+			read_uart(fd_com);
+		}
+	}
+	else if(fpid>0)
+	{
+		while(1)
+		{
+			set_alarm(0,0,10);
+			sync_server(fd_com,1);
+			sync_server(fd_com,0);
+		}
 	}
 	return 0;
 }

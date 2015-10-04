@@ -101,15 +101,15 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
 			if(atoi(type)==5)
 			{
-				starttime=doit_data(rcv,(char *)"210");
-				tmp=doit_data(rcv,(char *)"211");
-				printf("201 %s\r\n",doit(rcv,"201"));
-				printf("202 %s\r\n",doit(rcv,"202"));
+				starttime=doit_data(rcv+4,(char *)"210");
+				tmp=doit_data(rcv+4,(char *)"211");
+				printf("201 %s\r\n",doit(rcv+4,"201"));
+				printf("202 %s\r\n",doit(rcv+4,"202"));
 			}
 			else if(atoi(type)==6)
 			{
-				starttime=doit_data(rcv,(char *)"101");
-				tmp=doit_data(rcv,(char *)"102");
+				starttime=doit_data(rcv+3,(char *)"101");
+				tmp=doit_data(rcv+3,(char *)"102");
 			}
 			if(starttime!=NULL)
 			{
