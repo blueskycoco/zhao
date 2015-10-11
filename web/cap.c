@@ -39,8 +39,8 @@
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
 #define ARM_TO_CAP 0xBB
-#define RESEND_BYTE	0x02
-#define TIME_BYTE	0x01
+#define RESEND_BYTE	0x0002
+#define TIME_BYTE	0x0001
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 #define FILE_PATH	"/mnt/user/history/"
@@ -462,6 +462,223 @@ void get_ip(char *ip)
 	GetIP_v4_and_v6_linux(AF_INET,ip,16);
 	printf("ip addrss %s\n", ip);
 	return ;
+}
+int get_uart(int fd)
+{
+	#define STATE_IDLE 	0
+	#define STATE_6C 	1
+	#define STATE_AA 	2
+	#define STATE_MESSAGE_TYPE 3
+	#define STATE_MESSAGE_LEN 4
+	#define STATE_MESSAGE 5
+	#define STATE_CRC 6
+	char *rcv=NULL,ch,state=STATE_IDLE,message_type=0,message_len=0;	
+	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
+	char message[10],i=0,to_check[20];
+	struct timeval time1;
+	int crc,j;
+	fd_set fs_read;
+	FD_ZERO(&fs_read);
+	FD_SET(fd,&fs_read);
+	time1.tv_sec = 10;
+	time1.tv_usec = 0;
+	while(1)
+	{
+		//if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
+		{
+			if(read(fd,&ch,1)==1)
+			{
+				switch (state)
+				{
+					case STATE_IDLE:
+					{
+						if(ch==0x6c)
+							state=STATE_6C;
+					}
+					break;
+					case STATE_6C:
+					{
+						if(ch==0xaa)
+						{
+							state=STATE_AA;
+							i=0;
+						}						
+					}
+					break;
+					case STATE_AA:
+					{
+						message_type=ch<<8;
+						i=0;
+						state=STATE_MESSAGE_TYPE;
+					}
+					break;
+					case STATE_MESSAGE_TYPE:
+					{
+						message_type|=ch;
+						state=STATE_MESSAGE_LEN;
+					}
+					break;
+					case STATE_MESSAGE_LEN:
+					{
+						message_len=ch;
+						state=STATE_MESSAGE;
+						i=0;
+					}
+					break;
+					case STATE_MESSAGE:
+					{
+						if(i!=message_len)
+						{
+							message[i++]=ch;
+						}
+						else
+						{
+							state=STATE_CRC;
+							crc=ch<<8;
+							//printf(SUB_PROCESS"crc1 %02x\n",ch);
+						}	
+					}
+					break;
+					case STATE_CRC:
+					{
+						crc|=ch;
+						//printf(SUB_PROCESS"crc2 %02x\n",ch);
+						printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
+						for(i=0;i<message_len;i++)
+						{
+							printf("%02x ",message[i]);
+							to_check[5+i]=message[i];
+						}
+						printf("%04x \r\n",crc);
+						to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
+						to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
+						to_check[5+message_len+1]=crc&0xff;
+						printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
+						if(crc==CRC_check(to_check,message_len+5))
+						{
+							if(post_message==NULL)
+							{
+								post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+								post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+								post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
+								post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
+							}
+							i=0;
+							memset(id,'\0',sizeof(id));
+							memset(data,'\0',sizeof(data));
+							memset(date,'\0',sizeof(date));
+							memset(error,'\0',sizeof(error));
+							switch(message_type)
+							{
+								case TIME_BYTE:
+									{
+										sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
+										printf(SUB_PROCESS"date is %s\r\n",date);
+										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
+										can_send=1;
+									}
+									break;
+								case ERROR_BYTE:
+									{
+										sprintf(error,"%dth sensor possible error",to_check[i+2]);
+										post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
+									}
+									break;
+								case RESEND_BYTE:
+									{
+										write(fd,server_time,13);
+									}
+									break;
+								default:
+									{
+										/*get cap data*/
+										if(to_check[i+5]==0x45 && to_check[i+6]==0x52 && to_check[i+7]==0x52 && to_check[i+8]==0x4f && to_check[i+9]==0x52)
+										{
+											sprintf(error,"%dth%%20sensor%%20possible%%20error",to_check[i+3]);
+											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
+										}
+										else
+										{
+											sprintf(id,"%d",message_type);
+											sprintf(data,"%d%d",to_check[i+5],to_check[i+6]);
+											//printf("pre data %s %d\r\n",data,strlen(data));
+											
+											if(to_check[i+7]>=strlen(data))
+											{									
+												sprintf(data,"0.%d%d",to_check[i+5],to_check[i+6]);
+											}
+											else if(to_check[i+7]==0)
+											{									
+												sprintf(data,"%d%d.0",to_check[i+5],to_check[i+6]);
+											}
+											else
+											{
+												for(j=strlen(data);j>strlen(data)-to_check[i+7]-1;j--)
+												{
+													data[j]=data[j-1];
+													//printf("j %d %c\r\n",j,data[j]);
+												}	
+												data[j]='.';
+											}
+											printf(SUB_PROCESS"id %s data %s\r\n",id,data);
+											post_message=add_item(post_message,id,data);
+										}
+									}
+									break;
+							}
+						}
+						else
+						{
+							printf(SUB_PROCESS"CRC error \r\n");
+							for(i=0;i<message_len+7;i++)
+								printf("0x%02x ",to_check[i]);
+						}
+						//i=to_check[i+3]+6;							
+						if(can_send)
+						{
+							can_send=0;
+							j=0;
+							for(i=0;i<strlen(post_message);i++)
+							{
+								if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
+									j++;
+							}
+							printf(SUB_PROCESS"send post_message %s",post_message);
+							char *out1=malloc(strlen(post_message)-j+1);
+							memset(out1,'\0',strlen(post_message)-j+1);
+							j=0;
+							for(i=0;i<strlen(post_message);i++)
+							{
+								if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
+								{
+									out1[j++]=post_message[i];
+								}
+							}
+							save_to_file(date,out1);
+							printf(SUB_PROCESS"send web %s",out1);
+							rcv=send_web(URL,out1,9);
+							free(post_message);
+							post_message=NULL;
+							free(out1);
+							if(rcv!=NULL)
+							{	
+								int len=strlen(rcv);
+								printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+								printf(SUB_PROCESS"send ok\n");
+								free(rcv);
+							}						
+						}
+						return 0;						
+					}
+					default:
+					{
+						i=0;
+						state=STATE_IDLE;
+					}	
+				}
+			}
+		}
+	}
 }
 int read_uart(int fd)
 {
@@ -892,7 +1109,8 @@ int main(int argc, char *argv[])
 	{
 		while(1)
 		{
-			read_uart(fd_com);
+			//read_uart(fd_com);
+			get_uart(fd_com);
 		}
 	}
 	else if(fpid>0)
@@ -900,8 +1118,8 @@ int main(int argc, char *argv[])
 		while(1)
 		{
 			set_alarm(0,0,10);
-			sync_server(fd_com,1);
-			sync_server(fd_com,0);
+			//sync_server(fd_com,1);
+			//sync_server(fd_com,0);
 		}
 	}
 	return 0;
