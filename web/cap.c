@@ -472,11 +472,11 @@ int get_uart(int fd)
 	#define STATE_MESSAGE_LEN 4
 	#define STATE_MESSAGE 5
 	#define STATE_CRC 6
-	char *rcv=NULL,ch,state=STATE_IDLE,message_type=0,message_len=0;	
+	char *rcv=NULL,ch,state=STATE_IDLE,message_len=0;	
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	char message[10],i=0,to_check[20];
 	struct timeval time1;
-	int crc,j;
+	int crc,j,message_type=0;
 	fd_set fs_read;
 	FD_ZERO(&fs_read);
 	FD_SET(fd,&fs_read);
@@ -508,6 +508,7 @@ int get_uart(int fd)
 					case STATE_AA:
 					{
 						message_type=ch<<8;
+						//printf("Get AA ==> %02x %02x",ch,message_type);
 						i=0;
 						state=STATE_MESSAGE_TYPE;
 					}
@@ -553,7 +554,7 @@ int get_uart(int fd)
 						to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 						to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 						to_check[5+message_len+1]=crc&0xff;
-						printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
+						//printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
 						if(crc==CRC_check(to_check,message_len+5))
 						{
 							if(post_message==NULL)
