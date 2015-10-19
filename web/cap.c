@@ -85,10 +85,16 @@ char *send_web(char *url,char *buf,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
+	char *rcv=NULL;
+#if 0
 	sprintf(request,"%s?JSONStr=%s",url,buf);
 	printf(LOG_PREFX"send web %s\n",request);
-	//char *rcv=http_post(url,buf,timeout);
-	char *rcv=http_get(request,timeout);
+	rcv=http_get(request,timeout);
+#else
+	sprintf(request,"JSONStr=%s",buf);
+	printf(LOG_PREFX"send web %s\n",request);
+	rcv=http_post(url,request,timeout);
+#endif
 	if(rcv!=NULL)
 		printf(LOG_PREFX"rcv %s\n",rcv);
 	else
@@ -377,7 +383,7 @@ void sync_server(int fd,int resend)
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_ASK_RE_DATA);
 	else
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
-	sync_message=add_item(sync_message,ID_DEVICE_UID,"230FFEE9981283737D");
+	sync_message=add_item(sync_message,ID_DEVICE_UID,"1234abcd");
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
 	printf(LOG_PREFX"<sync GET>%s\n",sync_message);
@@ -423,7 +429,7 @@ void sync_server(int fd,int resend)
 		}
 		else
 		{
-			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
+			//strcpy(rcv,"{\"30\":\"1234abcd\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
 			//if(atoi(type)==5)
 			//{
 				char year[3]={0},month[3]={0},day[3]={0},hour[3]={0},minute[3]={0},second[3]={0};
@@ -560,7 +566,7 @@ int get_uart(int fd)
 							if(post_message==NULL)
 							{
 								post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-								post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+								post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
 								post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
 								post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
 							}
@@ -740,7 +746,7 @@ int read_uart(int fd)
 		if(post_message==NULL)
 		{
 			post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-			post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+			post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
 			post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
 			post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
 		}
