@@ -124,7 +124,26 @@ char *send_web(char *url,char *buf,int timeout)
 #endif
 	return rcv;
 }
-
+char *send_web_get(char *url,char *buf,int timeout)
+{
+	char request[1024]={0};
+	int result=0;
+	char *rcv=NULL;
+#if 1
+	sprintf(request,"%s?JSONStr=%s",url,buf);
+	printf(LOG_PREFX"send web %s\n",request);
+	rcv=http_get(request,timeout);
+#else
+	sprintf(request,"JSONStr=%s",buf);
+	printf(LOG_PREFX"send web %s\n",request);
+	rcv=http_post(url,request,timeout);
+#endif
+	if(rcv!=NULL)
+		printf(LOG_PREFX"rcv %s\n",rcv);
+	else
+		printf(LOG_PREFX"no rcv got\n");
+	return rcv;
+}
 int GetIP_v4_and_v6_linux(int family,char *address,int size)
 {
 	struct ifaddrs *ifap0,*ifap;
@@ -309,7 +328,7 @@ void resend_history(char *date_begin,char *date_end)
 						{
 							line[strlen(line)-1]='\0';							
 							printf(MAIN_PROCESS"rsend web %s",line);
-							char *rcv=send_web(URL,line,39);
+							char *rcv=send_web_get(URL,line,39);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
@@ -325,7 +344,7 @@ void resend_history(char *date_begin,char *date_end)
 						{						
 							line[strlen(line)-1]='\0';
 							printf(MAIN_PROCESS"rsend web %s",line);
-							char *rcv=send_web(URL,line,9);
+							char *rcv=send_web_get(URL,line,9);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
@@ -403,7 +422,7 @@ void sync_server(int fd,int resend)
 			out1[j++]=sync_message[i];
 		}
 	}
-	rcv=send_web(URL,out1,9);
+	rcv=send_web_get(URL,out1,9);
 	free(sync_message);
 	free(out1);
 	if(rcv!=NULL)
@@ -579,7 +598,7 @@ int get_uart(int fd)
 							{
 								case TIME_BYTE:
 									{
-										sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
+										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
 										printf(SUB_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 										can_send=1;
@@ -601,7 +620,7 @@ int get_uart(int fd)
 										/*get cap data*/
 										if(to_check[i+5]==0x45 && to_check[i+6]==0x52 && to_check[i+7]==0x52 && to_check[i+8]==0x4f && to_check[i+9]==0x52)
 										{
-											sprintf(error,"%dth%%20sensor%%20possible%%20error",to_check[i+3]);
+											sprintf(error,"%dth sensor possible error",to_check[i+3]);
 											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 										}
 										else
@@ -770,7 +789,7 @@ int read_uart(int fd)
 					{
 						case TIME_BYTE:
 							{
-								sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
+								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
 								printf(SUB_PROCESS"date is %s\r\n",date);
 								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 								can_send=1;
@@ -792,7 +811,7 @@ int read_uart(int fd)
 								/*get cap data*/
 								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
 								{
-									sprintf(error,"%dth%%20sensor%%20possible%%20error",ch[i+2]);
+									sprintf(error,"%dth sensor possible error",ch[i+2]);
 									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 								}
 								else
@@ -1111,6 +1130,15 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
+	server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
+	server_time[2]=0x01;server_time[3]=0x06;
+	server_time[4]=0x0f;server_time[5]=0x0a;
+	server_time[6]=0x13;server_time[7]=0x13;
+	server_time[8]=0x37;server_time[9]=0x11;
+	int crc=CRC_check(server_time,10);
+	server_time[10]=(crc&0xff00)>>8;server_time[11]=crc&0x00ff;
+	//write(fd,server_time,12);
+	write(fd_com,server_time,12);
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -1125,8 +1153,8 @@ int main(int argc, char *argv[])
 		while(1)
 		{
 			set_alarm(0,0,10);
-			//sync_server(fd_com,1);
-			//sync_server(fd_com,0);
+			sync_server(fd_com,1);
+			sync_server(fd_com,0);
 		}
 	}
 	return 0;
