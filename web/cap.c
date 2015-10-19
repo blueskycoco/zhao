@@ -43,6 +43,7 @@
 #define TIME_BYTE	0x0001
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
+//#define URL "http://16.168.0.3:8080/saveData/airmessage/messMgr.do"
 #define FILE_PATH	"/mnt/user/history/"
 #define MAIN_PROCESS 						"[MainSystem]:"
 #define SUB_PROCESS 						"[ChildSystem]:"
