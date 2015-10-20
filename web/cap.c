@@ -407,6 +407,7 @@ void sync_server(int fd,int resend)
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
 	printf(LOG_PREFX"<sync GET>%s\n",sync_message);
+#if 0
 	j=0;
 	for(i=0;i<strlen(sync_message);i++)
 	{
@@ -423,9 +424,10 @@ void sync_server(int fd,int resend)
 			out1[j++]=sync_message[i];
 		}
 	}
-	rcv=send_web_get(URL,out1,9);
+#endif
+	rcv=send_web_get(URL,sync_message,9);
 	free(sync_message);
-	free(out1);
+	//free(out1);
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
@@ -599,7 +601,7 @@ int get_uart(int fd)
 							{
 								case TIME_BYTE:
 									{
-										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
+										sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
 										printf(SUB_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 										can_send=1;
@@ -607,7 +609,7 @@ int get_uart(int fd)
 									break;
 								case ERROR_BYTE:
 									{
-										sprintf(error,"%dth sensor possible error",to_check[i+2]);
+										sprintf(error,"%dth%%20sensor%%20possible%%20error",to_check[i+2]);
 										post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 									}
 									break;
@@ -621,7 +623,7 @@ int get_uart(int fd)
 										/*get cap data*/
 										if(to_check[i+5]==0x45 && to_check[i+6]==0x52 && to_check[i+7]==0x52 && to_check[i+8]==0x4f && to_check[i+9]==0x52)
 										{
-											sprintf(error,"%dth sensor possible error",to_check[i+3]);
+											sprintf(error,"%dth%%20sensor%%20possible%%20error",to_check[i+3]);
 											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 										}
 										else
@@ -664,6 +666,7 @@ int get_uart(int fd)
 						if(can_send)
 						{
 							can_send=0;
+#if 0
 							j=0;
 							for(i=0;i<strlen(post_message);i++)
 							{
@@ -681,12 +684,13 @@ int get_uart(int fd)
 									out1[j++]=post_message[i];
 								}
 							}
+#endif
 							save_to_file(date,out1);
 							printf(SUB_PROCESS"send web %s",out1);
-							rcv=send_web(URL,out1,9);
+							rcv=send_web_get(URL,post_message,9);
 							free(post_message);
 							post_message=NULL;
-							free(out1);
+							//free(out1);
 							if(rcv!=NULL)
 							{	
 								int len=strlen(rcv);
@@ -790,7 +794,7 @@ int read_uart(int fd)
 					{
 						case TIME_BYTE:
 							{
-								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
+								sprintf(date,"20%02d-%02d-%02d%%20%02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
 								printf(SUB_PROCESS"date is %s\r\n",date);
 								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 								can_send=1;
@@ -798,7 +802,7 @@ int read_uart(int fd)
 							break;
 						case ERROR_BYTE:
 							{
-								sprintf(error,"%dth sensor possible error",ch[i+2]);
+								sprintf(error,"%dth%%20sensor%%20possible%%20error",ch[i+2]);
 								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 							}
 							break;
@@ -812,7 +816,7 @@ int read_uart(int fd)
 								/*get cap data*/
 								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
 								{
-									sprintf(error,"%dth sensor possible error",ch[i+2]);
+									sprintf(error,"%dth%%20sensor%%20possible%%20error",ch[i+2]);
 									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 								}
 								else
@@ -858,6 +862,7 @@ int read_uart(int fd)
 		if(can_send)
 		{
 			can_send=0;
+#if 0
 			j=0;
 			for(i=0;i<strlen(post_message);i++)
 			{
@@ -875,12 +880,13 @@ int read_uart(int fd)
 					out1[j++]=post_message[i];
 				}
 			}
+#endif
 			save_to_file(date,out1);
 			printf(SUB_PROCESS"send web %s",out1);
-			rcv=send_web(URL,out1,9);
+			rcv=send_web_get(URL,post_message,9);
 			free(post_message);
 			post_message=NULL;
-			free(out1);
+			//free(out1);
 			if(rcv!=NULL)
 			{	
 				int len=strlen(rcv);

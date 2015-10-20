@@ -14,7 +14,7 @@
 #include "weblib.h"
 #include "web_interface.h"
 
-char *send_web(char *url,char *post_message,int timeout)
+char *send_web_get(char *url,char *post_message,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
@@ -26,29 +26,20 @@ char *send_web(char *url,char *post_message,int timeout)
 		printf(LOG_PREFX"rcv %s\n",rcv);
 	else
 		printf(LOG_PREFX"no rcv got\n");
-#if 0
+	return rcv;
+}
+char *send_web_post(char *url,char *post_message,int timeout)
+{
+	char request[1024]={0};
+	int result=0;
+	//sprintf(request,"%s?JSONStr=%s",url,post_message);
+	printf(LOG_PREFX"send web %s\n",request);
+	char *rcv=http_post(url,post_message,timeout);
+	//char *rcv=http_get(request,timeout);
 	if(rcv!=NULL)
-	{
-		printf("%s\n",rcv);
-		char res=doit_ack(rcv,"success");
-		if(res)
-		{
-			printf(LOG_PREFX"code is %d\n",res);
-			result=1;
-			if(strstr(url,"achieve")!=0)
-			{
-				char *data=doit_data(rcv,"data");
-				if(data)
-				{
-					send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
-					free(data);
-				}
-			}
-		}
-		free(rcv);
-	}
-	return result;
-#endif
+		printf(LOG_PREFX"rcv %s\n",rcv);
+	else
+		printf(LOG_PREFX"no rcv got\n");
 	return rcv;
 }
 
@@ -69,6 +60,7 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 		post_message=add_item(post_message,ID_DEVICE_CAP_TIME,time);
 	}
 	printf(LOG_PREFX"<GET>%s\n",post_message);
+#if 0
 	j=0;
 	for(i=0;i<strlen(post_message);i++)
 	{
@@ -85,9 +77,14 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 			out1[j++]=post_message[i];
 		}
 	}
-	rcv=send_web(url,out1,timeout);
+#endif
+	if(atoi(type)==2)
+	rcv=send_web_get(url,post_message,timeout);
+	else
+	rcv=send_web_get(url,post_message,timeout);
+
 	free(post_message);
-	free(out1);
+	//free(out1);
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
@@ -101,15 +98,15 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
 			if(atoi(type)==5)
 			{
-				starttime=doit_data(rcv+4,(char *)"210");
-				tmp=doit_data(rcv+4,(char *)"211");
-				printf("201 %s\r\n",doit(rcv+4,"201"));
-				printf("202 %s\r\n",doit(rcv+4,"202"));
+				starttime=doit_data(rcv,(char *)"210");
+				tmp=doit_data(rcv,(char *)"211");
+				printf("201 %s\r\n",doit(rcv,"201"));
+				printf("202 %s\r\n",doit(rcv,"202"));
 			}
 			else if(atoi(type)==6)
 			{
-				starttime=doit_data(rcv+3,(char *)"101");
-				tmp=doit_data(rcv+3,(char *)"102");
+				starttime=doit_data(rcv,(char *)"101");
+				tmp=doit_data(rcv,(char *)"102");
 			}
 			if(starttime!=NULL)
 			{

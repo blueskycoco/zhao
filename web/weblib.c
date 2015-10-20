@@ -462,8 +462,8 @@ char * http_post(const char *url,const char *post_str,int timeout){
 		printf(LOG_PREFX"http_tcpclient_send failed..\n");  
 		return NULL;  
 	}  
-	//printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
-
+	printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
+	memset(lpbuf,0,BUFFER_SIZE*4);
 	/*it's time to recv from server*/  
 	if(http_tcpclient_recv(socket_fd,lpbuf,timeout) <= 0){  
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
@@ -604,7 +604,8 @@ char *add_item(char *old,char *id,char *text)
 	else
 		root=cJSON_CreateObject();	
 	cJSON_AddItemToObject(root, id, cJSON_CreateString(text));
-	out=cJSON_Print(root);	
+	//out=cJSON_Print(root);	
+	out=cJSON_PrintUnformatted(root);	
 	cJSON_Delete(root);
 	if(old)
 		free(old);
@@ -617,7 +618,8 @@ char *add_obj(char *old,char *id,char *pad)
 	root=cJSON_Parse(old);
 	fmt=cJSON_Parse(pad);
 	cJSON_AddItemToObject(root, id, fmt);
-	out=cJSON_Print(root);
+	//out=cJSON_Print(root);
+	out=cJSON_PrintUnformatted(root);
 	cJSON_Delete(root);
 	cJSON_Delete(fmt);
 	free(pad);
