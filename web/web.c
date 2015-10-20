@@ -32,9 +32,9 @@ char *send_web_post(char *url,char *post_message,int timeout)
 {
 	char request[1024]={0};
 	int result=0;
-	//sprintf(request,"%s?JSONStr=%s",url,post_message);
+	sprintf(request,"JSONStr=%s",post_message);
 	printf(LOG_PREFX"send web %s\n",request);
-	char *rcv=http_post(url,post_message,timeout);
+	char *rcv=http_post(url,request,timeout);
 	//char *rcv=http_get(request,timeout);
 	if(rcv!=NULL)
 		printf(LOG_PREFX"rcv %s\n",rcv);
@@ -79,9 +79,9 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 	}
 #endif
 	if(atoi(type)==2)
-	rcv=send_web_get(url,post_message,timeout);
+	rcv=send_web_post(url,post_message,timeout);
 	else
-	rcv=send_web_get(url,post_message,timeout);
+	rcv=send_web_post(url,post_message,timeout);
 
 	free(post_message);
 	//free(out1);
