@@ -303,6 +303,7 @@ static int http_tcpclient_recv(int socket,char *lpbuff,int timeout){
 	struct timeval tv; 
 	tv.tv_usec=0;
 	tv.tv_sec = timeout;
+
 	FD_ZERO(&rset); 
 	FD_SET(socket, &rset);
 	if(select(socket+1, &rset, NULL, NULL, &tv) > 0) 
@@ -397,7 +398,7 @@ static char *http_parse_result(const char*lpbuf)
 		printf(LOG_PREFX"http/1.1 not faind\n%s\n",lpbuf);  
 		return NULL;  
 	}  
-	printf(LOG_PREFX"%s",lpbuf);
+	//printf(LOG_PREFX"%s",lpbuf);
 	if(atoi(ptmp + 9)!=200)
 	{  
 		if(strstr(lpbuf,"ok")==NULL)
@@ -462,13 +463,17 @@ char * http_post(const char *url,const char *post_str,int timeout){
 		printf(LOG_PREFX"http_tcpclient_send failed..\n");  
 		return NULL;  
 	}  
-	printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
+	//printf(LOG_PREFX"POST Sent:\n%s\n",lpbuf);  
 	memset(lpbuf,0,BUFFER_SIZE*4);
 	/*it's time to recv from server*/  
-	if(http_tcpclient_recv(socket_fd,lpbuf,timeout) <= 0){  
+	if((len=http_tcpclient_recv(socket_fd,lpbuf,timeout)) <= 0){  
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  
-	}  
+	}
+	else
+	{
+		http_tcpclient_recv(socket_fd,lpbuf+len,3);
+	}
 
 	http_tcpclient_close(socket_fd);  
 

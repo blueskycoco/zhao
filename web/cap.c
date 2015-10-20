@@ -97,9 +97,9 @@ char *send_web_post(char *url,char *buf,int timeout)
 	rcv=http_post(url,request,timeout);
 #endif
 	if(rcv!=NULL)
-		printf(LOG_PREFX"rcv %s\n",rcv);
+		printf("\n\n"LOG_PREFX"rcv %s\n\n",rcv);
 	else
-		printf(LOG_PREFX"no rcv got\n");
+		printf("\n\n"LOG_PREFX"no rcv got\n\n");
 #if 0
 	if(rcv!=NULL)
 	{
@@ -249,7 +249,8 @@ void save_to_file(char *date,char *message)
 		fclose(fp);
 		fp=fopen(file_path, "a");
 	}
-	strcpy(data,date+13);
+	strcpy(data,date+11);
+	//strcpy(data,date+13);
 	strcat(data,"\n");
 	fwrite(data,strlen(data),1,fp);
 	memset(data,'\0',512);
@@ -438,8 +439,8 @@ void sync_server(int fd,int resend)
 		if(resend)
 		{
 			
-			starttime=doit_data(rcv+3,(char *)"101");
-			tmp=doit_data(rcv+3,(char *)"102");
+			starttime=doit_data(rcv,(char *)"101");
+			tmp=doit_data(rcv,(char *)"102");
 			if(starttime!=NULL && tmp!=NULL)
 			{
 				printf(MAIN_PROCESS"%s\r\n",tmp);
@@ -456,25 +457,25 @@ void sync_server(int fd,int resend)
 			//{
 				char year[3]={0},month[3]={0},day[3]={0},hour[3]={0},minute[3]={0},second[3]={0};
 				unsigned int crc=0;
-				starttime=doit_data(rcv+4,(char *)"104");
+				starttime=doit_data(rcv,(char *)"104");
 				server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
-				server_time[2]=0x01;server_time[3]=0x06;
+				server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
 				memcpy(year,starttime+2,2);
 				memcpy(month,starttime+5,2);
 				memcpy(day,starttime+8,2);
 				memcpy(hour,starttime+11,2);
 				memcpy(minute,starttime+14,2);
 				memcpy(second,starttime+17,2);
-				server_time[4]=atoi(year);server_time[5]=atoi(month);
-				server_time[6]=atoi(day);server_time[7]=atoi(hour);
-				server_time[8]=atoi(minute);server_time[9]=atoi(second);
-				crc=CRC_check(server_time,10);
-				server_time[10]=(crc&0xff00)>>8;server_time[11]=crc&0x00ff;
-				write(fd,server_time,12);
+				server_time[5]=atoi(year);server_time[6]=atoi(month);
+				server_time[7]=atoi(day);server_time[8]=atoi(hour);
+				server_time[9]=atoi(minute);server_time[10]=atoi(second);
+				crc=CRC_check(server_time,11);
+				server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
+				write(fd,server_time,13);
 				printf(MAIN_PROCESS"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
-				printf(MAIN_PROCESS"211 %s\r\n",doit_data(rcv+4,"211"));
-				printf(MAIN_PROCESS"212 %s\r\n",doit_data(rcv+4,"212"));
+				printf(MAIN_PROCESS"211 %s\r\n",doit_data(rcv,"211"));
+				printf(MAIN_PROCESS"212 %s\r\n",doit_data(rcv,"212"));
 			//}
 			//else if(atoi(type)==6)
 			//{
@@ -572,13 +573,13 @@ int get_uart(int fd)
 					{
 						crc|=ch;
 						//printf(SUB_PROCESS"crc2 %02x\n",ch);
-						printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
+						//printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
 						for(i=0;i<message_len;i++)
 						{
-							printf("%02x ",message[i]);
+							//printf("%02x ",message[i]);
 							to_check[5+i]=message[i];
 						}
-						printf("%04x \r\n",crc);
+						//printf("%04x \r\n",crc);
 						to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 						to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 						to_check[5+message_len+1]=crc&0xff;
@@ -649,7 +650,7 @@ int get_uart(int fd)
 												}	
 												data[j]='.';
 											}
-											printf(SUB_PROCESS"id %s data %s\r\n",id,data);
+											//printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 											post_message=add_item(post_message,id,data);
 										}
 									}
@@ -685,8 +686,8 @@ int get_uart(int fd)
 								}
 							}
 #endif
-							save_to_file(date,out1);
-							printf(SUB_PROCESS"send web %s",out1);
+							save_to_file(date,post_message);
+							printf(SUB_PROCESS"send web %s",post_message);
 							rcv=send_web_post(URL,post_message,9);
 							free(post_message);
 							post_message=NULL;
@@ -881,8 +882,8 @@ int read_uart(int fd)
 				}
 			}
 #endif
-			save_to_file(date,out1);
-			printf(SUB_PROCESS"send web %s",out1);
+			save_to_file(date,post_message);
+			printf(SUB_PROCESS"send web %s",post_message);
 			rcv=send_web_post(URL,post_message,9);
 			free(post_message);
 			post_message=NULL;
@@ -1137,15 +1138,17 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
+	#if 1
 	server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
-	server_time[2]=0x01;server_time[3]=0x06;
-	server_time[4]=0x0f;server_time[5]=0x0a;
-	server_time[6]=0x13;server_time[7]=0x13;
-	server_time[8]=0x37;server_time[9]=0x11;
-	int crc=CRC_check(server_time,10);
-	server_time[10]=(crc&0xff00)>>8;server_time[11]=crc&0x00ff;
+	server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
+	server_time[5]=0x0f;server_time[6]=0x0a;
+	server_time[7]=0x15;server_time[8]=0x08;
+	server_time[9]=0x05;server_time[10]=0x11;
+	int crc=CRC_check(server_time,11);
+	server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
 	//write(fd,server_time,12);
-	write(fd_com,server_time,12);
+	write(fd_com,server_time,13);
+	#endif
 	fpid=fork();
 	if(fpid==0)
 	{
