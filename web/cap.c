@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <pthread.h>
 //#include <net/if_arp.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -49,6 +50,7 @@
 #define SUB_PROCESS 						"[ChildSystem]:"
 //char server_time[20]={0};
 char ip[20]={0};
+pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
 char *server_time;
 //*******************************************************************
@@ -87,6 +89,7 @@ char *send_web_post(char *url,char *buf,int timeout)
 	char request[1024]={0};
 	int result=0;
 	char *rcv=NULL;
+	pthread_mutex_lock(&mutex);
 #if 0
 	sprintf(request,"%s?JSONStr=%s",url,buf);
 	printf(LOG_PREFX"send web %s\n",request);
@@ -100,6 +103,7 @@ char *send_web_post(char *url,char *buf,int timeout)
 		printf("\n\n"LOG_PREFX"rcv %s\n\n",rcv);
 	else
 		printf("\n\n"LOG_PREFX"no rcv got\n\n");
+	pthread_mutex_unlock(&mutex);
 #if 0
 	if(rcv!=NULL)
 	{
@@ -330,13 +334,20 @@ void resend_history(char *date_begin,char *date_end)
 						{
 							line[strlen(line)-1]='\0';							
 							printf(MAIN_PROCESS"rsend web %s",line);
+							while(1){
 							char *rcv=send_web_post(URL,line,39);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
 								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
 								printf(MAIN_PROCESS"send ok\n");
+								if(strncmp(rcv,"ok",2)==0)
+								{
+									free(rcv);
+									break;
+								}
 								free(rcv);
+							}
 							}
 						}
 					}
@@ -346,13 +357,20 @@ void resend_history(char *date_begin,char *date_end)
 						{						
 							line[strlen(line)-1]='\0';
 							printf(MAIN_PROCESS"rsend web %s",line);
+							while(1){
 							char *rcv=send_web_post(URL,line,9);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
 								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
 								printf(MAIN_PROCESS"send ok\n");
+								if(strncmp(rcv,"ok",2)==0)
+								{
+									free(rcv);
+									break;
+								}
 								free(rcv);
+							}
 							}
 						}
 					}
@@ -573,17 +591,17 @@ int get_uart(int fd)
 					{
 						crc|=ch;
 						//printf(SUB_PROCESS"crc2 %02x\n",ch);
-						//printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
+						printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
 						for(i=0;i<message_len;i++)
 						{
-							//printf("%02x ",message[i]);
+							printf("%02x ",message[i]);
 							to_check[5+i]=message[i];
 						}
-						//printf("%04x \r\n",crc);
+						printf("%04x \r\n",crc);
 						to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 						to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 						to_check[5+message_len+1]=crc&0xff;
-						//printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
+						printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
 						if(crc==CRC_check(to_check,message_len+5))
 						{
 							if(post_message==NULL)
@@ -630,27 +648,37 @@ int get_uart(int fd)
 										else
 										{
 											sprintf(id,"%d",message_type);
-											sprintf(data,"%d%d",to_check[i+5],to_check[i+6]);
+											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
 											//printf("pre data %s %d\r\n",data,strlen(data));
 											
 											if(to_check[i+7]>=strlen(data))
-											{									
-												sprintf(data,"0.%d%d",to_check[i+5],to_check[i+6]);
+											{								
+												if((to_check[i+7]-strlen(data))==1)
+												sprintf(data,"0.0%d",to_check[i+5]<<8|to_check[i+6]);
+												else if((to_check[i+7]-strlen(data))==2)
+													sprintf(data,"0.00%d",to_check[i+5]<<8|to_check[i+6]);
+												else
+													sprintf(data,"0.%d",to_check[i+5]<<8|to_check[i+6]);
 											}
 											else if(to_check[i+7]==0)
 											{									
-												sprintf(data,"%d%d.0",to_check[i+5],to_check[i+6]);
+												//if(to_check[i+5]!=0)
+												sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
+												//else
+												//sprintf(data,"%d.0",to_check[i+6]);
 											}
 											else
 											{
-												for(j=strlen(data);j>strlen(data)-to_check[i+7]-1;j--)
-												{
+												int min;
+												min=strlen(data)-to_check[i+7];
+												for(j=strlen(data);j>min;j--)
+												{													
 													data[j]=data[j-1];
 													//printf("j %d %c\r\n",j,data[j]);
 												}	
 												data[j]='.';
 											}
-											//printf(SUB_PROCESS"id %s data %s\r\n",id,data);
+											printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 											post_message=add_item(post_message,id,data);
 										}
 									}
@@ -1138,6 +1166,7 @@ int main(int argc, char *argv[])
 		perror(" set_opt error");
 		return -1;
 	}
+	pthread_mutex_init(&mutex, NULL);
 	#if 1
 	server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
 	server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
@@ -1162,9 +1191,9 @@ int main(int argc, char *argv[])
 	{
 		while(1)
 		{
-			set_alarm(0,0,10);
-			sync_server(fd_com,1);
+			set_alarm(0,0,10);			
 			sync_server(fd_com,0);
+			sync_server(fd_com,1);
 		}
 	}
 	return 0;

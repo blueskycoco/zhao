@@ -470,11 +470,9 @@ char * http_post(const char *url,const char *post_str,int timeout){
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  
 	}
-	else
-	{
-		http_tcpclient_recv(socket_fd,lpbuf+len,3);
-	}
-
+	
+		http_tcpclient_recv(socket_fd,lpbuf+len,timeout);
+	
 	http_tcpclient_close(socket_fd);  
 
 	return http_parse_result(lpbuf);  
@@ -517,10 +515,14 @@ char * http_get(const char *url,int timeout)
 	}  
 	//printf(LOG_PREFX"GET Sent:\n%s\n",lpbuf);  
 	memset(lpbuf,0,BUFFER_SIZE*4);
-	if(http_tcpclient_recv(socket_fd,lpbuf,timeout) <= 0){  
+	if((len=http_tcpclient_recv(socket_fd,lpbuf,timeout)) <= 0){  
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  
-	}  
+	}
+	else
+	{
+		http_tcpclient_recv(socket_fd,lpbuf+len,3);
+	}
 	http_tcpclient_close(socket_fd);  
 
 	return http_parse_result(lpbuf);  
