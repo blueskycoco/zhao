@@ -84,6 +84,7 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
+#define UPLOAD_PROCESS "[UPLOAD_PROCESS]"
 char *send_web_post(char *url,char *buf,int timeout)
 {
 	char request[1024]={0};
@@ -92,17 +93,17 @@ char *send_web_post(char *url,char *buf,int timeout)
 	pthread_mutex_lock(&mutex);
 #if 0
 	sprintf(request,"%s?JSONStr=%s",url,buf);
-	printf(LOG_PREFX"send web %s\n",request);
+	printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_get(request,timeout);
 #else
 	sprintf(request,"JSONStr=%s",buf);
-	printf(LOG_PREFX"send web %s\n",request);
+	printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_post(url,request,timeout);
 #endif
 	if(rcv!=NULL)
-		printf("\n\n"LOG_PREFX"rcv %s\n\n",rcv);
+		printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
 	else
-		printf("\n\n"LOG_PREFX"no rcv got\n\n");
+		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	pthread_mutex_unlock(&mutex);
 #if 0
 	if(rcv!=NULL)
@@ -136,7 +137,7 @@ char *send_web_get(char *url,char *buf,int timeout)
 	char *rcv=NULL;
 #if 1
 	sprintf(request,"%s?JSONStr=%s",url,buf);
-	printf(LOG_PREFX"send web %s\n",request);
+	printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_get(request,timeout);
 #else
 	sprintf(request,"JSONStr=%s",buf);
@@ -144,9 +145,9 @@ char *send_web_get(char *url,char *buf,int timeout)
 	rcv=http_post(url,request,timeout);
 #endif
 	if(rcv!=NULL)
-		printf(LOG_PREFX"rcv %s\n",rcv);
+		printf(UPLOAD_PROCESS"rcv %s\n",rcv);
 	else
-		printf(LOG_PREFX"no rcv got\n");
+		printf(UPLOAD_PROCESS"no rcv got\n");
 	return rcv;
 }
 int GetIP_v4_and_v6_linux(int family,char *address,int size)
@@ -263,6 +264,7 @@ void save_to_file(char *date,char *message)
 	fwrite(data,strlen(data),1,fp);
 	fclose(fp);
 }
+#define RESEND_PROCESS "[RESEND_PROCESS]"
 void resend_history(char *date_begin,char *date_end)
 {
 	FILE *fp;
@@ -294,7 +296,7 @@ void resend_history(char *date_begin,char *date_end)
 	day_e=atoi(day_end);
 	hour_e=atoi(hour_end);
 	minute_e=atoi(minute_end);
-	printf(MAIN_PROCESS"year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+	printf(RESEND_PROCESS"year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
 	while(1)
 	{
 		if(year_b<year_e || month_b<month_e || day_b<=day_e)
@@ -305,14 +307,14 @@ void resend_history(char *date_begin,char *date_end)
 			strcpy(file_path,FILE_PATH);
 			memcpy(file_path+strlen(FILE_PATH),date,10);
 			strcat(file_path,".dat");
-			printf(MAIN_PROCESS"to open %s\r\n",file_path);
+			printf(RESEND_PROCESS"to open %s\r\n",file_path);
 			fp = fopen(file_path, "r");
 			if (fp != NULL)
 			{
 				int read=0,tmp_i=0;
 				char * line = NULL;
 				size_t len = 0;
-				printf(MAIN_PROCESS"open file %s ok\r\n",file_path);
+				printf(RESEND_PROCESS"open file %s ok\r\n",file_path);
 				while ((read = getline(&line, &len, fp)) != -1) 
 				{				
 					if(year_b==year_e && month_b==month_e && day_b==day_e)
@@ -324,7 +326,7 @@ void resend_history(char *date_begin,char *date_end)
 							memcpy(local_minute,line+3,2);
 							if((atoi(local_hour)*60+atoi(local_minute))>(hour_e*60+minute_e))
 							{
-								printf(MAIN_PROCESS"file_time %02d:%02d,end time %02d:%02d",atoi(local_hour),atoi(local_minute),hour_e,minute_e);
+								printf(RESEND_PROCESS"file_time %02d:%02d,end time %02d:%02d",atoi(local_hour),atoi(local_minute),hour_e,minute_e);
 								free(line);
 								fclose(fp);
 								return;
@@ -333,14 +335,14 @@ void resend_history(char *date_begin,char *date_end)
 						else
 						{
 							line[strlen(line)-1]='\0';							
-							printf(MAIN_PROCESS"rsend web %s",line);
+							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,39);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
-								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
-								printf(MAIN_PROCESS"send ok\n");
+								//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								//printf(MAIN_PROCESS"send ok\n");
 								if(strncmp(rcv,"ok",2)==0)
 								{
 									free(rcv);
@@ -356,14 +358,14 @@ void resend_history(char *date_begin,char *date_end)
 						if((tmp_i%2)!=0)
 						{						
 							line[strlen(line)-1]='\0';
-							printf(MAIN_PROCESS"rsend web %s",line);
+							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,9);
 							if(rcv!=NULL)
 							{	
 								int len1=strlen(rcv);
-								printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
-								printf(MAIN_PROCESS"send ok\n");
+								//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+								//printf(MAIN_PROCESS"send ok\n");
 								if(strncmp(rcv,"ok",2)==0)
 								{
 									free(rcv);
@@ -381,7 +383,7 @@ void resend_history(char *date_begin,char *date_end)
 			}
 			else
 			{
-				printf(MAIN_PROCESS"can not open %s\r\n",file_path);
+				printf(RESEND_PROCESS"can not open %s\r\n",file_path);
 				//break;
 			}
 			if(month_b==2)
@@ -406,13 +408,14 @@ void resend_history(char *date_begin,char *date_end)
 		}
 		else
 		{
-			printf(MAIN_PROCESS"end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+			printf(RESEND_PROCESS"end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
 			break;
 		}
 	}
 	if(fp!=NULL)
 	fclose(fp);
 }
+#define SYNC_PREFX "[SYNC_PROCESS]"
 void sync_server(int fd,int resend)
 {
 	int i,j;
@@ -425,7 +428,7 @@ void sync_server(int fd,int resend)
 	sync_message=add_item(sync_message,ID_DEVICE_UID,"1234abcd");
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
-	printf(LOG_PREFX"<sync GET>%s\n",sync_message);
+	printf(SYNC_PREFX"<sync GET>%s\n",sync_message);
 #if 0
 	j=0;
 	for(i=0;i<strlen(sync_message);i++)
@@ -450,8 +453,8 @@ void sync_server(int fd,int resend)
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
-		printf(MAIN_PROCESS"<=== %s\n",rcv);
-		printf(MAIN_PROCESS"send ok\n");
+		printf(SYNC_PREFX"<=== %s\n",rcv);
+		printf(SYNC_PREFX"send ok\n");
 		char *starttime=NULL;
 		char *tmp=NULL;
 		if(resend)
@@ -461,8 +464,8 @@ void sync_server(int fd,int resend)
 			tmp=doit_data(rcv,(char *)"102");
 			if(starttime!=NULL && tmp!=NULL)
 			{
-				printf(MAIN_PROCESS"%s\r\n",tmp);
-				printf(MAIN_PROCESS"%s\r\n",starttime);
+				printf(SYNC_PREFX"%s\r\n",tmp);
+				printf(SYNC_PREFX"%s\r\n",starttime);
 				resend_history(starttime,tmp);
 				free(starttime);
 				free(tmp);
@@ -490,10 +493,10 @@ void sync_server(int fd,int resend)
 				crc=CRC_check(server_time,11);
 				server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
 				write(fd,server_time,13);
-				printf(MAIN_PROCESS"SERVER TIME %s\r\n",starttime);
+				printf(SYNC_PREFX"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
-				printf(MAIN_PROCESS"211 %s\r\n",doit_data(rcv,"211"));
-				printf(MAIN_PROCESS"212 %s\r\n",doit_data(rcv,"212"));
+				printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
+				printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
 			//}
 			//else if(atoi(type)==6)
 			//{
@@ -510,6 +513,7 @@ void get_ip(char *ip)
 	printf("ip addrss %s\n", ip);
 	return ;
 }
+#define CAP_PROCESS "[CAP_PROCESS]"
 int get_uart(int fd)
 {
 	#define STATE_IDLE 	0
@@ -591,17 +595,17 @@ int get_uart(int fd)
 					{
 						crc|=ch;
 						//printf(SUB_PROCESS"crc2 %02x\n",ch);
-						printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
+						//printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
 						for(i=0;i<message_len;i++)
 						{
-							printf("%02x ",message[i]);
+							//printf("%02x ",message[i]);
 							to_check[5+i]=message[i];
 						}
-						printf("%04x \r\n",crc);
+						//printf("%04x \r\n",crc);
 						to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 						to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 						to_check[5+message_len+1]=crc&0xff;
-						printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
+						//printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
 						if(crc==CRC_check(to_check,message_len+5))
 						{
 							if(post_message==NULL)
@@ -621,7 +625,7 @@ int get_uart(int fd)
 								case TIME_BYTE:
 									{
 										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
-										printf(SUB_PROCESS"date is %s\r\n",date);
+										printf(CAP_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
 										can_send=1;
 									}
@@ -678,7 +682,7 @@ int get_uart(int fd)
 												}	
 												data[j]='.';
 											}
-											printf(SUB_PROCESS"id %s data %s\r\n",id,data);
+											//printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 											post_message=add_item(post_message,id,data);
 										}
 									}
@@ -687,7 +691,7 @@ int get_uart(int fd)
 						}
 						else
 						{
-							printf(SUB_PROCESS"CRC error \r\n");
+							printf(CAP_PROCESS"CRC error \r\n");
 							for(i=0;i<message_len+7;i++)
 								printf("0x%02x ",to_check[i]);
 						}
@@ -702,7 +706,7 @@ int get_uart(int fd)
 								if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
 									j++;
 							}
-							printf(SUB_PROCESS"send post_message %s",post_message);
+							printf(CAP_PROCESS"send post_message %s",post_message);
 							char *out1=malloc(strlen(post_message)-j+1);
 							memset(out1,'\0',strlen(post_message)-j+1);
 							j=0;
@@ -715,7 +719,7 @@ int get_uart(int fd)
 							}
 #endif
 							save_to_file(date,post_message);
-							printf(SUB_PROCESS"send web %s",post_message);
+							//printf(SUB_PROCESS"send web %s",post_message);
 							rcv=send_web_post(URL,post_message,9);
 							free(post_message);
 							post_message=NULL;
@@ -723,8 +727,8 @@ int get_uart(int fd)
 							if(rcv!=NULL)
 							{	
 								int len=strlen(rcv);
-								printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-								printf(SUB_PROCESS"send ok\n");
+								//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+								//printf(SUB_PROCESS"send ok\n");
 								free(rcv);
 							}						
 						}
@@ -911,7 +915,7 @@ int read_uart(int fd)
 			}
 #endif
 			save_to_file(date,post_message);
-			printf(SUB_PROCESS"send web %s",post_message);
+			//printf(SUB_PROCESS"send web %s",post_message);
 			rcv=send_web_post(URL,post_message,9);
 			free(post_message);
 			post_message=NULL;
@@ -919,8 +923,8 @@ int read_uart(int fd)
 			if(rcv!=NULL)
 			{	
 				int len=strlen(rcv);
-				printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-				printf(SUB_PROCESS"send ok\n");
+				//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+				//printf(SUB_PROCESS"send ok\n");
 				free(rcv);
 			}
 		}
