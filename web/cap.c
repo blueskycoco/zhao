@@ -653,37 +653,30 @@ int get_uart(int fd)
 										{
 											sprintf(id,"%d",message_type);
 											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
-											//printf("pre data %s %d\r\n",data,strlen(data));
+											//rt_kprintf("pre data %s %d\r\n",data,rt_rt_strlen(data));
 											
 											if(to_check[i+7]>=strlen(data))
-											{								
-												if((to_check[i+7]-strlen(data))==1)
-												sprintf(data,"0.0%d",to_check[i+5]<<8|to_check[i+6]);
-												else if((to_check[i+7]-strlen(data))==2)
-													sprintf(data,"0.00%d",to_check[i+5]<<8|to_check[i+6]);
-												else
-													sprintf(data,"0.%d",to_check[i+5]<<8|to_check[i+6]);
+											{									
+												sprintf(data,"0.%d%d",to_check[i+5],to_check[i+6]);
 											}
 											else if(to_check[i+7]==0)
-											{									
-												//if(to_check[i+5]!=0)
-												sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
-												//else
-												//sprintf(data,"%d.0",to_check[i+6]);
+											{
+												if(to_check[i+5]!=0)
+													sprintf(data,"%d%d.0",to_check[i+5],to_check[i+6]);
+												else
+													sprintf(data,"%d.0",to_check[i+6]);
 											}
 											else
 											{
-												int min;
-												min=strlen(data)-to_check[i+7];
-												for(j=strlen(data);j>min;j--)
-												{													
+												for(j=strlen(data);j>strlen(data)-to_check[i+7]-1;j--)
+												{
 													data[j]=data[j-1];
-													//printf("j %d %c\r\n",j,data[j]);
+													//rt_kprintf("j %d %c\r\n",j,data[j]);
 												}	
 												data[j]='.';
 											}
-											//printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 											post_message=add_item(post_message,id,data);
+											//rt_kprintf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
 										}
 									}
 									break;
