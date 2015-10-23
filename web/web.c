@@ -59,6 +59,11 @@ int upload_data(char *type,char *uid,char *url,char *ipaddr,char *port,char *id0
 		post_message=add_item(post_message,id1,data1);
 		post_message=add_item(post_message,ID_DEVICE_CAP_TIME,time);
 	}
+	else if(atoi(type)==4)
+	{	
+		post_message=add_item(post_message,id0,data0);
+	}
+
 	printf(LOG_PREFX"<GET>%s\n",post_message);
 #if 0
 	j=0;
@@ -140,12 +145,25 @@ int main(int argc,char *argv[])
 	}
 	else
 	{
-		printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nurl %s\ntimeout %d\n",
-			argv[1],argv[2],argv[3],argv[4],argv[5],atoi(argv[6]));		
-		if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],NULL,NULL,NULL,NULL,NULL,atoi(argv[6])))
-			printf("send data ok\n");
+		if(atoi(argv[1])==4)
+		{
+			printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nurl %s\ntimeout %d\n92 string:%s\n",
+				argv[1],argv[2],argv[3],argv[4],argv[5],atoi(argv[6]),argv[7]);		
+			if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],argv[5],argv[6],NULL,NULL,NULL,atoi(argv[7])))
+				printf("send data ok\n");
+			else
+				printf("send data failed\n");
+
+		}
 		else
-			printf("send data failed\n");
+		{
+			printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nurl %s\ntimeout %d\n",
+				argv[1],argv[2],argv[3],argv[4],argv[5],atoi(argv[6]));		
+			if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],NULL,NULL,NULL,NULL,NULL,atoi(argv[6])))
+				printf("send data ok\n");
+			else
+				printf("send data failed\n");
+		}
 	}
 	return 0;
 }
