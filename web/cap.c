@@ -608,13 +608,7 @@ int get_uart(int fd)
 						//printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
 						if(crc==CRC_check(to_check,message_len+5))
 						{
-							if(post_message==NULL)
-							{
-								post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-								post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
-								post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-								post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
-							}
+							
 							i=0;
 							memset(id,'\0',sizeof(id));
 							memset(data,'\0',sizeof(data));
@@ -647,10 +641,26 @@ int get_uart(int fd)
 										if(to_check[i+5]==0x45 && to_check[i+6]==0x52 && to_check[i+7]==0x52 && to_check[i+8]==0x4f && to_check[i+9]==0x52)
 										{
 											sprintf(error,"%dth sensor possible error",to_check[i+3]);
+											if(post_message==NULL)
+											{
+												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
+												post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
+												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
+												can_send=1;
+											}
 											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 										}
 										else
 										{
+											if(post_message==NULL)
+											{
+												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+												post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
+												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
+												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
+											}
+											#if 0
 											sprintf(id,"%d",message_type);
 											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
 											//rt_kprintf("pre data %s %d\r\n",data,rt_rt_strlen(data));
@@ -675,8 +685,36 @@ int get_uart(int fd)
 												}	
 												data[j]='.';
 											}
+											#else
+											sprintf(id,"%d",message_type);
+											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);						
+											if(to_check[i+7]!=0)
+											{//have .
+												int m;
+												if(to_check[i+7]>strlen(data))
+												{
+													char tmp_buf[10]={0};
+													int dist=to_check[i+7]-strlen(data);
+													strcpy(tmp_buf,"0.");
+													for(m=0;m<dist;m++)
+														strcat(tmp_buf,"0");
+													strcat(tmp_buf,data);
+													strcpy(data,tmp_buf);
+												}
+												else
+												{
+													int left,right,number,n=1;
+													number=(to_check[i+5]<<8)|to_check[i+6];
+													for(m=0;m<to_check[i+7];m++)
+														n=n*10;
+													right=number%n;
+													left=number/n;
+													sprintf(data,"%d.%d",left,right);								
+												}
+											}	
+											#endif
 											post_message=add_item(post_message,id,data);
-											//rt_kprintf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
+											//printf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
 										}
 									}
 									break;
@@ -793,13 +831,6 @@ int read_uart(int fd)
 		}
 		printf("\r\n"SUB_PROCESS"\r\n");	
 		len=message_len+2;
-		if(post_message==NULL)
-		{
-			post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-			post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
-			post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-			post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
-		}
 		i=0;
 		//while(1)
 		{
@@ -843,10 +874,27 @@ int read_uart(int fd)
 								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
 								{
 									sprintf(error,"%dth sensor possible error",ch[i+2]);
+									if(post_message==NULL)
+									{
+										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
+										post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
+										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
+										can_send=1;
+									}
 									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 								}
 								else
 								{
+									
+									if(post_message==NULL)
+									{
+										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
+										post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
+										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
+										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
+									}
+									#if 0
 									sprintf(id,"%d",ch[i+2]);
 									sprintf(data,"%d%d",ch[i+4],ch[i+5]);
 									//printf("pre data %s %d\r\n",data,strlen(data));
@@ -868,6 +916,34 @@ int read_uart(int fd)
 										}	
 										data[j]='.';
 									}
+									#else
+									sprintf(id,"%d",ch[i+2]);
+									sprintf(data,"%d",ch[i+5]<<8|ch[i+6]);						
+									if(ch[i+7]!=0)
+									{//have .
+										int m;
+										if(ch[i+7]>strlen(data))
+										{
+											char tmp_buf[10]={0};
+											int dist=ch[i+7]-strlen(data);
+											strcpy(tmp_buf,"0.");
+											for(m=0;m<dist;m++)
+												strcat(tmp_buf,"0");
+											strcat(tmp_buf,data);
+											strcpy(data,tmp_buf);
+										}
+										else
+										{
+											int left,right,number,n=1;
+											number=(ch[i+5]<<8)|ch[i+6];
+											for(m=0;m<ch[i+7];m++)
+												n=n*10;
+											right=number%n;
+											left=number/n;
+											sprintf(data,"%d.%d",left,right);								
+										}
+									}	
+									#endif
 									printf(SUB_PROCESS"id %s data %s\r\n",id,data);
 									post_message=add_item(post_message,id,data);
 								}
@@ -1121,7 +1197,7 @@ int open_com_port()
 	int fd;
 	long  vdisable;
 
-	fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
+	fd = open( "/dev/ttySP0", O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
 		return(-1);
