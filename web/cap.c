@@ -1196,8 +1196,11 @@ int open_com_port()
 {
 	int fd;
 	long  vdisable;
-
+	#ifdef S3C2440
+	fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
+	#else
 	fd = open( "/dev/ttySP0", O_RDWR|O_NOCTTY|O_NDELAY);
+	#endif
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
 		return(-1);
