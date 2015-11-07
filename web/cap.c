@@ -45,7 +45,7 @@
 #define ERROR_BYTE	0xFF
 #define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 //#define URL "http://16.168.0.3:8080/saveData/airmessage/messMgr.do"
-#define FILE_PATH	"/mnt/user/history/"
+#define FILE_PATH	"/home/user/history/"
 #define MAIN_PROCESS 						"[MainSystem]:"
 #define SUB_PROCESS 						"[ChildSystem]:"
 //char server_time[20]={0};
@@ -53,6 +53,7 @@ char ip[20]={0};
 pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
 char *server_time;
+char g_uuid[256]={0};
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -264,6 +265,20 @@ void save_to_file(char *date,char *message)
 	fwrite(data,strlen(data),1,fp);
 	fclose(fp);
 }
+void get_uuid()
+{
+	FILE *fp=fopen("/home/user/uuid.txt","r");
+	if(fp!=NULL)
+	{
+		if(fread(g_uuid,256,1,fp)<0)
+			strcpy(g_uuid,"1234abcd");
+		fclose(fp);
+	}
+	else
+		strcpy(g_uuid,"1234abcd");
+	g_uuid[strlen(g_uuid)-1]='\0';
+	printf("uuid is %s\n",g_uuid);
+}
 #define RESEND_PROCESS "[RESEND_PROCESS]"
 void resend_history(char *date_begin,char *date_end)
 {
@@ -425,7 +440,7 @@ void sync_server(int fd,int resend)
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_ASK_RE_DATA);
 	else
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
-	sync_message=add_item(sync_message,ID_DEVICE_UID,"1234abcd");
+	sync_message=add_item(sync_message,ID_DEVICE_UID,g_uuid);
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
 	printf(SYNC_PREFX"<sync GET>%s\n",sync_message);
@@ -621,7 +636,8 @@ int get_uart(int fd)
 										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
 										printf(CAP_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
-										can_send=1;
+										can_send=1;										
+										save_to_file(date,post_message);
 									}
 									break;
 								case ERROR_BYTE:
@@ -638,16 +654,16 @@ int get_uart(int fd)
 								default:
 									{
 										/*get cap data*/
-										if(to_check[i+5]==0x45 && to_check[i+6]==0x52 && to_check[i+7]==0x52 && to_check[i+8]==0x4f && to_check[i+9]==0x52)
+										if(to_check[i+5]==0x65 && to_check[i+6]==0x72 && to_check[i+7]==0x72 && to_check[i+8]==0x6f && to_check[i+9]==0x72)
 										{
 											sprintf(error,"%dth sensor possible error",to_check[i+3]);
 											if(post_message==NULL)
-											{
+											{												
 												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-												post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+												post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
 												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
 												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
-												can_send=1;
+												//can_send=1;										
 											}
 											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
 										}
@@ -656,7 +672,7 @@ int get_uart(int fd)
 											if(post_message==NULL)
 											{
 												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-												post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
+												post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
 												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
 												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
 											}
@@ -749,7 +765,6 @@ int get_uart(int fd)
 								}
 							}
 #endif
-							save_to_file(date,post_message);
 							//printf(SUB_PROCESS"send web %s",post_message);
 							rcv=send_web_post(URL,post_message,9);
 							free(post_message);
@@ -877,7 +892,7 @@ int read_uart(int fd)
 									if(post_message==NULL)
 									{
 										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-										post_message=add_item(post_message,ID_DEVICE_UID,"230FFEE9981283737D");
+										post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
 										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
 										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
 										can_send=1;
@@ -890,7 +905,7 @@ int read_uart(int fd)
 									if(post_message==NULL)
 									{
 										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-										post_message=add_item(post_message,ID_DEVICE_UID,"1234abcd");
+										post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
 										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
 										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
 									}
@@ -1243,7 +1258,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	pthread_mutex_init(&mutex, NULL);
-	#if 1
+	#if 0
 	server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
 	server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
 	server_time[5]=0x0f;server_time[6]=0x0a;
@@ -1254,6 +1269,8 @@ int main(int argc, char *argv[])
 	//write(fd,server_time,12);
 	write(fd_com,server_time,13);
 	#endif
+	get_uuid();
+	
 	fpid=fork();
 	if(fpid==0)
 	{
