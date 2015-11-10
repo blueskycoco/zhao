@@ -280,6 +280,24 @@ void get_uuid()
 	printf("uuid is %s\n",g_uuid);
 }
 #define RESEND_PROCESS "[RESEND_PROCESS]"
+void resend_history_done(char *begin,char *end)
+{
+	char *resend_done=NULL;						
+	resend_done=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_RE_DATA);
+	resend_done=add_item(resend_done,ID_DEVICE_UID,g_uuid);
+	resend_done=add_item(resend_done,ID_DEVICE_IP_ADDR,"192.168.1.2");
+	resend_done=add_item(resend_done,ID_DEVICE_PORT,"9517");
+	resend_done=add_item(resend_done,ID_RE_START_TIME,begin);
+	resend_done=add_item(resend_done,ID_RE_STOP_TIME,end);
+	char *rcv=send_web_post(URL,resend_done,9);
+	free(resend_done);
+	resend_done=NULL;
+	if(rcv!=NULL)
+	{	
+		int len=strlen(rcv);
+		free(rcv);
+	}	
+}
 void resend_history(char *date_begin,char *date_end)
 {
 	FILE *fp;
@@ -345,6 +363,7 @@ void resend_history(char *date_begin,char *date_end)
 								printf(RESEND_PROCESS"file_time %02d:%02d,end time %02d:%02d",atoi(local_hour),atoi(local_minute),hour_e,minute_e);
 								free(line);
 								fclose(fp);
+								resend_history_done(date_begin,date_end);
 								return;
 							}
 						}
@@ -430,6 +449,7 @@ void resend_history(char *date_begin,char *date_end)
 	}
 	if(fp!=NULL)
 	fclose(fp);
+	resend_history_done(date_begin,date_end);
 }
 #define SYNC_PREFX "[SYNC_PROCESS]"
 void sync_server(int fd,int resend)
