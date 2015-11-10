@@ -331,7 +331,8 @@ void resend_history(char *date_begin,char *date_end)
 				size_t len = 0;
 				printf(RESEND_PROCESS"open file %s ok\r\n",file_path);
 				while ((read = getline(&line, &len, fp)) != -1) 
-				{				
+				{	
+					line[6]='3';//change resend history type from 2 to 3
 					if(year_b==year_e && month_b==month_e && day_b==day_e)
 					{//check time in file
 						if((tmp_i%2)==0)
@@ -657,15 +658,21 @@ int get_uart(int fd)
 										if(to_check[i+5]==0x65 && to_check[i+6]==0x72 && to_check[i+7]==0x72 && to_check[i+8]==0x6f && to_check[i+9]==0x72)
 										{
 											sprintf(error,"%dth sensor possible error",to_check[i+3]);
-											if(post_message==NULL)
-											{												
-												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-												post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
-												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
-												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
-												//can_send=1;										
-											}
-											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
+											char *warnning_msg=NULL;						
+											warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
+											warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
+											warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,"192.168.1.2");
+											warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
+											warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
+											rcv=send_web_post(URL,warnning_msg,9);
+											free(warnning_msg);
+											warnning_msg=NULL;
+											if(rcv!=NULL)
+											{	
+												int len=strlen(rcv);
+												free(rcv);
+											}	
+											return 0;
 										}
 										else
 										{
