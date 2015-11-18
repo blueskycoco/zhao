@@ -471,7 +471,7 @@ char * http_post(const char *url,const char *post_str,int timeout){
 		return NULL;  
 	}
 	
-	http_tcpclient_recv(socket_fd,lpbuf+len,timeout);
+//	http_tcpclient_recv(socket_fd,lpbuf+len,timeout);
 	
 	http_tcpclient_close(socket_fd);  
 
