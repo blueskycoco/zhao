@@ -52,7 +52,7 @@
 void set_time(int year,int mon,int day,int hour,int minute,int second);
 void write_data(int fd,unsigned int Index,int data);
 void switch_pic(int fd,unsigned char Index);
-void dump_curr_time(int fd,char *out);
+void dump_curr_time(int fd);
 
 char ip[20]={0};
 pthread_mutex_t mutex;
@@ -103,11 +103,11 @@ char *send_web_post(char *url,char *buf,int timeout)
 	rcv=http_get(request,timeout);
 #else
 	sprintf(request,"JSONStr=%s",buf);
-	printf(UPLOAD_PROCESS"send web %s\n",request);
+	//printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_post(url,request,timeout);
 #endif
 	if(rcv!=NULL)
-		printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
+		;//printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	pthread_mutex_unlock(&mutex);
@@ -375,7 +375,7 @@ void resend_history(char *date_begin,char *date_end)
 						else
 						{
 							line[strlen(line)-1]='\0';							
-							printf(RESEND_PROCESS"[rsend web]\n");
+							//printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,39);
 							if(rcv!=NULL)
@@ -398,7 +398,7 @@ void resend_history(char *date_begin,char *date_end)
 						if((tmp_i%2)!=0)
 						{						
 							line[strlen(line)-1]='\0';
-							printf(RESEND_PROCESS"[rsend web]\n");
+							//printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,9);
 							if(rcv!=NULL)
@@ -491,7 +491,7 @@ void sync_server(int fd,int resend)
 	rcv=send_web_post(URL,sync_message,9);
 	free(sync_message);
 	//free(out1);
-	if(rcv!=NULL)
+	if(rcv!=NULL&&strlen(rcv)!=0)
 	{	
 		int len=strlen(rcv);
 		printf(SYNC_PREFX"<=== %s\n",rcv);
@@ -863,19 +863,21 @@ void write_data(int fd,unsigned int Index,int data)
 }
 #define LCD_PROCESS "[LCD_PROCESS]"
 FILE *history_fp=NULL;
-unsigned short input_handle(char *input)
+unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
+	char * line = NULL;
+	char date_buf[32]={0};
 	char date1[32]={0};
 	char date2[32]={0};
 	char date3[32]={0};
 	char data1[32]={0};
 	char data2[32]={0};
 	char data3[32]={0};
-	printf("got press\r\n");
 	input[0]=2;
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
+	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(	addr==TOUCH_DETAIL_CO||
 		addr==TOUCH_DETAIL_CO2||
 		addr==TOUCH_DETAIL_HCHO||
@@ -893,22 +895,69 @@ unsigned short input_handle(char *input)
 				if(history_fp!=NULL)
 				{
 					fclose(history_fp);
-					char buf[32]={0};
-					char *file_path=(char *)malloc(256);
-					memset(file_path,'\0',256);
-					int rtc_fd = open(RTCDEV, O_RDONLY);
-					if(rtc_fd!=NULL)
-					{
-						dump_curr_time(rtc_fd,buf);					
-						strcpy(file_path,FILE_PATH);
-						strcat(file_path,buf);
-						printf(LCD_PROCESS"to open %s\r\n",file_path);
-						history_fp = fopen(file_path, "r");
+					printf("close the last opened\n");
+				}
+				char *file_path=(char *)malloc(256);
+				memset(file_path,'\0',256);
+				int rtc_fd = open(RTCDEV, O_RDONLY);
+				if(rtc_fd!=-1)
+				{				
+					int retval;
+					struct rtc_time rtc_tm;
+					retval = ioctl(rtc_fd, RTC_RD_TIME, &rtc_tm);
+					if (retval == -1) {
+					perror("RTC_RD_TIME ioctl");
+					exit(errno);
 					}
-				}					
+
+					printf(LCD_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
+					rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
+					rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+					sprintf(date_buf,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
+					close(rtc_fd);
+					printf(LCD_PROCESS"cur is %s\n",date_buf);
+					strcpy(file_path,FILE_PATH);
+					strcat(file_path,date_buf);
+					strcat(file_path,".dat");
+					printf(LCD_PROCESS"to open %s\r\n",file_path);
+					history_fp = fopen(file_path, "r");
+					if(history_fp!=NULL)
+					{
+						if(fgets(line,512,history_fp))
+						{
+							char tmp[10]={'\0'};
+							memcpy(tmp,date_buf,4);
+							printf(LCD_PROCESS"Line %s\n",line);
+							printf(LCD_PROCESS"year %d\n",atoi(tmp));
+							write_data(fd_lcd,VAR_CO_YEAR1,atoi(tmp));
+							memset(tmp,'\0',10);
+							memcpy(tmp,date_buf+5,2);				
+							printf(LCD_PROCESS"mon %d\n",atoi(tmp));
+							write_data(fd_lcd,VAR_CO_MON1,atoi(tmp));
+							memset(tmp,'\0',10);
+							memcpy(tmp,date_buf+8,2);				
+							printf(LCD_PROCESS"day %d\n",atoi(tmp));
+							write_data(fd_lcd,VAR_CO_DAY1,atoi(tmp));
+							memset(tmp,'\0',10);
+							memcpy(tmp,line,2);				
+							printf(LCD_PROCESS"hour %d\n",atoi(tmp));
+							write_data(fd_lcd,VAR_CO_DATA1,atoi(tmp));
+							//memset(tmp,'\0',10);
+							//memcpy(tmp,line+3,2);				
+							//write_data(fd_lcd,VAR_DATE_TIME_3,atoi(tmp));
+							//memset(tmp,'\0',10);
+						}
+						else
+							printf(LCD_PROCESS"fgets failed\n");
+					}
+					else
+						printf(LCD_PROCESS"open file %s failed\n",file_path);
+				}		
+				else
+					printf(LCD_PROCESS"open RTC dev failed\n");
 			}
-			
 		}
+	#if 0
 	switch(addr)
 	{
 		
@@ -946,6 +995,7 @@ unsigned short input_handle(char *input)
 			return STATE_MAIN;
 		
 	}
+	#endif
 	return STATE_MAIN;
 }
 void lcd_loop(int fd)
@@ -954,25 +1004,25 @@ void lcd_loop(int fd)
 	int i=1;
 	int get=0;
 	char ptr[32]={0};	
-	switch_pic(0);
+	switch_pic(fd,0);
 	while(1)	
 	{	
 		if(read(fd,&ch,1)==1)
 		{
-			//rt_kprintf("<=%x \r\n",ch);
+			printf("<=%x \r\n",ch);
 			switch(get)
 			{
 				case 0:
 					if(ch==0x5a)
 					{
-						//rt_kprintf("0x5a get ,get =1\r\n");
+						printf(LCD_PROCESS"0x5a get ,get =1\r\n");
 						get=1;
 					}
 					break;
 				case 1:
 					if(ch==0xa5)
 					{
-						//rt_kprintf("0xa5 get ,get =2\r\n");
+						printf(LCD_PROCESS"0xa5 get ,get =2\r\n");
 						get=2;
 						
 						}
@@ -980,34 +1030,34 @@ void lcd_loop(int fd)
 				case 2:
 					if(ch==0x06)
 					{
-						//rt_kprintf("0x06 get,get =3\r\n");
+						printf(LCD_PROCESS"0x06 get,get =3\r\n");
 						get=3;
 						break;
 					}
 				case 3:
 					if(ch==0x83)
 					{
-						//rt_kprintf("0x83 get,get =4\r\n");
+						printf(LCD_PROCESS"0x83 get,get =4\r\n");
 						get=4;
 						i=1;
 						break;
 					}
 				case 4:
 					{
-						//rt_kprintf("%02x get ,get =5\r\n",ch);
+						printf(LCD_PROCESS"%02x get ,get =5\r\n",ch);
 						ptr[i++]=ch;
 						if(i==6)
 						{
 							get=0;
 							ptr[0]=0x01;
-							printf("get %x %x %x %x %x %x\r\n",ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
-							input_handle(ptr);
-							
+							printf(LCD_PROCESS"get %x %x %x %x %x %x\r\n",ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+							input_handle(fd,ptr);
+							printf("enter new loop\n");
 						}
 					}
 					break;			
 				default:
-					printf("unknown state\r\n");
+					printf(LCD_PROCESS"unknown state\r\n");
 					get=0;
 					break;						
 			}			
@@ -1327,7 +1377,7 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 	printf("set done!\n");
 	return 0;
 }
-void dump_curr_time(int fd,char *out)
+void dump_curr_time(int fd)
 {
 	int retval;
 	struct rtc_time rtc_tm;
@@ -1342,10 +1392,10 @@ void dump_curr_time(int fd,char *out)
 	printf(MAIN_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 	rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 	rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
-	if(out!=NULL)
-	{
-		sprintf(out,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
-	}
+	//if(*out!=NULL)
+	//{
+	//	sprintf(*out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
+	//}
 }
 void set_time(int year,int mon,int day,int hour,int minute,int second)
 {	
@@ -1371,7 +1421,7 @@ void set_time(int year,int mon,int day,int hour,int minute,int second)
 	perror("RTC_SET_TIME ioctl");
 	exit(errno);
 	}
-	dump_curr_time(fd,NULL);
+	dump_curr_time(fd);
 	close(fd);
 }
 /* Original work from rtc-test example */
@@ -1395,7 +1445,7 @@ int set_alarm(int hour,int mintue,int sec)
 	exit(errno);
 	}
 
-	dump_curr_time(fd,NULL);
+	dump_curr_time(fd);
 	#if 0
 	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
 	{
@@ -1461,7 +1511,7 @@ int set_alarm(int hour,int mintue,int sec)
 	}
 	printf(MAIN_PROCESS"Alarm has triggered\n");
 	
-	dump_curr_time(fd,NULL);
+	dump_curr_time(fd);
 	close(fd);
 	return 0;
 }
