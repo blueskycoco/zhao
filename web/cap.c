@@ -49,6 +49,7 @@
 #define MAIN_PROCESS 						"[MainSystem]:"
 #define SUB_PROCESS 						"[ChildSystem]:"
 //char server_time[20]={0};
+void set_time(int year,int mon,int day,int hour,int minute,int second);
 char ip[20]={0};
 pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
@@ -533,6 +534,7 @@ void sync_server(int fd,int resend)
 				//tmp=doit_data(rcv+4,(char *)"211");
 				printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
 				printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
+				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
 			//}
 			//else if(atoi(type)==6)
 			//{
@@ -1144,6 +1146,33 @@ void dump_curr_time(int fd)
 	printf(MAIN_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 	rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 	rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+}
+void set_time(int year,int mon,int day,int hour,int minute,int second)
+{	
+	int fd, retval;
+	struct rtc_time rtc_tm;
+	unsigned long data;
+
+	fd = open(RTCDEV, O_RDWR);
+
+	if (fd == -1) {
+	perror("RTC open (RTCDEV node missing?)");
+	exit(errno);
+	}
+	rtc_tm.tm_mday = day;
+	rtc_tm.tm_mon = mon-1;
+	rtc_tm.tm_year = year-1900;
+	rtc_tm.tm_hour = hour;
+	rtc_tm.tm_min = minute;
+	rtc_tm.tm_sec = second;
+	/* Read the current RTC time/date */
+	retval = ioctl(fd, RTC_SET_TIME, &rtc_tm);
+	if (retval == -1) {
+	perror("RTC_RD_TIME ioctl");
+	exit(errno);
+	}
+	dump_curr_time(fd);
+	close(fd);
 }
 /* Original work from rtc-test example */
 int set_alarm(int hour,int mintue,int sec)
