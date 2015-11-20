@@ -103,11 +103,11 @@ char *send_web_post(char *url,char *buf,int timeout)
 	rcv=http_get(request,timeout);
 #else
 	sprintf(request,"JSONStr=%s",buf);
-	//printf(UPLOAD_PROCESS"send web %s\n",request);
+	printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_post(url,request,timeout);
 #endif
 	if(rcv!=NULL)
-		;//printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
+		printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	pthread_mutex_unlock(&mutex);
@@ -375,7 +375,7 @@ void resend_history(char *date_begin,char *date_end)
 						else
 						{
 							line[strlen(line)-1]='\0';							
-							//printf(RESEND_PROCESS"[rsend web]\n");
+							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,39);
 							if(rcv!=NULL)
@@ -398,7 +398,7 @@ void resend_history(char *date_begin,char *date_end)
 						if((tmp_i%2)!=0)
 						{						
 							line[strlen(line)-1]='\0';
-							//printf(RESEND_PROCESS"[rsend web]\n");
+							printf(RESEND_PROCESS"[rsend web]\n");
 							while(1){
 							char *rcv=send_web_post(URL,line,9);
 							if(rcv!=NULL)
@@ -1446,7 +1446,7 @@ int set_alarm(int hour,int mintue,int sec)
 	}
 
 	dump_curr_time(fd);
-	#if 0
+	#if 1
 	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
 	{
 		rtc_tm.tm_sec=sec;
@@ -1595,6 +1595,7 @@ int main(int argc, char *argv[])
 	//write(fd,server_time,12);
 	write(fd_com,server_time,13);
 	#endif
+	memset(server_time,0,13);
 	get_uuid();
 	
 	fpid=fork();
@@ -1619,9 +1620,14 @@ int main(int argc, char *argv[])
 		{
 			while(1)
 			{
-				set_alarm(0,0,10);			
 				sync_server(fd_com,0);
-				sync_server(fd_com,1);
+				if(server_time[0]!=0 &&server_time[5]!=0)
+				{
+					set_alarm(23,30,0);
+					sync_server(fd_com,1);
+				}
+				else
+					sleep(10);
 			}
 		}
 	}
