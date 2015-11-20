@@ -50,6 +50,10 @@
 #define SUB_PROCESS 						"[ChildSystem]:"
 //char server_time[20]={0};
 void set_time(int year,int mon,int day,int hour,int minute,int second);
+void write_data(int fd,unsigned int Index,int data);
+void switch_pic(int fd,unsigned char Index);
+void dump_curr_time(int fd,char *out);
+
 char ip[20]={0};
 pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
@@ -552,7 +556,7 @@ void get_ip(char *ip)
 	return ;
 }
 #define CAP_PROCESS "[CAP_PROCESS]"
-int get_uart(int fd)
+int get_uart(int fd_lcd,int fd)
 {
 	#define STATE_IDLE 	0
 	#define STATE_6C 	1
@@ -758,6 +762,31 @@ int get_uart(int fd)
 												}
 											}	
 											#endif
+											//real time update cap data
+											if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
+											{
+												write_data(fd_lcd,VAR_DATE_TIME_1,to_check[i+5]<<8|to_check[i+6]);
+											}
+											else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
+											{						
+												write_data(fd_lcd,VAR_DATE_TIME_2,to_check[i+5]<<8|to_check[i+6]);
+											}
+											else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
+											{
+												write_data(fd_lcd,VAR_DATE_TIME_3,to_check[i+5]<<8|to_check[i+6]);
+											}
+											else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
+											{
+												write_data(fd_lcd,VAR_DATE_TIME_4,to_check[i+5]<<8|to_check[i+6]);
+											}
+											else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
+											{
+												write_data(fd_lcd,VAR_ALARM_TYPE_1,to_check[i+5]<<8|to_check[i+6]);
+											}
+											else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
+											{
+												write_data(fd_lcd,VAR_ALARM_TYPE_2,to_check[i+5]<<8|to_check[i+6]);
+											}
 											post_message=add_item(post_message,id,data);
 											//printf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
 										}
@@ -819,6 +848,173 @@ int get_uart(int fd)
 		}
 	}
 }
+void switch_pic(int fd,unsigned char Index)
+{
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x04,0x00};
+	cmd[5]=Index;
+	write(fd,cmd,6);
+}
+void write_data(int fd,unsigned int Index,int data)
+{
+	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
+	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
+	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
+	write(fd,cmd,8);
+}
+#define LCD_PROCESS "[LCD_PROCESS]"
+FILE *history_fp=NULL;
+unsigned short input_handle(char *input)
+{
+	int addr=0,data=0;
+	char date1[32]={0};
+	char date2[32]={0};
+	char date3[32]={0};
+	char data1[32]={0};
+	char data2[32]={0};
+	char data3[32]={0};
+	printf("got press\r\n");
+	input[0]=2;
+	addr=input[1]<<8|input[2];
+	data=input[4]<<8|input[5];
+	if(	addr==TOUCH_DETAIL_CO||
+		addr==TOUCH_DETAIL_CO2||
+		addr==TOUCH_DETAIL_HCHO||
+		addr==TOUCH_DETAIL_TEMP||
+		addr==TOUCH_DETAIL_SHIDU||
+		addr==TOUCH_DETAIL_PM25)
+		{
+			if((TOUCH_DETAIL_CO-0x100)==data||
+				(TOUCH_DETAIL_CO2-0x100)==data||
+				(TOUCH_DETAIL_HCHO-0x100)==data||
+				(TOUCH_DETAIL_TEMP-0x100)==data||
+				(TOUCH_DETAIL_SHIDU-0x100)==data||
+				(TOUCH_DETAIL_PM25-0x100)==data)
+			{
+				if(history_fp!=NULL)
+				{
+					fclose(history_fp);
+					char buf[32]={0};
+					char *file_path=(char *)malloc(256);
+					memset(file_path,'\0',256);
+					int rtc_fd = open(RTCDEV, O_RDONLY);
+					if(rtc_fd!=NULL)
+					{
+						dump_curr_time(rtc_fd,buf);					
+						strcpy(file_path,FILE_PATH);
+						strcat(file_path,buf);
+						printf(LCD_PROCESS"to open %s\r\n",file_path);
+						history_fp = fopen(file_path, "r");
+					}
+				}					
+			}
+			
+		}
+	switch(addr)
+	{
+		
+		case TOUCH_DETAIL_CO:
+			{
+				if(history_fp!=NULL)
+				{
+
+				}
+			}
+		case TOUCH_UPDATE_CO:
+			if((TOUCH_DETAIL_CO-0x100)==data||(TOUCH_UPDATE_CO-0x100)==data)
+				return STATE_DETAIL_CO;			
+		case TOUCH_DETAIL_CO2:
+		case TOUCH_UPDATE_CO2:
+			if(TOUCH_DETAIL_CO2-0x100==data||TOUCH_UPDATE_CO2-0x100==data)
+				return TOUCH_DETAIL_CO2;
+		case TOUCH_DETAIL_HCHO:
+		case TOUCH_UPDATE_HCHO:
+			if((TOUCH_DETAIL_HCHO-0x100)==data||(TOUCH_UPDATE_HCHO-0x100)==data)
+				return STATE_DETAIL_HCHO;
+		case TOUCH_DETAIL_TEMP:
+		case TOUCH_UPDATE_TEMP:
+			if((TOUCH_DETAIL_TEMP-0x100)==data||(TOUCH_UPDATE_TEMP-0x100)==data)
+				return STATE_DETAIL_TMP;
+		case TOUCH_DETAIL_SHIDU:
+		case TOUCH_UPDATE_SHIDU:
+			if((TOUCH_DETAIL_SHIDU-0x100)==data||(TOUCH_UPDATE_SHIDU-0x100)==data)
+				return STATE_DETAIL_SHIDU;
+		case TOUCH_DETAIL_PM25:
+		case TOUCH_UPDATE_PM25:
+			if((TOUCH_DETAIL_PM25-0x100)==data||(TOUCH_UPDATE_PM25-0x100)==data)
+				return STATE_DETAIL_PM25;
+		default:
+			return STATE_MAIN;
+		
+	}
+	return STATE_MAIN;
+}
+void lcd_loop(int fd)
+{	
+	char ch;
+	int i=1;
+	int get=0;
+	char ptr[32]={0};	
+	switch_pic(0);
+	while(1)	
+	{	
+		if(read(fd,&ch,1)==1)
+		{
+			//rt_kprintf("<=%x \r\n",ch);
+			switch(get)
+			{
+				case 0:
+					if(ch==0x5a)
+					{
+						//rt_kprintf("0x5a get ,get =1\r\n");
+						get=1;
+					}
+					break;
+				case 1:
+					if(ch==0xa5)
+					{
+						//rt_kprintf("0xa5 get ,get =2\r\n");
+						get=2;
+						
+						}
+					break;
+				case 2:
+					if(ch==0x06)
+					{
+						//rt_kprintf("0x06 get,get =3\r\n");
+						get=3;
+						break;
+					}
+				case 3:
+					if(ch==0x83)
+					{
+						//rt_kprintf("0x83 get,get =4\r\n");
+						get=4;
+						i=1;
+						break;
+					}
+				case 4:
+					{
+						//rt_kprintf("%02x get ,get =5\r\n",ch);
+						ptr[i++]=ch;
+						if(i==6)
+						{
+							get=0;
+							ptr[0]=0x01;
+							printf("get %x %x %x %x %x %x\r\n",ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+							input_handle(ptr);
+							
+						}
+					}
+					break;			
+				default:
+					printf("unknown state\r\n");
+					get=0;
+					break;						
+			}			
+		}
+	}	
+}
+
 int read_uart(int fd)
 {
 	int len,fs_sel,i=0,j=0,get_start=0,get_stop=0,message_len;
@@ -1131,7 +1327,7 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 	printf("set done!\n");
 	return 0;
 }
-void dump_curr_time(int fd)
+void dump_curr_time(int fd,char *out)
 {
 	int retval;
 	struct rtc_time rtc_tm;
@@ -1146,6 +1342,10 @@ void dump_curr_time(int fd)
 	printf(MAIN_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 	rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 	rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+	if(out!=NULL)
+	{
+		sprintf(out,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
+	}
 }
 void set_time(int year,int mon,int day,int hour,int minute,int second)
 {	
@@ -1168,10 +1368,10 @@ void set_time(int year,int mon,int day,int hour,int minute,int second)
 	/* Read the current RTC time/date */
 	retval = ioctl(fd, RTC_SET_TIME, &rtc_tm);
 	if (retval == -1) {
-	perror("RTC_RD_TIME ioctl");
+	perror("RTC_SET_TIME ioctl");
 	exit(errno);
 	}
-	dump_curr_time(fd);
+	dump_curr_time(fd,NULL);
 	close(fd);
 }
 /* Original work from rtc-test example */
@@ -1195,83 +1395,86 @@ int set_alarm(int hour,int mintue,int sec)
 	exit(errno);
 	}
 
-	dump_curr_time(fd);
+	dump_curr_time(fd,NULL);
+	#if 0
+	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
+	{
+		rtc_tm.tm_sec=sec;
+		rtc_tm.tm_min=mintue;
+		rtc_tm.tm_hour=hour;
+	}
+	else
+		printf(MAIN_PROCESS"no alarm tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec	);
+	#else	
+	rtc_tm.tm_sec += sec;
+	if (rtc_tm.tm_sec >= 60) {
+	rtc_tm.tm_sec %= 60;
+	rtc_tm.tm_min++;
+	}
+	if (rtc_tm.tm_min == 60) {
+	rtc_tm.tm_min = 0;
+	rtc_tm.tm_hour++;
+	}
+	if (rtc_tm.tm_hour == 24)
+	rtc_tm.tm_hour = 0;
 
-	//if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
-	//{
-		//rtc_tm.tm_sec=sec;
-		//rtc_tm.tm_min=mintue;
-		//rtc_tm.tm_hour=hour;
-		
-		rtc_tm.tm_sec += sec;
-		if (rtc_tm.tm_sec >= 60) {
-		rtc_tm.tm_sec %= 60;
-		rtc_tm.tm_min++;
-		}
-		if (rtc_tm.tm_min == 60) {
-		rtc_tm.tm_min = 0;
-		rtc_tm.tm_hour++;
-		}
-		if (rtc_tm.tm_hour == 24)
-		rtc_tm.tm_hour = 0;
+	rtc_tm.tm_min +=mintue;
+	if (rtc_tm.tm_min == 60) {
+	rtc_tm.tm_min = 0;
+	rtc_tm.tm_hour++;
+	}
+	if (rtc_tm.tm_hour == 24)
+	rtc_tm.tm_hour = 0;
+
+	rtc_tm.tm_hour +=hour;
+	if (rtc_tm.tm_hour == 24)
+	rtc_tm.tm_hour = 0;
+	#endif
+	printf(MAIN_PROCESS"tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);		
+	retval = ioctl(fd, RTC_ALM_SET, &rtc_tm);
+	if (retval == -1) {
+	perror("RTC_ALM_SET ioctl");
+	exit(errno);
+	}
+
+	/* Enable alarm interrupts */
+	retval = ioctl(fd, RTC_AIE_ON, 0);
+	if (retval == -1) {
+	perror("RTC_AIE_ON ioctl");
+	exit(errno);
+	}
+
+	printf(MAIN_PROCESS"Alarm will trigger in %02d:%02d:%02d\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);
+
+	/* This blocks until the alarm ring causes an interrupt */
+	retval = read(fd, &data, sizeof(unsigned long));
+	if (retval == -1) {
+	perror("read");
+	exit(errno);
+	}
+
+	/* Disable alarm interrupts */
+	retval = ioctl(fd, RTC_AIE_OFF, 0);
+	if (retval == -1) {
+	perror("RTC_AIE_OFF ioctl");
+	exit(errno);
+	}
+	printf(MAIN_PROCESS"Alarm has triggered\n");
 	
-		rtc_tm.tm_min +=mintue;
-		if (rtc_tm.tm_min == 60) {
-		rtc_tm.tm_min = 0;
-		rtc_tm.tm_hour++;
-		}
-		if (rtc_tm.tm_hour == 24)
-		rtc_tm.tm_hour = 0;
-	
-		rtc_tm.tm_hour +=hour;
-		if (rtc_tm.tm_hour == 24)
-		rtc_tm.tm_hour = 0;
-		printf(MAIN_PROCESS"tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);		
-		retval = ioctl(fd, RTC_ALM_SET, &rtc_tm);
-		if (retval == -1) {
-		perror("RTC_ALM_SET ioctl");
-		exit(errno);
-		}
-
-		/* Enable alarm interrupts */
-		retval = ioctl(fd, RTC_AIE_ON, 0);
-		if (retval == -1) {
-		perror("RTC_AIE_ON ioctl");
-		exit(errno);
-		}
-
-		printf(MAIN_PROCESS"Alarm will trigger in %02d:%02d:%02d\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);
-
-		/* This blocks until the alarm ring causes an interrupt */
-		retval = read(fd, &data, sizeof(unsigned long));
-		if (retval == -1) {
-		perror("read");
-		exit(errno);
-		}
-
-		/* Disable alarm interrupts */
-		retval = ioctl(fd, RTC_AIE_OFF, 0);
-		if (retval == -1) {
-		perror("RTC_AIE_OFF ioctl");
-		exit(errno);
-		}
-		printf(MAIN_PROCESS"Alarm has triggered\n");
-	//}
-	//else
-	//	printf(MAIN_PROCESS"no alarm tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec	);
-	dump_curr_time(fd);
+	dump_curr_time(fd,NULL);
 	close(fd);
 	return 0;
 }
-int open_com_port()
+int open_com_port(char *dev)
 {
 	int fd;
 	long  vdisable;
-	#ifdef S3C2440
-	fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
-	#else
-	fd = open( "/dev/ttySP0", O_RDWR|O_NOCTTY|O_NDELAY);
-	#endif
+	fd = open(dev, O_RDWR|O_NOCTTY|O_NDELAY);
+	//#ifdef S3C2440
+	//fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
+	//#else
+	//fd = open( "/dev/ttySP0", O_RDWR|O_NOCTTY|O_NDELAY);
+	//#endif
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
 		return(-1);
@@ -1295,7 +1498,7 @@ int open_com_port()
 int main(int argc, char *argv[])
 {
 	key_t shmid; 
-	int fd_com=0,fpid;
+	int fd_com=0,fpid,fd_lcd;
 	get_ip(ip);
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{
@@ -1303,14 +1506,31 @@ int main(int argc, char *argv[])
         exit(1);  
     }  
 	server_time = (char *)shmat(shmid, 0, 0);
-	if((fd_com=open_com_port())<0)
+	#ifdef S3C2440
+	if((fd_com=open_com_port("/dev/s3c2410_serial1"))<0)
+	#else
+	if((fd_com=open_com_port("/dev/ttySP0"))<0)
+	#endif
 	{
-		perror("open_port error");
+		perror("open_port cap error");
 		return -1;
 	}
 	if(set_opt(fd_com,9600,8,'N',1)<0)
 	{
-		perror(" set_opt error");
+		perror(" set_opt cap error");
+		return -1;
+	}
+	if((fd_lcd=open_com_port("/dev/ttySP1"))<0)
+	{
+		perror("open_port lcd error");
+		close(fd_com);
+		return -1;
+	}
+	if(set_opt(fd_lcd,115200,8,'N',1)<0)
+	{
+		perror(" set_opt cap error");
+		close(fd_com);
+		close(fd_lcd);
 		return -1;
 	}
 	pthread_mutex_init(&mutex, NULL);
@@ -1332,17 +1552,27 @@ int main(int argc, char *argv[])
 	{
 		while(1)
 		{
-			//read_uart(fd_com);
-			get_uart(fd_com);
+			get_uart(fd_lcd,fd_com);
 		}
 	}
 	else if(fpid>0)
 	{
-		while(1)
+		fpid=fork();
+		if(fpid==0)
 		{
-			set_alarm(0,0,10);			
-			sync_server(fd_com,0);
-			sync_server(fd_com,1);
+			while(1)
+			{
+				lcd_loop(fd_lcd);
+			}	
+		}
+		else if(fpid>0)
+		{
+			while(1)
+			{
+				set_alarm(0,0,10);			
+				sync_server(fd_com,0);
+				sync_server(fd_com,1);
+			}
 		}
 	}
 	return 0;
