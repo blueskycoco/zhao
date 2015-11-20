@@ -36,6 +36,9 @@
 #include "cJSON.h"
 #include "weblib.h"
 #include "web_interface.h"
+//#include <iostream>
+#include <unistd.h>
+
 #define RTCDEV "/dev/rtc0"
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
@@ -53,7 +56,7 @@ void set_time(int year,int mon,int day,int hour,int minute,int second);
 void write_data(int fd,unsigned int Index,int data);
 void switch_pic(int fd,unsigned char Index);
 void dump_curr_time(int fd);
-
+int g_upload=0;
 char ip[20]={0};
 pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
@@ -663,7 +666,8 @@ int get_uart(int fd_lcd,int fd)
 										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
 										printf(CAP_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
-										can_send=1;										
+										can_send=1;
+										if(g_upload)
 										save_to_file(date,post_message);
 									}
 									break;
@@ -823,18 +827,22 @@ int get_uart(int fd_lcd,int fd)
 								}
 							}
 #endif
-							//printf(SUB_PROCESS"send web %s",post_message);
-							rcv=send_web_post(URL,post_message,9);
+							if(g_upload)
+							{
+								g_upload=0;
+								printf(SUB_PROCESS"send web %s",post_message);
+								rcv=send_web_post(URL,post_message,9);
+								//free(out1);
+								if(rcv!=NULL)
+								{	
+									int len=strlen(rcv);
+									//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+									//printf(SUB_PROCESS"send ok\n");
+									free(rcv);
+								}			
+							}
 							free(post_message);
 							post_message=NULL;
-							//free(out1);
-							if(rcv!=NULL)
-							{	
-								int len=strlen(rcv);
-								//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-								//printf(SUB_PROCESS"send ok\n");
-								free(rcv);
-							}						
 						}
 						return 0;						
 					}
@@ -1273,19 +1281,23 @@ int read_uart(int fd)
 				}
 			}
 #endif
-			save_to_file(date,post_message);
-			//printf(SUB_PROCESS"send web %s",post_message);
-			rcv=send_web_post(URL,post_message,9);
+			if(g_upload)
+			{
+				g_upload=0;
+				save_to_file(date,post_message);
+				printf(SUB_PROCESS"send web %s",post_message);
+				rcv=send_web_post(URL,post_message,9);
+				//free(out1);
+				if(rcv!=NULL)
+				{	
+					int len=strlen(rcv);
+					//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
+					//printf(SUB_PROCESS"send ok\n");
+					free(rcv);
+				}
+			}
 			free(post_message);
 			post_message=NULL;
-			//free(out1);
-			if(rcv!=NULL)
-			{	
-				int len=strlen(rcv);
-				//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-				//printf(SUB_PROCESS"send ok\n");
-				free(rcv);
-			}
 		}
 	}
 	else
@@ -1544,6 +1556,12 @@ int open_com_port(char *dev)
 	printf("fd-open=%d\n",fd);
 	return fd;
 }
+void set_upload_flag(int a)
+{
+	  g_upload=1;
+	  alarm(50);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -1601,6 +1619,8 @@ int main(int argc, char *argv[])
 	fpid=fork();
 	if(fpid==0)
 	{
+		signal(SIGALRM, set_upload_flag);
+        alarm(1);
 		while(1)
 		{
 			get_uart(fd_lcd,fd_com);
