@@ -830,7 +830,7 @@ int get_uart(int fd_lcd,int fd)
 							if(g_upload)
 							{
 								g_upload=0;
-								printf(SUB_PROCESS"send web %s",post_message);
+								//printf(SUB_PROCESS"send web %s",post_message);
 								rcv=send_web_post(URL,post_message,9);
 								//free(out1);
 								if(rcv!=NULL)
@@ -1559,7 +1559,7 @@ int open_com_port(char *dev)
 void set_upload_flag(int a)
 {
 	  g_upload=1;
-	  alarm(50);
+	  alarm(60);
 }
 
 
