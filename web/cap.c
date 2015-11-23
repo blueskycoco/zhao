@@ -830,7 +830,7 @@ int get_uart(int fd_lcd,int fd)
 							if(g_upload)
 							{
 								g_upload=0;
-								printf(SUB_PROCESS"send web %s",post_message);
+								//printf(SUB_PROCESS"send web %s",post_message);
 								rcv=send_web_post(URL,post_message,9);
 								//free(out1);
 								if(rcv!=NULL)
@@ -869,6 +869,20 @@ void write_data(int fd,unsigned int Index,int data)
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
 	write(fd,cmd,8);
 }
+void write_string(int fd,unsigned int addr,char *data,int len)
+{
+	int i=0;
+	char *cmd=(char *)malloc(len+6);
+	cmd[0]=0x5a;cmd[1]=0xa5;cmd[2]=len+3;cmd[3]=0x82;
+	cmd[4]=(addr&0xff00)>>8;cmd[5]=addr&0x00ff;
+	for(i=0;i<len;i++)
+		cmd[6+i]=data[i];
+	for(i=0;i<len+6;i++)
+		printf("%02x ",cmd[i]);
+	printf("\n");
+	write(fd,cmd,len+6);
+	free(cmd);
+}
 #define LCD_PROCESS "[LCD_PROCESS]"
 FILE *history_fp=NULL;
 unsigned short input_handle(int fd_lcd,char *input)
@@ -882,6 +896,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 	char data1[32]={0};
 	char data2[32]={0};
 	char data3[32]={0};
+	char time[]={0x32,0x30,0x31 ,0x35 ,0x2d,0x31 ,0x31 ,0x2d ,0x32 ,0x30 ,0x20,0x32 ,0x37 ,0x3A ,0x32 ,0x30 ,0x3A ,0x30 ,0x30};
+	char co[]={0x30,0x2e,0x31,0x32};
 	input[0]=2;
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
@@ -907,6 +923,11 @@ unsigned short input_handle(int fd_lcd,char *input)
 				}
 				char *file_path=(char *)malloc(256);
 				memset(file_path,'\0',256);
+				int year=2015,mon=11,day=23,hour=9,min=36,sec=12,cod=34;
+				sprintf(time,"%04d-%02d-%02d %02d:%02d:%02d",year,mon,day,hour,min,sec);
+				sprintf(co,"0.%d",cod);
+				write_string(fd_lcd,0x0006,time,sizeof(time));
+				write_string(fd_lcd,0x0018,co,sizeof(co));
 				int rtc_fd = open(RTCDEV, O_RDONLY);
 				if(rtc_fd!=-1)
 				{				
@@ -1559,7 +1580,7 @@ int open_com_port(char *dev)
 void set_upload_flag(int a)
 {
 	  g_upload=1;
-	  alarm(50);
+	  alarm(60);
 }
 
 
