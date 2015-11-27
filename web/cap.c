@@ -58,6 +58,7 @@ void switch_pic(int fd,unsigned char Index);
 void dump_curr_time(int fd);
 int g_upload=0;
 char ip[20]={0};
+char cur_date[15]={0};
 pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
 char *server_time;
@@ -889,7 +890,6 @@ unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
 	char * line = NULL;
-	char date_buf[32]={0};
 	char date1[32]={0};
 	char date2[32]={0};
 	char date3[32]={0};
@@ -925,65 +925,30 @@ unsigned short input_handle(int fd_lcd,char *input)
 				memset(file_path,'\0',256);
 				int year=2015,mon=11,day=23,hour=9,min=36,sec=12,cod=34;
 				sprintf(time,"%04d-%02d-%02d %02d:%02d:%02d",year,mon,day,hour,min,sec);
-				sprintf(co,"0.%d",cod);
+				sprintf(co,"0.%02d",cod);
 				write_string(fd_lcd,0x0006,time,sizeof(time));
-				write_string(fd_lcd,0x0018,co,sizeof(co));
-				int rtc_fd = open(RTCDEV, O_RDONLY);
-				if(rtc_fd!=-1)
-				{				
-					int retval;
-					struct rtc_time rtc_tm;
-					retval = ioctl(rtc_fd, RTC_RD_TIME, &rtc_tm);
-					if (retval == -1) {
-					perror("RTC_RD_TIME ioctl");
-					exit(errno);
-					}
-
-					printf(LCD_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
-					rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
-					rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
-					sprintf(date_buf,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
-					close(rtc_fd);
-					printf(LCD_PROCESS"cur is %s\n",date_buf);
-					strcpy(file_path,FILE_PATH);
-					strcat(file_path,date_buf);
-					strcat(file_path,".dat");
-					printf(LCD_PROCESS"to open %s\r\n",file_path);
-					history_fp = fopen(file_path, "r");
-					if(history_fp!=NULL)
+				write_string(fd_lcd,0x0018,co,sizeof(co));				
+				printf(LCD_PROCESS"cur is %s\n",cur_date);
+				strcpy(file_path,FILE_PATH);
+				strcat(file_path,date_buf);
+				printf(LCD_PROCESS"to open %s\r\n",file_path);
+				history_fp = fopen(file_path, "r");
+				if(history_fp!=NULL)
+				{
+					if(fgets(line,512,history_fp))
 					{
-						if(fgets(line,512,history_fp))
-						{
-							char tmp[10]={'\0'};
-							memcpy(tmp,date_buf,4);
-							printf(LCD_PROCESS"Line %s\n",line);
-							printf(LCD_PROCESS"year %d\n",atoi(tmp));
-							write_data(fd_lcd,VAR_CO_YEAR1,atoi(tmp));
-							memset(tmp,'\0',10);
-							memcpy(tmp,date_buf+5,2);				
-							printf(LCD_PROCESS"mon %d\n",atoi(tmp));
-							write_data(fd_lcd,VAR_CO_MON1,atoi(tmp));
-							memset(tmp,'\0',10);
-							memcpy(tmp,date_buf+8,2);				
-							printf(LCD_PROCESS"day %d\n",atoi(tmp));
-							write_data(fd_lcd,VAR_CO_DAY1,atoi(tmp));
-							memset(tmp,'\0',10);
-							memcpy(tmp,line,2);				
-							printf(LCD_PROCESS"hour %d\n",atoi(tmp));
-							write_data(fd_lcd,VAR_CO_DATA1,atoi(tmp));
-							//memset(tmp,'\0',10);
-							//memcpy(tmp,line+3,2);				
-							//write_data(fd_lcd,VAR_DATE_TIME_3,atoi(tmp));
-							//memset(tmp,'\0',10);
-						}
-						else
-							printf(LCD_PROCESS"fgets failed\n");
+						char tmp[17]={'\0'};
+						memcpy(tmp,cur_date,10);
+						strcat(tmp,line);
+						printf(LCD_PROCESS"date %s\n",tmp);
+						write_string(fd_lcd,VAR_CO_YEAR1,tmp,sizeof(tmp));
 					}
 					else
-						printf(LCD_PROCESS"open file %s failed\n",file_path);
-				}		
+						printf(LCD_PROCESS"fgets failed\n");
+				}
 				else
-					printf(LCD_PROCESS"open RTC dev failed\n");
+					printf(LCD_PROCESS"open file %s failed\n",file_path);
+				
 			}
 		}
 	#if 0
@@ -1480,6 +1445,8 @@ int set_alarm(int hour,int mintue,int sec)
 
 	dump_curr_time(fd);
 	#if 1
+	sprintf(cur_date,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_day);
+	printf(MAIN_PROCESS"cur_date %s\n",cur_date);
 	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
 	{
 		rtc_tm.tm_sec=sec;
@@ -1664,7 +1631,7 @@ int main(int argc, char *argv[])
 				sync_server(fd_com,0);
 				if(server_time[0]!=0 &&server_time[5]!=0)
 				{
-					set_alarm(23,30,0);
+					set_alarm(00,00,01);
 					sync_server(fd_com,1);
 				}
 				else
