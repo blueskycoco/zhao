@@ -930,7 +930,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 				write_string(fd_lcd,0x0018,co,sizeof(co));				
 				printf(LCD_PROCESS"cur is %s\n",cur_date);
 				strcpy(file_path,FILE_PATH);
-				strcat(file_path,date_buf);
+				//strcat(file_path,date_buf);
 				printf(LCD_PROCESS"to open %s\r\n",file_path);
 				history_fp = fopen(file_path, "r");
 				if(history_fp!=NULL)
@@ -1445,7 +1445,7 @@ int set_alarm(int hour,int mintue,int sec)
 
 	dump_curr_time(fd);
 	#if 1
-	sprintf(cur_date,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_day);
+	sprintf(cur_date,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
 	printf(MAIN_PROCESS"cur_date %s\n",cur_date);
 	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
 	{
@@ -1547,7 +1547,7 @@ int open_com_port(char *dev)
 void set_upload_flag(int a)
 {
 	  g_upload=1;
-	  alarm(60);
+	  alarm(600);
 }
 
 
