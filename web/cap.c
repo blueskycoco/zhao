@@ -113,8 +113,8 @@ char *send_web_post(char *url,char *buf,int timeout)
 	{
 		rcv=(char *)malloc(256);
 		memset(rcv,'\0',256);
-		char *gprs_string=(char *)malloc(strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+rt_strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
-		memset(gprs_string,'\0',strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+rt_strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
+		char *gprs_string=(char *)malloc(strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
+		memset(gprs_string,'\0',strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
 		strcpy(gprs_string,"/saveData/airmessage/messMgr.do?JSONStr=");
 		strcat(gprs_string,buf);
 		strcat(gprs_string,"\nHTTP/ 1.1\nhost:101.200.182.92");
@@ -134,8 +134,8 @@ char *send_web_post(char *url,char *buf,int timeout)
 				if(timeout!=-1)
 				{
 					ltimeout++;
-					msleep(1);
-					if(ltimeout>=timeout)
+					usleep(1000);
+					if(ltimeout>=timeout*1000)
 					{
 						printf("gprs timeout\n");						
 						free(gprs_string);
