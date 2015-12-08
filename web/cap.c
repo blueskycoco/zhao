@@ -63,6 +63,8 @@ pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0;
 char *server_time;
 char g_uuid[256]={0};
+char send_by_wifi=0;
+int fd_gprs=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -98,46 +100,58 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 char *send_web_post(char *url,char *buf,int timeout)
 {
 	char request[1024]={0};
-	int result=0;
-	char *rcv=NULL;
+	int result=0,i,ltimeout=0;
+	char *rcv=NULL,ch;
 	pthread_mutex_lock(&mutex);
-#if 0
-	sprintf(request,"%s?JSONStr=%s",url,buf);
-	printf(UPLOAD_PROCESS"send web %s\n",request);
-	rcv=http_get(request,timeout);
-#else
-	sprintf(request,"JSONStr=%s",buf);
-	printf(UPLOAD_PROCESS"send web %s\n",request);
-	rcv=http_post(url,request,timeout);
-#endif
+	if(send_by_wifi)
+	{		
+		sprintf(request,"JSONStr=%s",buf);
+		printf(UPLOAD_PROCESS"send web %s\n",request);
+		rcv=http_post(url,request,timeout);
+	}
+	else
+	{
+		rcv=(char *)malloc(256);
+		memset(rcv,'\0',256);
+		char *gprs_string=(char *)malloc(strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+rt_strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
+		memset(gprs_string,'\0',strlen(buf)+strlen("/saveData/airmessage/messMgr.do?JSONStr=")+rt_strlen("\nHTTP/ 1.1\nhost:101.200.182.92")+1);
+		strcpy(gprs_string,"/saveData/airmessage/messMgr.do?JSONStr=");
+		strcat(gprs_string,buf);
+		strcat(gprs_string,"\nHTTP/ 1.1\nhost:101.200.182.92");
+		write(fd_gprs, gprs_string, strlen(gprs_string));	
+		i=0;
+		while(1)
+		{
+			if(read(fd_gprs, &ch, 1)==1)
+			{
+				rcv[i++]=ch;
+				//rt_kprintf("%c",ch);
+				if(ch=='}'||ch=='k')
+					break;
+			}
+			else
+			{
+				if(timeout!=-1)
+				{
+					ltimeout++;
+					msleep(1);
+					if(ltimeout>=timeout)
+					{
+						printf("gprs timeout\n");						
+						free(gprs_string);
+						free(rcv);
+						return NULL;
+					}
+				}
+			}
+		}		
+		free(gprs_string);
+	}
 	if(rcv!=NULL)
 		printf(UPLOAD_PROCESS"rcv %s\n\n",rcv);
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	pthread_mutex_unlock(&mutex);
-#if 0
-	if(rcv!=NULL)
-	{
-		printf("%s\n",rcv);
-		char res=doit_ack(rcv,"success");
-		if(res)
-		{
-			printf(LOG_PREFX"code is %d\n",res);
-			result=1;
-			if(strstr(url,"achieve")!=0)
-			{
-				char *data=doit_data(rcv,"data");
-				if(data)
-				{
-					send_msg(msgid,TYPE_WEB_TO_MAIN,WEB_TO_MAIN,data);
-					free(data);
-				}
-			}
-		}
-		free(rcv);
-	}
-	return result;
-#endif
 	return rcv;
 }
 char *send_web_get(char *url,char *buf,int timeout)
@@ -714,32 +728,6 @@ int get_uart(int fd_lcd,int fd)
 												post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
 												post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
 											}
-											#if 0
-											sprintf(id,"%d",message_type);
-											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);
-											//rt_kprintf("pre data %s %d\r\n",data,rt_rt_strlen(data));
-											
-											if(to_check[i+7]>=strlen(data))
-											{									
-												sprintf(data,"0.%d%d",to_check[i+5],to_check[i+6]);
-											}
-											else if(to_check[i+7]==0)
-											{
-												if(to_check[i+5]!=0)
-													sprintf(data,"%d%d.0",to_check[i+5],to_check[i+6]);
-												else
-													sprintf(data,"%d.0",to_check[i+6]);
-											}
-											else
-											{
-												for(j=strlen(data);j>strlen(data)-to_check[i+7]-1;j--)
-												{
-													data[j]=data[j-1];
-													//rt_kprintf("j %d %c\r\n",j,data[j]);
-												}	
-												data[j]='.';
-											}
-											#else
 											sprintf(id,"%d",message_type);
 											sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);						
 											if(to_check[i+7]!=0)
@@ -766,7 +754,6 @@ int get_uart(int fd_lcd,int fd)
 													sprintf(data,"%d.%d",left,right);								
 												}
 											}	
-											#endif
 											//real time update cap data
 											if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
 											{
@@ -804,36 +791,15 @@ int get_uart(int fd_lcd,int fd)
 							printf(CAP_PROCESS"CRC error \r\n");
 							for(i=0;i<message_len+7;i++)
 								printf("0x%02x ",to_check[i]);
-						}
-						//i=to_check[i+3]+6;							
+						}					
 						if(can_send)
 						{
 							can_send=0;
-#if 0
-							j=0;
-							for(i=0;i<strlen(post_message);i++)
-							{
-								if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
-									j++;
-							}
-							printf(CAP_PROCESS"send post_message %s",post_message);
-							char *out1=malloc(strlen(post_message)-j+1);
-							memset(out1,'\0',strlen(post_message)-j+1);
-							j=0;
-							for(i=0;i<strlen(post_message);i++)
-							{
-								if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
-								{
-									out1[j++]=post_message[i];
-								}
-							}
-#endif
 							if(g_upload)
 							{
 								g_upload=0;
 								//printf(SUB_PROCESS"send web %s",post_message);
 								rcv=send_web_post(URL,post_message,9);
-								//free(out1);
 								if(rcv!=NULL)
 								{	
 									int len=strlen(rcv);
@@ -1059,246 +1025,6 @@ void lcd_loop(int fd)
 	}	
 }
 
-int read_uart(int fd)
-{
-	int len,fs_sel,i=0,j=0,get_start=0,get_stop=0,message_len;
-	char ch[100]={0};
-	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
-	fd_set fs_read;
-	char *rcv=NULL;
-	struct timeval time1;
-
-	FD_ZERO(&fs_read);
-	FD_SET(fd,&fs_read);
-	time1.tv_sec = 10;
-	time1.tv_usec = 0;
-	if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
-	{
-		len=0;
-		j=0;
-		while(1)
-		{
-			i=read(fd,ch+len,4-len);
-			len+=i;
-			if(len==4)
-				break;
-			else if(i==0)
-			{
-				j++;
-				if(j==3)
-					break;
-				usleep(10000);
-			}	
-		}
-		printf(SUB_PROCESS"read message %02X ,len %d\r\n",ch[2],ch[3]);
-		message_len=ch[3];
-		len=0;
-		j=0;
-		while(1)
-		{
-			i=read(fd,ch+len+4,message_len+2-len);
-			len+=i;
-			if(len==message_len+2)
-				break;
-			else if(i==0)
-			{
-				j++;
-				if(j==3)
-					break;
-				usleep(10000);
-			}	
-		}
-		printf(SUB_PROCESS"body %d\r\n",len);
-		for(i=0;i<message_len+2+4;i++)
-		{
-			printf("%02x ",ch[i]);
-		}
-		printf("\r\n"SUB_PROCESS"\r\n");	
-		len=message_len+2;
-		i=0;
-		//while(1)
-		{
-			memset(id,'\0',sizeof(id));
-			memset(data,'\0',sizeof(data));
-			memset(date,'\0',sizeof(date));
-			memset(error,'\0',sizeof(error));
-			while(ch[i]!=START_BYTE)
-				i++;
-			if(i>=len)
-				return 0;
-			//printf(SUB_PROCESS"ch[%d] %02x ,ch[%d+1],%02x\r\n",i,ch[i],i,ch[i+1]);
-			if(ch[i]==(char)START_BYTE && ch[i+1]==(char)CAP_TO_ARM)
-			{
-				if(CRC_check(ch,ch[i+3]+4)==(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]))
-				{
-					switch(ch[2])
-					{
-						case TIME_BYTE:
-							{
-								sprintf(date,"20%02d-%02d-%02d %02d:%02d",ch[i+4],ch[i+5],ch[i+6],ch[i+7],ch[i+8],ch[i+9]);
-								printf(SUB_PROCESS"date is %s\r\n",date);
-								post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
-								can_send=1;
-							}
-							break;
-						case ERROR_BYTE:
-							{
-								sprintf(error,"%dth sensor possible error",ch[i+2]);
-								post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
-							}
-							break;
-						case RESEND_BYTE:
-							{
-								write(fd,server_time,13);
-							}
-							break;
-						default:
-							{
-								/*get cap data*/
-								if(ch[i+4]==0x45 && ch[i+5]==0x52 && ch[i+6]==0x52 && ch[i+7]==0x4f && ch[i+8]==0x52)
-								{
-									sprintf(error,"%dth sensor possible error",ch[i+2]);
-									if(post_message==NULL)
-									{
-										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-										post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
-										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,"192.168.1.2");
-										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");
-										can_send=1;
-									}
-									post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
-								}
-								else
-								{
-									
-									if(post_message==NULL)
-									{
-										post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-										post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
-										post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-										post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
-									}
-									#if 0
-									sprintf(id,"%d",ch[i+2]);
-									sprintf(data,"%d%d",ch[i+4],ch[i+5]);
-									//printf("pre data %s %d\r\n",data,strlen(data));
-									
-									if(ch[i+6]>=strlen(data))
-									{									
-										sprintf(data,"0.%d%d",ch[i+4],ch[i+5]);
-									}
-									else if(ch[i+6]==0)
-									{									
-										sprintf(data,"%d%d.0",ch[i+4],ch[i+5]);
-									}
-									else
-									{
-										for(j=strlen(data);j>strlen(data)-ch[i+6]-1;j--)
-										{
-											data[j]=data[j-1];
-											//printf("j %d %c\r\n",j,data[j]);
-										}	
-										data[j]='.';
-									}
-									#else
-									sprintf(id,"%d",ch[i+2]);
-									sprintf(data,"%d",ch[i+5]<<8|ch[i+6]);						
-									if(ch[i+7]!=0)
-									{//have .
-										int m;
-										if(ch[i+7]>strlen(data))
-										{
-											char tmp_buf[10]={0};
-											int dist=ch[i+7]-strlen(data);
-											strcpy(tmp_buf,"0.");
-											for(m=0;m<dist;m++)
-												strcat(tmp_buf,"0");
-											strcat(tmp_buf,data);
-											strcpy(data,tmp_buf);
-										}
-										else
-										{
-											int left,right,number,n=1;
-											number=(ch[i+5]<<8)|ch[i+6];
-											for(m=0;m<ch[i+7];m++)
-												n=n*10;
-											right=number%n;
-											left=number/n;
-											sprintf(data,"%d.%d",left,right);								
-										}
-									}	
-									#endif
-									printf(SUB_PROCESS"id %s data %s\r\n",id,data);
-									post_message=add_item(post_message,id,data);
-								}
-							}
-							break;
-					}
-				}
-				else
-					printf(SUB_PROCESS"CRC error Get %02x <> Count %02x\r\n",(ch[ch[i+3]+4]<<8|ch[ch[i+3]+5]),CRC_check(ch,ch[i+3]+4));
-			}
-			else
-			{
-				printf(SUB_PROCESS"wrong info %02x %02x\r\n",ch[0],ch[1]);
-				return 0;
-			}
-			i=ch[i+3]+6;
-		}
-		if(can_send)
-		{
-			can_send=0;
-#if 0
-			j=0;
-			for(i=0;i<strlen(post_message);i++)
-			{
-				if(post_message[i]=='\n'||post_message[i]=='\r'||post_message[i]=='\t')
-					j++;
-			}
-			printf(SUB_PROCESS"send post_message %s",post_message);
-			char *out1=malloc(strlen(post_message)-j+1);
-			memset(out1,'\0',strlen(post_message)-j+1);
-			j=0;
-			for(i=0;i<strlen(post_message);i++)
-			{
-				if(post_message[i]!='\r'&&post_message[i]!='\n'&&post_message[i]!='\t')		
-				{
-					out1[j++]=post_message[i];
-				}
-			}
-#endif
-			if(g_upload)
-			{
-				g_upload=0;
-				save_to_file(date,post_message);
-				printf(SUB_PROCESS"send web %s",post_message);
-				rcv=send_web_post(URL,post_message,9);
-				//free(out1);
-				if(rcv!=NULL)
-				{	
-					int len=strlen(rcv);
-					//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-					//printf(SUB_PROCESS"send ok\n");
-					free(rcv);
-				}
-			}
-			free(post_message);
-			post_message=NULL;
-		}
-	}
-	else
-	{
-		char date[128]={0};
-		time_t t;
-		time(&t);
-		struct tm *tmtt;
-		tmtt = (struct tm *)localtime(&t);
-		strftime(date, 128, "%Y:%m:%d_%H:%M:%S", tmtt);
-		printf(SUB_PROCESS"no data in %s\r\n",date);		
-	}
-	return len;
-}
-
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
@@ -1520,11 +1246,6 @@ int open_com_port(char *dev)
 	int fd;
 	long  vdisable;
 	fd = open(dev, O_RDWR|O_NOCTTY|O_NDELAY);
-	//#ifdef S3C2440
-	//fd = open( "/dev/s3c2410_serial1", O_RDWR|O_NOCTTY|O_NDELAY);
-	//#else
-	//fd = open( "/dev/ttySP0", O_RDWR|O_NOCTTY|O_NDELAY);
-	//#endif
 	if (-1 == fd){
 		perror("Can't Open Serial ttySAC3");
 		return(-1);
@@ -1549,8 +1270,6 @@ void set_upload_flag(int a)
 	  g_upload=1;
 	  alarm(600);
 }
-
-
 int main(int argc, char *argv[])
 {
 	key_t shmid; 
@@ -1560,7 +1279,7 @@ int main(int argc, char *argv[])
 	{
         fprintf(stderr, "Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
-    }  
+    }
 	server_time = (char *)shmat(shmid, 0, 0);
 	#ifdef S3C2440
 	if((fd_com=open_com_port("/dev/s3c2410_serial1"))<0)
@@ -1587,6 +1306,21 @@ int main(int argc, char *argv[])
 		perror(" set_opt cap error");
 		close(fd_com);
 		close(fd_lcd);
+		return -1;
+	}
+	if((fd_gprs=open_com_port("/dev/ttySP2"))<0)
+	{
+		perror("open_port lcd error");
+		close(fd_com);
+		close(fd_lcd);
+		return -1;
+	}
+	if(set_opt(fd_gprs,115200,8,'N',1)<0)
+	{
+		perror(" set_opt cap error");
+		close(fd_com);
+		close(fd_lcd);
+		close(fd_gprs);
 		return -1;
 	}
 	pthread_mutex_init(&mutex, NULL);
