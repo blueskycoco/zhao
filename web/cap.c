@@ -60,11 +60,36 @@ int g_upload=0;
 char ip[20]={0};
 char cur_date[15]={0};
 pthread_mutex_t mutex;
-char *post_message=NULL,can_send=0;
+char *post_message=NULL,can_send=0,*warnning_msg=NULL;
 char *server_time;
 char g_uuid[256]={0};
 char send_by_wifi=0;
 int fd_gprs=0;
+#define ALARM_NONE		0
+#define ALARM_BELOW 	1
+#define ALARM_UP		2
+#define ALARM_UNINSERT 	3
+
+typedef struct _sensor_alarm {
+	char co;
+	char co2;
+	char hcho;
+	char shidu;
+	char temp;
+	char pm25;
+}sensor_alarm;
+
+typedef struct _sensor_times {
+	char co;
+	char co2;
+	char hcho;
+	char shidu;
+	char temp;
+	char pm25;
+}sensor_times;
+#define CONFIG_FILE "sensor_alarm.cfg"
+sensor_alarm sensor;
+sensor_times sensortimes;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -681,9 +706,25 @@ int get_uart(int fd_lcd,int fd)
 										sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
 										printf(CAP_PROCESS"date is %s\r\n",date);
 										post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
+										if(warnning_msg!=NULL)
+										{
+											warnning_msg=add_item(warnning_msg,ID_DEVICE_CAP_TIME,date);
+											rcv=send_web_post(URL,warnning_msg,9);
+											free(warnning_msg);
+											warnning_msg=NULL;
+											if(rcv!=NULL)
+											{	
+												int len=strlen(rcv);
+												free(rcv);
+											}	
+										}
 										can_send=1;
 										if(g_upload)
-										save_to_file(date,post_message);
+										{
+											save_to_file(date,post_message);
+											//compare 6 sensor max & min 
+											
+										}
 									}
 									break;
 								case ERROR_BYTE:
@@ -702,25 +743,47 @@ int get_uart(int fd_lcd,int fd)
 										/*get cap data*/
 										if(to_check[i+5]==0x65 && to_check[i+6]==0x72 && to_check[i+7]==0x72 && to_check[i+8]==0x6f && to_check[i+9]==0x72)
 										{
+											if(to_check[i+3]==ID_CAP_CO2 && !sensor.co2)
+												sensor.co2=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_CO && !sensor.co)
+												sensor.co=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_HCHO && !sensor.hcho)
+												sensor.hcho=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_SHI_DU && !sensor.shidu)
+												sensor.shidu=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_TEMPERATURE&& !sensor.temp)
+												sensor.temp=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_PM_25&& !sensor.pm25)
+												sensor.pm25=ALARM_UNINSERT;
+											else 
+												continue;
+											//inform server
 											sprintf(error,"%dth sensor possible error",to_check[i+3]);
-											char *warnning_msg=NULL;						
+											//char *warnning_msg=NULL;				
+											sprintf(id,to_check[i+3]);
 											warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 											warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
 											warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,"192.168.1.2");
 											warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
 											warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-											rcv=send_web_post(URL,warnning_msg,9);
-											free(warnning_msg);
-											warnning_msg=NULL;
-											if(rcv!=NULL)
-											{	
-												int len=strlen(rcv);
-												free(rcv);
-											}	
+											warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,id);
+											warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UNINSERT);
+											//sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
+											//printf(CAP_PROCESS"date is %s\r\n",date);
+											//warnning_msg=add_item(warnning_msg,ID_DEVICE_CAP_TIME,date);
+											//rcv=send_web_post(URL,warnning_msg,9);
+											//free(warnning_msg);
+											//warnning_msg=NULL;
+											//if(rcv!=NULL)
+											//{	
+											//	int len=strlen(rcv);
+											//	free(rcv);
+											//}	
 											return 0;
 										}
 										else
 										{
+											float value=0;
 											if(post_message==NULL)
 											{
 												post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
@@ -733,7 +796,7 @@ int get_uart(int fd_lcd,int fd)
 											if(to_check[i+7]!=0)
 											{//have .
 												int m;
-												if(to_check[i+7]>strlen(data))
+												if(to_check[i+7]>strlen(data))//like 0.012
 												{
 													char tmp_buf[10]={0};
 													int dist=to_check[i+7]-strlen(data);
@@ -743,7 +806,7 @@ int get_uart(int fd_lcd,int fd)
 													strcat(tmp_buf,data);
 													strcpy(data,tmp_buf);
 												}
-												else
+												else//like 12.33
 												{
 													int left,right,number,n=1;
 													number=(to_check[i+5]<<8)|to_check[i+6];
@@ -753,7 +816,46 @@ int get_uart(int fd_lcd,int fd)
 													left=number/n;
 													sprintf(data,"%d.%d",left,right);								
 												}
+												if(g_upload){
+												int temp=1;
+												for(i=0;i<to_check[i+7];i++)
+													temp*=10;
+												value=(float((to_check[i+5]<<8|to_check[i+6])))/((float)temp);
+												}
 											}	
+											else
+											{
+												if(g_upload)
+													value=(float)(to_check[i+5]<<8|to_check[i+6]);
+											}
+											if(g_upload)
+											{
+											if(message_type==ID_CAP_CO2 && !sensor.co2)
+											{
+													if(value<MIN_CO2)
+														sensortimes.co2++;
+													else if(value>MAX_CO2)
+														sensortimes.co2++;
+													else
+														sensortimes.co2=0;
+													if(sensortimes.co2==12)
+													{//need send server alarm
+														
+													}
+											}
+											else if(to_check[i+3]==ID_CAP_CO && !sensor.co)
+												sensor.co=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_HCHO && !sensor.hcho)
+												sensor.hcho=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_SHI_DU && !sensor.shidu)
+												sensor.shidu=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_TEMPERATURE&& !sensor.temp)
+												sensor.temp=ALARM_UNINSERT;
+											else if(to_check[i+3]==ID_CAP_PM_25&& !sensor.pm25)
+												sensor.pm25=ALARM_UNINSERT;
+											else 
+												continue;
+											}
 											//real time update cap data
 											if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
 											{
@@ -1270,6 +1372,32 @@ void set_upload_flag(int a)
 	  g_upload=1;
 	  alarm(600);
 }
+void get_sensor_alarm_info()
+{
+	sensortimes.co=0;
+	sensortimes.co2=0;
+	sensortimes.hcho=0;
+	sensortimes.shidu=0;
+	sensortimes.temp=0;
+	sensortimes.pm25=0;
+	FILE *fp=fopen(CONFIG_FILE,"r");
+	if(fp==NULL)
+	{
+		sensor.co=0;
+		sensor.co2=0;
+		sensor.hcho=0;
+		sensor.shidu=0;
+		sensor.temp=0;
+		sensor.pm25=0;
+		fp=fopen(CONFIG_FILE,"w");
+		fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);	
+		fclose(fp);
+		return;
+	}
+	fread(&sensor,sizeof(struct _sensor_alarm),1,fp);
+	fclose(fp);
+	printf(MAIN_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
+}
 int main(int argc, char *argv[])
 {
 	key_t shmid; 
@@ -1280,6 +1408,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
+	get_sensor_alarm_info();
 	server_time = (char *)shmat(shmid, 0, 0);
 	#ifdef S3C2440
 	if((fd_com=open_com_port("/dev/s3c2410_serial1"))<0)

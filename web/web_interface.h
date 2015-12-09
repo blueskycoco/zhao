@@ -32,6 +32,8 @@
 #define ID_DEVICE_IP_ADDR				"35"
 #define ID_DEVICE_PORT					"36"
 #define ID_RE_DGRAM_TYPE				"38"
+#define ID_ALARM_SENSOR					"41"
+#define ID_ALARM_TYPE					"42"
 
 #define ID_DEVICE_CAP_TIME				"103"
 #define ID_CAP_CO						"60"
@@ -77,6 +79,9 @@
 #define ID_ALERT_CAP_FAILED				"92"
 #define ID_ALERT_NO_ACK					"93"
 #define ID_ALERT_POWER_OFF				"94"
+#define ID_ALERT_UP						"95"
+#define ID_ALERT_BELOW					"96"
+#define ID_ALERT_UNINSERT				"97"
 #define ID_RE_START_TIME				"101"
 #define ID_RE_STOP_TIME					"102"
 #define ID_CAP_TIME						"103"
@@ -89,6 +94,19 @@
 #define ID_DEVICE_SETUP_PLACE			"211"
 #define ID_DEVICE_INFO					"212"
 #define ID_DEVICE_STATUS				"213"
+
+#define MAX_CO		900
+#define MIN_CO		100
+#define MAX_CO2		900
+#define MIN_CO2		100
+#define MAX_HCHO	900
+#define MIN_HCHO	100
+#define MAX_SHIDU	900
+#define MIN_SHIDU	100
+#define MAX_TEMP	900
+#define MIN_TEMP	100
+#define MAX_PM25	900
+#define MIN_PM25	100
 
 #define STATE_LOGO			0
 #define STATE_MAIN			1
