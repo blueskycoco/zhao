@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
 		{
 			printf("type %s\r\nuid %s\r\nipaddr %s\nport %s\nurl %s\ntimeout %d\n92 string:%s\n",
 				argv[1],argv[2],argv[3],argv[4],argv[5],atoi(argv[6]),argv[7]);		
-			if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],argv[5],argv[6],NULL,NULL,NULL,atoi(argv[7])))
+			if(upload_data(argv[1],argv[2],argv[5],argv[3],argv[4],argv[7],argv[8],NULL,NULL,NULL,atoi(argv[6])))
 				printf("send data ok\n");
 			else
 				printf("send data failed\n");
