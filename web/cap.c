@@ -104,26 +104,6 @@ typedef struct _sensor_times {
 #define CONFIG_FILE "sensor_alarm.cfg"
 sensor_alarm sensor;
 sensor_times sensortimes;
-#if 0
-char history_co_time[100000][20];
-char history_co_data[100000][10];
-long g_history_co_cnt=0;
-char history_co2_time[100000][20];
-char history_co2_data[100000][10];
-long g_history_co2_cnt=0;
-char history_hcho_time[100000][20];
-char history_hcho_data[100000][10];
-long g_history_hcho_cnt=0;
-char history_shidu_time[100000][20];
-char history_shidu_data[100000][10];
-long g_history_shidu_cnt=0;
-char history_temp_time[100000][20];
-char history_temp_data[100000][10];
-long g_history_temp_cnt=0;
-char history_pm25_time[100000][20];
-char history_pm25_data[100000][10];
-long g_history_pm25_cnt=0;
-#else
 key_t shmid_co,shmid_co2,shmid_hcho,shmid_temp,shmid_pm25,shmid_shidu;
 key_t shmid_co_cnt,shmid_co2_cnt,shmid_hcho_cnt,shmid_temp_cnt,shmid_pm25_cnt,shmid_shidu_cnt;
 struct nano{
@@ -132,7 +112,7 @@ struct nano{
 };
 struct nano *g_history_co,*g_history_temp,*g_history_shidu,*g_history_co2,*g_history_hcho,*g_history_pm25;
 long *g_co_cnt,*g_co2_cnt,*g_hcho_cnt,*g_temp_cnt,*g_pm25_cnt,*g_shidu_cnt;
-#endif
+
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -269,15 +249,10 @@ char *send_web_get(char *url,char *buf,int timeout)
 	char request[1024]={0};
 	int result=0;
 	char *rcv=NULL;
-#if 1
+
 	sprintf(request,"%s?JSONStr=%s",url,buf);
 	printf(UPLOAD_PROCESS"send web %s\n",request);
 	rcv=http_get(request,timeout);
-#else
-	sprintf(request,"JSONStr=%s",buf);
-	printf(LOG_PREFX"send web %s\n",request);
-	rcv=http_post(url,request,timeout);
-#endif
 	if(rcv!=NULL)
 		printf(UPLOAD_PROCESS"rcv %s\n",rcv);
 	else
@@ -691,330 +666,6 @@ void get_ip(char *ip)
 	printf("ip addrss %s\n", ip);
 	return ;
 }
-#if 0
-int get_uart(int fd_lcd,int fd)
-{
-	char *rcv=NULL,ch,state=STATE_IDLE,message_len=0;	
-	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
-	char message[10],i=0,to_check[20];
-	struct timeval time1;
-	int crc,j,message_type=0;
-	fd_set fs_read;
-	FD_ZERO(&fs_read);
-	FD_SET(fd,&fs_read);
-	time1.tv_sec = 10;
-	time1.tv_usec = 0;
-	while(1)
-	{
-		//if(select(fd+1,&fs_read,NULL,NULL,&time1)>0)
-		{
-			if(read(fd,&ch,1)==1)
-			{
-				switch (state)
-				{
-					case STATE_IDLE:
-						{
-							if(ch==0x6c)
-								state=STATE_6C;
-						}
-						break;
-					case STATE_6C:
-						{
-							if(ch==0xaa)
-							{
-								state=STATE_AA;
-								i=0;
-							}						
-						}
-						break;
-					case STATE_AA:
-						{
-							message_type=ch<<8;
-							//printf("Get AA ==> %02x %02x",ch,message_type);
-							i=0;
-							state=STATE_MESSAGE_TYPE;
-						}
-						break;
-					case STATE_MESSAGE_TYPE:
-						{
-							message_type|=ch;
-							state=STATE_MESSAGE_LEN;
-						}
-						break;
-					case STATE_MESSAGE_LEN:
-						{
-							message_len=ch;
-							state=STATE_MESSAGE;
-							i=0;
-						}
-						break;
-					case STATE_MESSAGE:
-						{
-							if(i!=message_len)
-							{
-								message[i++]=ch;
-							}
-							else
-							{
-								state=STATE_CRC;
-								crc=ch<<8;
-								//printf(SUB_PROCESS"crc1 %02x\n",ch);
-							}	
-						}
-						break;
-					case STATE_CRC:
-						{
-							crc|=ch;
-							//printf(SUB_PROCESS"crc2 %02x\n",ch);
-							//printf(SUB_PROCESS"GOT 0x6c 0xaa %04x %02x ",message_type,message_len);
-							for(i=0;i<message_len;i++)
-							{
-								//printf("%02x ",message[i]);
-								to_check[5+i]=message[i];
-							}
-							//printf("%04x \r\n",crc);
-							to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
-							to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
-							to_check[5+message_len+1]=crc&0xff;
-							//printf(SUB_PROCESS"CRC Get %02x <> Count %02x\r\n",crc,CRC_check(to_check,message_len+5));
-							if(crc==CRC_check(to_check,message_len+5))
-							{
-
-								i=0;
-								memset(id,'\0',sizeof(id));
-								memset(data,'\0',sizeof(data));
-								memset(date,'\0',sizeof(date));
-								memset(error,'\0',sizeof(error));
-								switch(message_type)
-								{
-									case TIME_BYTE:
-										{
-											sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
-											printf(CAP_PROCESS"date is %s\r\n",date);
-											post_message=add_item(post_message,ID_DEVICE_CAP_TIME,date);
-											if(warnning_msg!=NULL)
-											{
-												warnning_msg=add_item(warnning_msg,ID_DEVICE_CAP_TIME,date);
-												send_web_post(URL,warnning_msg,9,&rcv);
-												free(warnning_msg);
-												warnning_msg=NULL;
-												if(rcv!=NULL)
-												{	
-													int len=strlen(rcv);
-													free(rcv);
-													rcv=NULL;
-												}	
-											}
-											can_send=1;
-										}
-										break;
-									case ERROR_BYTE:
-										{
-											sprintf(error,"%dth sensor possible error",to_check[i+2]);
-											post_message=add_item(post_message,ID_ALERT_CAP_FAILED,error);
-										}
-										break;
-									case RESEND_BYTE:
-										{
-											write(fd,server_time,13);
-										}
-										break;
-									default:
-										{
-											/*get cap data*/
-											if(to_check[i+5]==0x65 && to_check[i+6]==0x72 && to_check[i+7]==0x72 && to_check[i+8]==0x6f && to_check[i+9]==0x72)
-											{
-												if(to_check[i+3]==atoi(ID_CAP_CO2) && !sensor.co2)
-													sensor.co2=ALARM_UNINSERT;
-												else if(to_check[i+3]==atoi(ID_CAP_CO) && !sensor.co)
-													sensor.co=ALARM_UNINSERT;
-												else if(to_check[i+3]==atoi(ID_CAP_HCHO) && !sensor.hcho)
-													sensor.hcho=ALARM_UNINSERT;
-												else if(to_check[i+3]==atoi(ID_CAP_SHI_DU) && !sensor.shidu)
-													sensor.shidu=ALARM_UNINSERT;
-												else if(to_check[i+3]==atoi(ID_CAP_TEMPERATURE)&& !sensor.temp)
-													sensor.temp=ALARM_UNINSERT;
-												else if(to_check[i+3]==atoi(ID_CAP_PM_25)&& !sensor.pm25)
-													sensor.pm25=ALARM_UNINSERT;
-												else 
-													continue;
-												//inform server
-												sprintf(error,"%dth sensor possible error",to_check[i+3]);
-												//char *warnning_msg=NULL;				
-												sprintf(id,"%d",to_check[i+3]);
-												warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-												warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-												warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-												warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-												warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-												warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,id);
-												warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UNINSERT);
-												//sprintf(date,"20%02d-%02d-%02d %02d:%02d",to_check[i+5],to_check[i+6],to_check[i+7],to_check[i+8],to_check[i+9],to_check[i+10]);
-												//printf(CAP_PROCESS"date is %s\r\n",date);
-												//warnning_msg=add_item(warnning_msg,ID_DEVICE_CAP_TIME,date);
-												//rcv=send_web_post(URL,warnning_msg,9);
-												//free(warnning_msg);
-												//warnning_msg=NULL;
-												//if(rcv!=NULL)
-												//{	
-												//	int len=strlen(rcv);
-												//	free(rcv);
-												//}	
-												return 0;
-											}
-											else
-											{
-												float value=0;
-												if(post_message==NULL)
-												{
-													post_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-													post_message=add_item(post_message,ID_DEVICE_UID,g_uuid);
-													post_message=add_item(post_message,ID_DEVICE_IP_ADDR,ip);
-													post_message=add_item(post_message,ID_DEVICE_PORT,"9517");	
-												}
-												sprintf(id,"%d",message_type);
-												sprintf(data,"%d",to_check[i+5]<<8|to_check[i+6]);						
-												if(to_check[i+7]!=0)
-												{//have .
-													int m;
-													if(to_check[i+7]>strlen(data))//like 0.012
-													{
-														char tmp_buf[10]={0};
-														int dist=to_check[i+7]-strlen(data);
-														strcpy(tmp_buf,"0.");
-														for(m=0;m<dist;m++)
-															strcat(tmp_buf,"0");
-														strcat(tmp_buf,data);
-														strcpy(data,tmp_buf);
-													}
-													else//like 12.33
-													{
-														int left,right,number,n=1;
-														number=(to_check[i+5]<<8)|to_check[i+6];
-														for(m=0;m<to_check[i+7];m++)
-															n=n*10;
-														right=number%n;
-														left=number/n;
-														sprintf(data,"%d.%d",left,right);								
-													}
-													#if 0
-													if(g_upload){
-														int temp=1;
-														for(i=0;i<to_check[i+7];i++)
-															temp*=10;
-														value=((float)(to_check[i+5]<<8|to_check[i+6]))/((float)temp);
-													}
-													#endif
-												}	
-												else
-												{
-													#if 0
-													if(g_upload)
-														value=(float)(to_check[i+5]<<8|to_check[i+6]);
-													#endif
-												}
-												#if 0
-												if(g_upload)
-												{
-													if(message_type==ID_CAP_CO2 && !sensor.co2)
-													{
-														if(value<MIN_CO2)
-															sensortimes.co2++;
-														else if(value>MAX_CO2)
-															sensortimes.co2++;
-														else
-															sensortimes.co2=0;
-														if(sensortimes.co2==12)
-														{//need send server alarm
-
-														}
-													}
-													else if(to_check[i+3]==ID_CAP_CO && !sensor.co)
-														sensor.co=ALARM_UNINSERT;
-													else if(to_check[i+3]==ID_CAP_HCHO && !sensor.hcho)
-														sensor.hcho=ALARM_UNINSERT;
-													else if(to_check[i+3]==ID_CAP_SHI_DU && !sensor.shidu)
-														sensor.shidu=ALARM_UNINSERT;
-													else if(to_check[i+3]==ID_CAP_TEMPERATURE&& !sensor.temp)
-														sensor.temp=ALARM_UNINSERT;
-													else if(to_check[i+3]==ID_CAP_PM_25&& !sensor.pm25)
-														sensor.pm25=ALARM_UNINSERT;
-													else 
-														continue;
-												}
-												#endif
-												//real time update cap data
-												if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
-												{
-													write_data(fd_lcd,VAR_DATE_TIME_1,to_check[i+5]<<8|to_check[i+6]);
-												}
-												else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-												{						
-													write_data(fd_lcd,VAR_DATE_TIME_2,to_check[i+5]<<8|to_check[i+6]);
-												}
-												else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
-												{
-													write_data(fd_lcd,VAR_DATE_TIME_3,to_check[i+5]<<8|to_check[i+6]);
-												}
-												else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
-												{
-													write_data(fd_lcd,VAR_DATE_TIME_4,to_check[i+5]<<8|to_check[i+6]);
-												}
-												else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
-												{
-													write_data(fd_lcd,VAR_ALARM_TYPE_1,to_check[i+5]<<8|to_check[i+6]);
-												}
-												else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
-												{
-													write_data(fd_lcd,VAR_ALARM_TYPE_2,to_check[i+5]<<8|to_check[i+6]);
-												}
-												post_message=add_item(post_message,id,data);
-												//printf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
-											}
-										}
-										break;
-								}
-							}
-							else
-							{
-								printf(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check(to_check,message_len+5));
-								for(i=0;i<message_len+7;i++)
-									printf("0x%02x ",to_check[i]);
-							}					
-							if(can_send)
-							{
-								can_send=0;
-								if(g_upload)
-								{
-									save_to_file(date,post_message);
-									g_upload=0;
-									//printf(SUB_PROCESS"send web %s",post_message);
-									send_web_post(URL,post_message,9,&rcv);
-									if(rcv!=NULL)
-									{	
-										int len=strlen(rcv);
-										//printf(SUB_PROCESS"<=== %s %d\n",rcv,len);
-										//printf(SUB_PROCESS"send ok\n");
-										free(rcv);
-										rcv=NULL;
-									}			
-								}
-								free(post_message);
-								post_message=NULL;
-							}
-							return 0;						
-						}
-					default:
-						{
-							i=0;
-							state=STATE_IDLE;
-						}	
-				}
-			}
-		}
-	}
-}
-#else
 /*
   *save message to local file
   *send message to server
@@ -1734,7 +1385,7 @@ int get_uart(int fd_lcd,int fd)
 	}
 	return 0;
 }
-#endif
+
 void switch_pic(int fd,unsigned char Index)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x04,0x00};
@@ -2204,45 +1855,6 @@ unsigned short input_handle(int fd_lcd,char *input)
 		begin_pm25+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,begin_pm25);
 	}
-#if 0
-	switch(addr)
-	{
-
-		case TOUCH_DETAIL_CO:
-			{
-				if(history_fp!=NULL)
-				{
-
-				}
-			}
-		case TOUCH_UPDATE_CO:
-			if((TOUCH_DETAIL_CO-0x100)==data||(TOUCH_UPDATE_CO-0x100)==data)
-				return STATE_DETAIL_CO;			
-		case TOUCH_DETAIL_CO2:
-		case TOUCH_UPDATE_CO2:
-			if(TOUCH_DETAIL_CO2-0x100==data||TOUCH_UPDATE_CO2-0x100==data)
-				return TOUCH_DETAIL_CO2;
-		case TOUCH_DETAIL_HCHO:
-		case TOUCH_UPDATE_HCHO:
-			if((TOUCH_DETAIL_HCHO-0x100)==data||(TOUCH_UPDATE_HCHO-0x100)==data)
-				return STATE_DETAIL_HCHO;
-		case TOUCH_DETAIL_TEMP:
-		case TOUCH_UPDATE_TEMP:
-			if((TOUCH_DETAIL_TEMP-0x100)==data||(TOUCH_UPDATE_TEMP-0x100)==data)
-				return STATE_DETAIL_TMP;
-		case TOUCH_DETAIL_SHIDU:
-		case TOUCH_UPDATE_SHIDU:
-			if((TOUCH_DETAIL_SHIDU-0x100)==data||(TOUCH_UPDATE_SHIDU-0x100)==data)
-				return STATE_DETAIL_SHIDU;
-		case TOUCH_DETAIL_PM25:
-		case TOUCH_UPDATE_PM25:
-			if((TOUCH_DETAIL_PM25-0x100)==data||(TOUCH_UPDATE_PM25-0x100)==data)
-				return STATE_DETAIL_PM25;
-		default:
-			return STATE_MAIN;
-
-	}
-#endif
 	return STATE_MAIN;
 }
 void lcd_loop(int fd)
@@ -2251,25 +1863,25 @@ void lcd_loop(int fd)
 	int i=1;
 	int get=0;
 	char ptr[32]={0};	
-	switch_pic(fd,0);
+	switch_pic(fd,2);
 	while(1)	
 	{	
 		if(read(fd,&ch,1)==1)
 		{
-			printf("<=%x \r\n",ch);
+			//printf("<=%x \r\n",ch);
 			switch(get)
 			{
 				case 0:
 					if(ch==0x5a)
 					{
-						printf(LCD_PROCESS"0x5a get ,get =1\r\n");
+						//printf(LCD_PROCESS"0x5a get ,get =1\r\n");
 						get=1;
 					}
 					break;
 				case 1:
 					if(ch==0xa5)
 					{
-						printf(LCD_PROCESS"0xa5 get ,get =2\r\n");
+						//printf(LCD_PROCESS"0xa5 get ,get =2\r\n");
 						get=2;
 
 					}
@@ -2277,21 +1889,21 @@ void lcd_loop(int fd)
 				case 2:
 					if(ch==0x06)
 					{
-						printf(LCD_PROCESS"0x06 get,get =3\r\n");
+						//printf(LCD_PROCESS"0x06 get,get =3\r\n");
 						get=3;
 						break;
 					}
 				case 3:
 					if(ch==0x83)
 					{
-						printf(LCD_PROCESS"0x83 get,get =4\r\n");
+						//printf(LCD_PROCESS"0x83 get,get =4\r\n");
 						get=4;
 						i=1;
 						break;
 					}
 				case 4:
 					{
-						printf(LCD_PROCESS"%02x get ,get =5\r\n",ch);
+						//printf(LCD_PROCESS"%02x get ,get =5\r\n",ch);
 						ptr[i++]=ch;
 						if(i==6)
 						{
@@ -2664,11 +2276,7 @@ int main(int argc, char *argv[])
 
 	if(fork()==0)
 	{
-		load_history("/home/user/history"/*,shmid_g_history_co_cnt,shmid_g_history_co2_cnt,shmid_g_history_hcho_cnt,
-			shmid_g_history_shidu_cnt,shmid_g_history_temp_cnt,shmid_g_history_pm25_cnt,shmid_history_co_time,
-			shmid_history_co2_time,shmid_history_hcho_time,shmid_history_shidu_time,shmid_history_temp_time,
-			shmid_history_pm25_time,shmid_history_co_data,shmid_history_co2_data,shmid_history_hcho_data,
-			shmid_history_shidu_data,shmid_history_temp_data,shmid_history_pm25_data*/);
+		load_history("/home/user/history");
 		return 0;
 	}
 	get_ip(ip);
@@ -2722,17 +2330,6 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	pthread_mutex_init(&mutex, NULL);
-#if 0
-	server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
-	server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
-	server_time[5]=0x0f;server_time[6]=0x0a;
-	server_time[7]=0x15;server_time[8]=0x08;
-	server_time[9]=0x05;server_time[10]=0x11;
-	int crc=CRC_check(server_time,11);
-	server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
-	//write(fd,server_time,12);
-	write(fd_com,server_time,13);
-#endif
 	memset(server_time,0,13);
 	get_uuid();
 
