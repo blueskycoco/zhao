@@ -112,7 +112,7 @@ struct nano{
 };
 struct nano *g_history_co,*g_history_temp,*g_history_shidu,*g_history_co2,*g_history_hcho,*g_history_pm25;
 long *g_co_cnt,*g_co2_cnt,*g_hcho_cnt,*g_temp_cnt,*g_pm25_cnt,*g_shidu_cnt;
-
+char network_state=0,logged=0,g_index=0;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -158,9 +158,15 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 		printf(UPLOAD_PROCESS"send web %s\n",request);
 		*out=http_post(url,request,timeout);
 		if(*out!=NULL)
+		{
 			printf(UPLOAD_PROCESS"<==%s\n",*out);
+			network_state=1;
+		}
 		else
+		{
 			printf(UPLOAD_PROCESS"<==NULL\n");
+			network_state=0;
+		}
 	}
 	else
 	{
@@ -190,6 +196,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 						memset(*out,'\0',i+1);
 						memcpy(*out,rcv,i);//strcpy(*out,rcv);
 						pthread_mutex_unlock(&mutex);
+						network_state=1;
 						return;
 					}
 					else if(ch=='{')
@@ -205,6 +212,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 								memset(rcv,'\0',512);
 								strcpy(rcv,"ok");
 								pthread_mutex_unlock(&mutex);
+								network_state=1;
 								return;
 							}
 					}
@@ -228,6 +236,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 								pthread_mutex_unlock(&mutex);
 								return;
 							}
+							network_state=0;
 							break;
 						}
 					}
@@ -1642,7 +1651,19 @@ void load_history(const char *name)
 	//for(i=0;i<g_history_co_cnt;i++)
 		//printf(LCD_PROCESS"[%d]time %s, data %s\n",i,history_co_time[i],history_co_data[i]);
 }
-
+void show_sensor_network(int fd)
+{
+	int pic=0;
+	if((sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(!network_state))
+		pic=11;
+	else if((sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(network_state))
+		pic=10;
+	else if(!(sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(network_state))
+		pic=9;
+	else if(!(sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(!network_state))
+		pic=12;
+	switch_pic(fd,pic);
+}
 void show_history(int fd_lcd,const char *name,char *id,int offset)
 {	
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
@@ -1771,7 +1792,92 @@ void show_history(int fd_lcd,const char *name,char *id,int offset)
 			write_string(fd_lcd,VAR_PM25_DATA7,g_history_pm25[*g_pm25_cnt-offset-7].data,strlen(g_history_pm25[*g_pm25_cnt-offset-7].data));
 		}
 	}
-
+}
+void draw_curve(int fd,int *data,int len)
+{
+	//char cmd[]={0x5a,0xa5,0x00,0x84,0x01};
+	int i;
+	char *cmd=(char *)malloc(len*2+5);
+	cmd[0]=0x5a;cmd[1]=0xa5;cmd[2]=len*2+2;cmd[3]=0x84;cmd[4]=0x01;
+	for(i=0;i<len;i++)
+	{
+		cmd[5+i]=(data[i]&0xff00)>>8;
+		cmd[6+i]=data[i]&0x00ff;
+	}
+	write(fd,cmd,len*2+5);
+}
+int read_dgus(int fd,int addr,char len,char *out)
+{
+	char ch,i;
+	char cmd[]={0x5a,0xa5,0x04,0x83,0x00,0x00,0x00};
+	cmd[4]=(addr & 0xff00)>>8;
+	cmd[5]=addr & 0x00ff;
+	cmd[6]=len;
+	write(fd,cmd,7);
+	out=(char *)malloc(len);
+	i=0;
+	while(1)	
+	{	
+		if(read(fd,&ch,1)==1)
+		{
+			out[i++]=ch;
+			if(i==len)
+				return 1;
+		}
+		else
+		{
+			timeout++;
+			if(timeout>100)
+				return 0;
+			usleep(1000);
+		}
+	}
+	return 0;
+}
+int verify_pwd(char *username,char *passwd)
+{
+	int result=0;
+	char verify_msg=add_item(verify_msg,ID_DGRAM_TYPE,TYPE_DGRAM_VERIFY_USER);
+	verify_msg=add_item(verify_msg,ID_DEVICE_UID,g_uuid);
+	verify_msg=add_item(verify_msg,ID_DEVICE_IP_ADDR,ip);
+	verify_msg=add_item(verify_msg,ID_DEVICE_PORT,"9517");
+	verify_msg=add_item(verify_msg,ID_USER_NAME_TYPE,username);
+	verify_msg=add_item(verify_msg,ID_USER_PWD_TYPE,passwd);
+	char *rcv=NULL;
+	send_web_post(URL,verify_msg,9,&rcv);
+	free(verify_msg);
+	verify_msg=NULL;
+	if(rcv!=NULL)
+	{	
+		if(strstr(rcv,"ok"))
+		{
+			result=1;
+			logged=1;
+		}
+		free(rcv);
+		rcv=NULL;
+	}	
+	return result;
+}
+void log_in(int fd)
+{
+	char *user_name=NULL;
+	char *passwd=NULL;
+	if(read_dgus(fd,USER_NAME_ADDR,10,user_name) && read_dgus(fd,USER_PWD_ADDR,10,passwd))
+	{
+		if(verify_pwd(user_name,passwd))
+		{
+			switch_pic(fd,g_index);
+			free(user_name);
+			free(passwd);
+			return;
+		}
+	}
+	switch_pic(fd,2);
+	if(user_name)
+		free(user_name);
+	if(passwd)
+		free(passwd);
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
@@ -1796,64 +1902,126 @@ unsigned short input_handle(int fd_lcd,char *input)
 	data=input[4]<<8|input[5];
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(addr==TOUCH_DETAIL_CO && (TOUCH_DETAIL_CO-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
-		begin_co=0;
+	{//show history CO the first page
+		if(logged)
+		{
+			switch_pic(fd_lcd,3);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
+			begin_co=0;
+		}
+		else
+		{
+			switch_pic(fd_lcd,16);
+			g_index=3;
+		}
 	}
 	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);	
-		begin_co2=0;
+	{//show history CO2 the first page
+		if(logged)
+		{
+			switch_pic(fd_lcd,4);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);	
+			begin_co2=0;
+		}
+		else
+		{
+			switch_pic(fd_lcd,16);	
+			g_index=4;
+		}
 	}	
 	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
-		begin_hcho=0;
+	{//show history HCHO the first page	
+		if(logged)
+		{
+			switch_pic(fd_lcd,5);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
+			begin_hcho=0;
+		}
+		else
+		{
+			switch_pic(fd_lcd,16);
+			g_index=5;
+		}
 	}	
 	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
-		begin_shidu=0;
+	{//show history SHIDU the first page
+		if(logged)
+		{
+			switch_pic(fd_lcd,7);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
+			begin_shidu=0;
+		}
+		else
+		{
+			switch_pic(fd_lcd,16);
+			g_index=7;
+		}		
 	}	
 	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
-		begin_temp=0;
+	{//show history TEMPERATURE the first page
+		if(logged)
+		{
+			switch_pic(fd_lcd,6);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
+			begin_temp=0;
+		}
+		else
+		{
+			switch_pic(fd_lcd,16);
+			g_index=6;
+		}		
 	}	
 	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
-	{
-		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
-		begin_pm25=0;
+	{//show history PM25 the first page
+		if(logged)
+		{
+			switch_pic(fd_lcd,8);
+			show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
+			begin_pm25=0;
+		}
+		else
+		{
+			switch_pic(16);
+			g_index=8;
+		}
 	}	
 	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
-	{
+	{//show history CO the next page
 		begin_co+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,begin_co);
 	}
 	else if(addr==TOUCH_UPDATE_CO2 && (TOUCH_UPDATE_CO2-0x100)==data)
-	{
+	{//show history CO2 the next page
 		begin_co2+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,begin_co2);
 	}
 	else if(addr==TOUCH_UPDATE_HCHO && (TOUCH_UPDATE_HCHO-0x100)==data)
-	{
+	{//show history HCHO the next page
 		begin_hcho+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,begin_hcho);
 	}
 	else if(addr==TOUCH_UPDATE_TEMP && (TOUCH_UPDATE_TEMP-0x100)==data)
-	{
+	{//show history TEMPERATURE the next page
 		begin_temp+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,begin_temp);
 	}
 	else if(addr==TOUCH_UPDATE_SHIDU&& (TOUCH_UPDATE_SHIDU-0x100)==data)
-	{
+	{//show history SHIDU the next page
 		begin_shidu+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,begin_shidu);
 	}
 	else if(addr==TOUCH_UPDATE_PM25 && (TOUCH_UPDATE_PM25-0x100)==data)
-	{
+	{//show history PM25 the next page
 		begin_pm25+=7;
 		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,begin_pm25);
+	}
+	else if(addr==TOUCH_SENSOR_NETWORK_STATE&& (TOUCH_SENSOR_NETWORK_STATE-0x100)==data)
+	{//show sensor and network state
+		show_sensor_network();
+	}
+	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
+	{//Login if didn't 
+		log_in(fd_lcd);
 	}
 	return STATE_MAIN;
 }
