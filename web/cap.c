@@ -1673,7 +1673,7 @@ void show_sensor_network(int fd)
 		pic=12;
 	switch_pic(fd,pic);
 }
-void show_history(int fd_lcd,const char *name,char *id,int offset)
+void show_history(int fd_lcd,char *id,int offset)
 {	
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
@@ -1815,6 +1815,57 @@ void draw_curve(int fd,int *data,int len)
 	}
 	write(fd,cmd,len*2+5);
 }
+void show_curve(int fd,char *id,int offset)
+{
+	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
+	{
+		//printf("g_co_cnt %d\n",*g_co_cnt);
+		if((*g_co_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_co+*g_co_cnt-offset-1,7);
+		}
+	}
+	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
+	{
+		//printf("g_co2_cnt %d\n",*g_co2_cnt);
+		if((*g_co2_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_co2+*g_co2_cnt-offset-1,7);
+		}
+	}
+	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
+	{
+		//printf("g_co_cnt %d\n",*g_hcho_cnt);
+		if((*g_hcho_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_hcho+*g_hcho_cnt-offset-1,7);
+		}
+	}	
+	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
+	{
+		//printf("g_shidu_cnt %d\n",*g_shidu_cnt);
+		if((*g_shidu_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_shidu+*g_shidu_cnt-offset-1,7);
+		}
+	}	
+	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
+	{
+		//printf("g_temp_cnt %d\n",*g_temp_cnt);
+		if((*g_temp_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_temp+*g_temp_cnt-offset-1,7);
+		}
+	}	
+	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
+	{
+		//printf("g_pm25_cnt %d\n",*g_pm25_cnt);
+		if((*g_pm25_cnt-offset-7)>0)
+		{
+			draw_curve(fd,g_history_pm25+*g_pm25_cnt-offset-1,7);
+		}
+	}
+}
 int read_dgus(int fd,int addr,char len,char *out)
 {
 	char ch,i;
@@ -1941,7 +1992,7 @@ void log_in(int fd)
 			return;
 		}
 	}
-	switch_pic(fd,2);
+	switch_pic(fd,27);
 }
 void wifi_handle(int fd)
 {
@@ -2022,127 +2073,121 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history CO the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,3);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
-			begin_co=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_CO,0);
 		}
 		else
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
-			g_index=3;
 		}
+		g_index=3;
 	}
 	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
 	{//show history CO2 the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,4);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);	
-			begin_co2=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_CO2,0);
 		}
 		else
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);	
-			g_index=4;
 		}
+		g_index=4;
 	}	
 	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
 	{//show history HCHO the first page	
 		if(logged)
 		{
-			switch_pic(fd_lcd,5);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
-			begin_hcho=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_HCHO,0);
 		}
 		else
 		{		
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);
-			g_index=5;
+			switch_pic(fd_lcd,16);			
 		}
+		g_index=5;
 	}	
 	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
 	{//show history SHIDU the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,7);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
-			begin_shidu=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_SHI_DU,0);
 		}
 		else
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);		
 			switch_pic(fd_lcd,16);
-			g_index=7;
 		}		
+		g_index=7;
 	}	
 	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
 	{//show history TEMPERATURE the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,6);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
-			begin_temp=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_TEMPERATURE,0);
 		}
 		else
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
-			g_index=6;
 		}		
+		g_index=6;
 	}	
 	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
 	{//show history PM25 the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,8);
-			show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
-			begin_pm25=0;
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_PM_25,0);
 		}
 		else
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
-			g_index=8;
 		}
+		g_index=8;
 	}	
 	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
 	{//show history CO the next page
 		begin_co+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_CO,begin_co);
+		show_history(fd_lcd,ID_CAP_CO,begin_co);
 	}
 	else if(addr==TOUCH_UPDATE_CO2 && (TOUCH_UPDATE_CO2-0x100)==data)
 	{//show history CO2 the next page
 		begin_co2+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,begin_co2);
+		show_history(fd_lcd,ID_CAP_CO2,begin_co2);
 	}
 	else if(addr==TOUCH_UPDATE_HCHO && (TOUCH_UPDATE_HCHO-0x100)==data)
 	{//show history HCHO the next page
 		begin_hcho+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,begin_hcho);
+		show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
 	}
 	else if(addr==TOUCH_UPDATE_TEMP && (TOUCH_UPDATE_TEMP-0x100)==data)
 	{//show history TEMPERATURE the next page
 		begin_temp+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,begin_temp);
+		show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
 	}
 	else if(addr==TOUCH_UPDATE_SHIDU&& (TOUCH_UPDATE_SHIDU-0x100)==data)
 	{//show history SHIDU the next page
 		begin_shidu+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,begin_shidu);
+		show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
 	}
 	else if(addr==TOUCH_UPDATE_PM25 && (TOUCH_UPDATE_PM25-0x100)==data)
 	{//show history PM25 the next page
 		begin_pm25+=7;
-		show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,begin_pm25);
+		show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
 	}
 	else if(addr==TOUCH_SENSOR_NETWORK_STATE&& (TOUCH_SENSOR_NETWORK_STATE-0x100)==data)
 	{//show sensor and network state
@@ -2173,6 +2218,56 @@ unsigned short input_handle(int fd_lcd,char *input)
 		sleep(3);
 		switch_pic(fd_lcd,18);
 	}
+	else if(addr==TOUCH_LIST_DISPLAY&& (TOUCH_LIST_DISPLAY-0x100)==data)
+	{//show detail in list
+		switch (g_index)
+		{
+			case 3:
+			{//co
+				switch_pic(fd_lcd,3);
+				show_history(fd_lcd,ID_CAP_CO,0);
+				begin_co=0;
+			}
+			break;
+			case 4:
+			{//co2
+				switch_pic(fd_lcd,4);
+				show_history(fd_lcd,ID_CAP_CO2,0);
+				begin_co2=0;
+			}
+			break;
+			case 5:
+			{//hcho
+				switch_pic(fd_lcd,5);
+				show_history(fd_lcd,ID_CAP_HCHO,0);
+				begin_hcho=0;
+			}
+			break;
+			case 7:
+			{//shidu
+				switch_pic(fd_lcd,7);
+				show_history(fd_lcd,ID_CAP_SHI_DU,0);
+				begin_shidu=0;
+			}
+			break;
+			case 6:
+			{//temp
+				switch_pic(fd_lcd,6);
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
+				begin_temp=0;
+			}
+			break;
+			case 8:
+			{//pm25
+				switch_pic(fd_lcd,8);
+				show_history(fd_lcd,ID_CAP_PM_25,0);
+				begin_pm25=0;
+			}
+			break;
+			default:
+				break;
+		}
+	}
 	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
 	{//Login if didn't 
 		log_in(fd_lcd);
@@ -2180,38 +2275,32 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			case 3:
 			{//co
-				show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
-				begin_co=0;
+				show_curve(fd_lcd,ID_CAP_CO,0);
 			}
 			break;
 			case 4:
 			{//co2
-				show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);
-				begin_co2=0;
+				show_curve(fd_lcd,ID_CAP_CO2,0);
 			}
 			break;
 			case 5:
 			{//hcho
-				show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
-				begin_hcho=0;
+				show_curve(fd_lcd,ID_CAP_HCHO,0);
 			}
 			break;
 			case 7:
 			{//shidu
-				show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
-				begin_shidu=0;
+				show_curve(fd_lcd,ID_CAP_SHI_DU,0);
 			}
 			break;
 			case 6:
 			{//temp
-				show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
-				begin_temp=0;
+				show_curve(fd_lcd,ID_CAP_TEMPERATURE,0);
 			}
 			break;
 			case 8:
 			{//pm25
-				show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
-				begin_pm25=0;
+				show_curve(fd_lcd,ID_CAP_PM_25,0);
 			}
 			break;
 			default:
