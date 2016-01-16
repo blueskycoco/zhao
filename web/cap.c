@@ -16,6 +16,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <pthread.h>
+#include <iconv.h>
 //#include <net/if_arp.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -54,6 +55,7 @@
 void set_time(int year,int mon,int day,int hour,int minute,int second);
 void write_data(int fd,unsigned int Index,int data);
 void switch_pic(int fd,unsigned char Index);
+void write_string(int fd,unsigned int addr,char *data,int len);
 void dump_curr_time(int fd);
 void save_sensor_alarm_info();
 int g_upload=0;
@@ -118,7 +120,7 @@ struct state{
 	char network_state;
 	char sensor[6];
 };
-int fd_com=0;
+int fd_com=0,fd_lcd=0;
 struct state *g_state;
 //*******************************************************************
 //
@@ -581,6 +583,28 @@ void resend_history(char *date_begin,char *date_end)
 		fclose(fp);
 	resend_history_done(date_begin,date_end);
 }
+int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char *outbuf,int outlen)
+{
+	iconv_t cd;
+	int rc;
+	char **pin = &inbuf;
+	char **pout = &outbuf;
+
+	cd = iconv_open(to_charset,from_charset);
+	if (cd==0) 
+	{
+		printf("iconv_open failed\n");
+		return -1;
+	}
+	memset(outbuf,0,outlen);
+	if (iconv(cd,pin,&inlen,pout,&outlen)==-1)
+	{
+		printf("iconv failed\n");
+		return -1;
+	}
+	iconv_close(cd);
+	return 0;
+}
 #define SYNC_PREFX "[SYNC_PROCESS]"
 void sync_server(int fd,int resend)
 {
@@ -662,9 +686,52 @@ void sync_server(int fd,int resend)
 				write(fd,server_time,13);
 				printf(SYNC_PREFX"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
-				printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
-				printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
+				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
+				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
 				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
+				free(starttime);
+				char *user_name=doit_data(rcv,"203");
+				char *user_place=doit_data(rcv,"211");
+				char *user_addr=doit_data(rcv,"200");
+				char *user_phone=doit_data(rcv,"202");
+				char *user_contraceer=doit_data(rcv,"201");				
+				char cmd[256]={0};
+				if(user_name && strlen(user_name)>0)
+				{
+					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
+					write_string(fd_lcd,VAR_USER_NAME_ADDR,cmd,strlen(cmd));
+					printf("user_name:%s\n",user_name);
+					free(user_name);
+				}
+				if(user_place && strlen(user_place)>0)
+				{		
+				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
+					write_string(fd_lcd,VAR_USER_PLACE_ADDR,cmd,strlen(cmd));
+					printf("user_place:%s\n",user_place);
+					free(user_place);
+				}
+				if(user_addr && strlen(user_addr)>0)
+				{
+				
+					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
+					write_string(fd_lcd,VAR_USER_ADDR_ADDR,cmd,strlen(cmd));					
+					printf("user_addr:%s\n",user_addr);
+					free(user_addr);
+				}
+				if(user_phone && strlen(user_phone)>0)
+				{
+					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
+					write_string(fd_lcd,VAR_USER_PHONE_ADDR,cmd,strlen(cmd));					
+					printf("user_phone:%s\n",user_phone);
+					free(user_phone);
+				}
+				if(user_contraceer && strlen(user_contraceer)>0)
+				{
+					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
+					write_string(fd_lcd,VAR_USER_CONTRACT_ADDR,cmd,strlen(cmd));
+					printf("user_contraceer:%s\n",user_contraceer);
+					free(user_contraceer);
+				}
 			}
 			//else if(atoi(type)==6)
 			//{
@@ -675,7 +742,27 @@ void sync_server(int fd,int resend)
 	}
 		return ;
 }
-
+int ping_server()
+{
+	char cmd[256]={0};
+	char ret[256]={0};
+	FILE *fp;
+	sprintf(cmd,"ping -W 1 -c 1 123.57.26.24");
+	if((fp=popen(cmd,"r"))!=NULL)
+	{
+		memset(ret,0,256);
+		fread(ret,sizeof(char),sizeof(ret),fp);
+		pclose(fp);
+		printf("ping return %s %d\n",ret,strlen(ret));
+		if(strstr(ret,"from")!=NULL)
+		{
+			g_state->network_state=1;
+			return 1;				
+		}
+	}
+	g_state->network_state=0;
+	return 0;
+}
 void get_ip(char *ip)
 {
 	GetIP_v4_and_v6_linux(AF_INET,ip,16);
@@ -1661,6 +1748,7 @@ void load_history(const char *name)
 void show_sensor_network(int fd)
 {
 	int pic=0;
+	ping_server();
 	printf("sensor %d %d %d %d %d %d\nnet_work %d\n",g_state->sensor[0],g_state->sensor[1],g_state->sensor[2],g_state->sensor[3],g_state->sensor[4],g_state->sensor[5],
 		g_state->network_state);
 	if((g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
@@ -1883,6 +1971,16 @@ void show_curve(int fd,char *id,int offset)
 				buf[i]=atoi(g_history_pm25[*g_pm25_cnt-offset-i+1].data);
 		}
 	}
+	write_string(fd, 0x049a, g_history_co2[*g_co2_cnt-offset-0+1].time+11,5);
+	write_string(fd, 0x049f, g_history_co2[*g_co2_cnt-offset-1+1].time+11,5);
+	//write_string(fd, 0x04a4, g_history_co2[*g_co2_cnt-offset-2+1].time+11,5);
+	//write_string(fd, 0x04a9, g_history_co2[*g_co2_cnt-offset-3+1].time+11,5);
+	//write_string(fd, 0x04ae, g_history_co2[*g_co2_cnt-offset-4+1].time+11,5);
+	//write_string(fd, 0x04b3, g_history_co2[*g_co2_cnt-offset-0+1].data, 4);
+	//write_string(fd, 0x04b7, g_history_co2[*g_co2_cnt-offset-1+1].data, 4);
+	//write_string(fd, 0x04bb, g_history_co2[*g_co2_cnt-offset-2+1].data, 4);
+	//write_string(fd, 0x04bf, g_history_co2[*g_co2_cnt-offset-3+1].data, 4);
+	//write_string(fd, 0x04c3, g_history_co2[*g_co2_cnt-offset-4+1].data, 4);
 	draw_curve(fd,buf,7);
 }
 int read_dgus(int fd,int addr,char len,char *out)
@@ -2007,11 +2105,12 @@ void log_in(int fd)
 		printf("User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
-			switch_pic(fd,g_index);
+		
+			switch_pic(fd,27);
 			return;
 		}
 	}
-	switch_pic(fd,27);
+	switch_pic(fd,2);
 }
 void wifi_handle(int fd)
 {
@@ -2026,6 +2125,8 @@ void wifi_handle(int fd)
 	if(read_dgus(fd,WIFI_AP_NAME_ADDR,10,ap_name) && read_dgus(fd,WIFI_AP_PWD_ADDR,10,ap_passwd))
 	{
 		printf("AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
+		if(strlen(ap_passwd)<8)
+			return ;
 		for(i=0;i<100;i++)
 		{
 			sprintf(cmd,"wpa_cli -ira0 get_network %d ssid",i);
@@ -2059,24 +2160,24 @@ void wifi_handle(int fd)
 		sprintf(cmd,"wpa_cli -ira0 set_network %d key_mgmt WPA-PSK",i);
 		printf("exec %s\n",cmd);
 		system(cmd);	
-		sprintf(cmd,"wpa_cli -ira0 set_network %d psk '%s'",i,ap_passwd);
+		sprintf(cmd,"wpa_cli -ira0 set_network %d psk \\\"%s\\\"",i,ap_passwd);
 		printf("exec %s\n",cmd);
 		system(cmd);		
-		sprintf(cmd,"wpa_cli -ira0 set_network %d ssid '%s'",i,ap_name);
+		sprintf(cmd,"wpa_cli -ira0 set_network %d ssid \\\"%s\\\"",i,ap_name);
 		printf("exec %s\n",cmd);
 		system(cmd);
 		sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
 		printf("exec %s\n",cmd);
 		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
-		printf("exec %s\n",cmd);
-		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 save_config");
-		printf("exec %s\n",cmd);
+		//sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
+		//printf("exec %s\n",cmd);
 		//system(cmd);
+		sprintf(cmd,"wpa_cli -ira0 save_config");
+		printf("exec %s\n",cmd);		
+		system(cmd);
 		sprintf(cmd,"udhcpc -i ra0");
 		printf("exec %s\n",cmd);
-		system(cmd);
+		//system(cmd);
 	}
 }
 unsigned short input_handle(int fd_lcd,char *input)
@@ -2255,6 +2356,21 @@ unsigned short input_handle(int fd_lcd,char *input)
 		sleep(3);
 		switch_pic(fd_lcd,18);
 	}
+	else if(addr==TOUCH_VERIFY_SENSOR && (TOUCH_VERIFY_SENSOR-0x100)==data)
+	{//show history HCHO the first page	
+		if(logged)
+		{
+			switch_pic(fd_lcd,27);
+			show_curve(fd_lcd,ID_CAP_HCHO,0);
+		}
+		else
+		{		
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			switch_pic(fd_lcd,16);			
+		}
+		g_index=5;
+	}	
 	else if(addr==TOUCH_LIST_DISPLAY&& (TOUCH_LIST_DISPLAY-0x100)==data)
 	{//show detail in list
 		switch (g_index)
@@ -2712,7 +2828,7 @@ void save_sensor_alarm_info()
 }
 int main(int argc, char *argv[])
 {
-	int fpid,fd_lcd;	
+	int fpid;	
 	long i;
 	key_t shmid;	
 	if((shmid_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
