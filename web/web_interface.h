@@ -240,10 +240,10 @@
 #define TOUCH_TIME_SET_AUTO			0x0143
 #define TIME_YEAR_ADDR				0x01af
 #define TIME_MON_ADDR				0x01b3
-#define TIME_DAY_ADDR				0x01b5
-#define TIME_HOUR_ADDR				0x01b7
-#define TIME_MIN_ADDR				0x01b9
-#define TIME_SECONDS_ADDR			0x01bb
+#define TIME_DAY_ADDR				0x04e3
+#define TIME_HOUR_ADDR				0x04e5
+#define TIME_MIN_ADDR				0x04e7
+#define TIME_SECONDS_ADDR			0x04e9
 #define TOUCH_SET_TIME				0x0132
 #define TOUCH_LIST_DISPLAY			0x0498
 #define TOUCH_WIFI_ENTER			0x013e

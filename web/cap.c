@@ -121,6 +121,8 @@ struct state{
 	char network_state;
 	char sensor[6];
 };
+key_t history_load_done_shmid;
+int *history_done;
 int fd_com=0,fd_lcd=0;
 struct state *g_state;
 //*******************************************************************
@@ -607,7 +609,7 @@ int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char 
 	return 0;
 }
 #define SYNC_PREFX "[SYNC_PROCESS]"
-void sync_server(int fd,int resend)
+void sync_server(int fd,int resend,int set_local)
 {
 	int i,j;
 	char text_out[512]={0};
@@ -689,6 +691,7 @@ void sync_server(int fd,int resend)
 				//tmp=doit_data(rcv+4,(char *)"211");
 				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
 				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
+				if(set_local)
 				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
 				free(starttime);
 				char *user_name=doit_data(rcv,"203");
@@ -1551,6 +1554,8 @@ void load_history(const char *name)
 	g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 	g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 	printf(LCD_PROCESS"end to shmat\n");
+	*history_done=0;
+	printf("load=>history_done %d\n",*history_done);
 	d = opendir(name);
 	if(d == 0)
 	{
@@ -1750,6 +1755,8 @@ void load_history(const char *name)
 	}
 	//for(i=0;i<g_history_co_cnt;i++)
 		//printf(LCD_PROCESS"[%d]time %s, data %s\n",i,history_co_time[i],history_co_data[i]);
+	*history_done=1;
+	printf("load=>history_done %d\n",*history_done);
 }
 void show_sensor_network(int fd)
 {
@@ -1921,6 +1928,7 @@ void clear_curve(int fd)
 void show_curve(int fd,char *id,int* offset)
 {
 	int buf[24]={0};
+	char info[20]={0};
 	char temp[10]={0},temp2[10]={0};
 	char hour1[3]={0},hour2[3]={0};
 	char index[5][4]={0};
@@ -1930,19 +1938,66 @@ void show_curve(int fd,char *id,int* offset)
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
 		//printf("g_co_cnt %d\n",*g_co_cnt);
-		if((*g_co_cnt-*offset-70)>0)
+		if((*g_co_cnt-*offset)>0)
 		{
-			//draw_curve(fd,g_history_co[*g_co_cnt-offset-1].data,7);
-			for(i=0;i<70;i++)
-				buf[i]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data);
+			strcpy(index[0],"200");
+			strcpy(index[1],"150");
+			strcpy(index[2],"100");
+			strcpy(index[3],"050");
+			strcpy(index[4],"000");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");	
+			strcpy(info,"CO");
+			write_string(fd, 0x04ce, g_history_co[*g_co_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_co[*g_co_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_co[*g_co_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_co[*g_co_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							if(j<24)
+							{
+								buf[j++]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data)*5;
+								printf("j %d %s==>%d\n",j,g_history_co[*g_co_cnt-*offset-i-1].time,buf[j-1]);
+							}
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_co[*g_co_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_co_cnt)
+				*offset=0;
 		}
+		else
+			*offset=0;
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
 		//printf("g_co2_cnt %d\n",*g_co2_cnt);
-		if((*g_co2_cnt-*offset-70)>0)
+		if((*g_co2_cnt-*offset)>0)
 		{
-			//draw_curve(fd,g_history_co2+*g_co2_cnt-offset-1,7);
 			strcpy(index[0],"2000");
 			strcpy(index[1],"1500");
 			strcpy(index[2],"1000");
@@ -1952,7 +2007,8 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
 			strcpy(index_time[3],"06");
-			strcpy(index_time[4],"00");						
+			strcpy(index_time[4],"00");	
+			strcpy(info,"CO2");
 			write_string(fd, 0x04ce, g_history_co2[*g_co2_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_co2[*g_co2_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
@@ -1967,10 +2023,11 @@ void show_curve(int fd,char *id,int* offset)
 						printf("hour1 %s,hour2 %s\n",hour1,hour2);
 						for(m=atoi(hour1);m>atoi(hour2);m--)
 						{
-							buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
-							printf("j %d %s==>%d\n",j,g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
-							if(j==24)
-								break;
+							if(j<24)
+							{
+								buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
+								printf("j %d %s==>%d\n",j,g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
+							}
 						}					
 						memcpy(hour1,hour2,2);
 					}
@@ -1980,39 +2037,6 @@ void show_curve(int fd,char *id,int* offset)
 				else
 					break;
 			}
-			/*memcpy(index_time[0],g_history_co2[*g_co2_cnt-*offset-1].time+11,2);
-			printf("index_time[0] %s\n",index_time[0]);
-			if(atoi(index_time[0])-1>=0)
-				sprintf(index_time[1],"%02d",atoi(index_time[0])-1);
-			else
-				strcpy(index_time[1],"23");
-			printf("index_time[1] %s\n",index_time[1]);
-			if(atoi(index_time[1])-1>=0)
-				sprintf(index_time[2],"%02d",atoi(index_time[1])-1);
-			else
-				strcpy(index_time[2],"23");
-			printf("index_time[2] %s\n",index_time[2]);
-			if(atoi(index_time[2])-1>=0)
-				sprintf(index_time[3],"%02d",atoi(index_time[2])-1);
-			else
-				strcpy(index_time[3],"23");
-			printf("index_time[3] %s\n",index_time[3]);
-			if(atoi(index_time[3])-1>=0)
-				sprintf(index_time[4],"%02d",atoi(index_time[3])-1);
-			else
-				strcpy(index_time[4],"23");
-			printf("index_time[4] %s\n",index_time[4]);
-			for(i=0;i<*g_co2_cnt-*offset;i++)
-			{
-				memcpy(temp,g_history_co2[*g_co2_cnt-*offset-i-1].time+11,2);
-				if(strncmp(index_time[j],temp,2)==0)
-				{
-					buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
-					printf("%s==>%d\n",g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
-					if(j==5)
-						break;
-				}
-			}*/
 			printf("j is %d\n",j);
 			if(j!=24)
 			{
@@ -2030,44 +2054,245 @@ void show_curve(int fd,char *id,int* offset)
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
 	{
 		//printf("g_co_cnt %d\n",*g_hcho_cnt);
-		if((*g_hcho_cnt-*offset-7)>0)
+		if((*g_hcho_cnt-*offset)>0)
 		{
-			//draw_curve(fd,g_history_hcho+*g_hcho_cnt-offset-1,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data);
+			strcpy(index[0],"003");
+			strcpy(index[1],"2.5");
+			strcpy(index[2],"1.5");
+			strcpy(index[3],"001");
+			strcpy(index[4],"000");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");	
+			strcpy(info,"HCHO");
+			write_string(fd, 0x04ce, g_history_hcho[*g_hcho_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_hcho[*g_hcho_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_hcho[*g_hcho_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_hcho[*g_hcho_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							if(j<24)
+							{
+								buf[j++]=(atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data+2)*667)/1000;
+								printf("j %d %s==>%d\n",j,g_history_hcho[*g_hcho_cnt-*offset-i-1].time,buf[j-1]);							
+							}
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_hcho[*g_hcho_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_hcho_cnt)
+				*offset=0;
+
 		}
+		else
+			*offset=0;
 	}	
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
 	{
 		//printf("g_shidu_cnt %d\n",*g_shidu_cnt);
 		if((*g_shidu_cnt-*offset-7)>0)
 		{
-			//draw_curve(fd,g_history_shidu+*g_shidu_cnt-offset-1,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_shidu[*g_shidu_cnt-*offset-i-1].data);
+			char info_l[]={"Êª¶È"};
+			strcpy(index[0],"90");
+			strcpy(index[1],"68");
+			strcpy(index[2],"45");
+			strcpy(index[3],"23");
+			strcpy(index[4],"00");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");	
+			//strcpy(info,"Humidity");
+			sprintf(info,"%s",info_l);
+			write_string(fd, 0x04ce, g_history_shidu[*g_shidu_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_shidu[*g_shidu_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_shidu[*g_shidu_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_shidu[*g_shidu_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							if(j<24)
+							{
+								buf[j++]=atoi(g_history_shidu[*g_shidu_cnt-*offset-i-1].data)*22;
+								printf("j %d %s==>%d\n",j,g_history_shidu[*g_shidu_cnt-*offset-i-1].time,buf[j-1]);
+							}
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_shidu[*g_shidu_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_shidu_cnt)
+				*offset=0;
+
 		}
+		else
+			*offset=0;
 	}	
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
 	{
 		//printf("g_temp_cnt %d\n",*g_temp_cnt);
 		if((*g_temp_cnt-*offset-7)>0)
 		{
-			//draw_curve(fd,g_history_temp+*g_temp_cnt-offset-1,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_temp[*g_temp_cnt-*offset-i-1].data);
+			char info_l[]={"ÎÂ¶È"};
+			strcpy(index[0],"60");
+			strcpy(index[1],"40");
+			strcpy(index[2],"20");
+			strcpy(index[3],"00");
+			strcpy(index[4],"-20");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");	
+			//strcpy(info,"Temperature");
+			sprintf(info,"%s",info_l);
+			write_string(fd, 0x04ce, g_history_temp[*g_temp_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_temp[*g_temp_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_temp[*g_temp_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_temp[*g_temp_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							if(j<24)
+							{
+								buf[j++]=(atoi(g_history_temp[*g_temp_cnt-*offset-i-1].data)+20)*25;
+								printf("j %d %s==>%d\n",j,g_history_temp[*g_temp_cnt-*offset-i-1].time,buf[j-1]);
+							}
+							
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_temp[*g_temp_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_temp_cnt)
+				*offset=0;
 		}
+		else
+			*offset=0;
 	}	
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
 	{
 		//printf("g_pm25_cnt %d\n",*g_pm25_cnt);
-		if((*g_pm25_cnt-*offset-7)>0)
+		if((*g_pm25_cnt-*offset)>0)
 		{
-			//draw_curve(fd,g_history_pm25+*g_pm25_cnt-offset-1,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data);
+			strcpy(index[0],"1000");
+			strcpy(index[1],"750");
+			strcpy(index[2],"500");
+			strcpy(index[3],"250");
+			strcpy(index[4],"000");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");	
+			strcpy(info,"PM25");
+			write_string(fd, 0x04ce, g_history_pm25[*g_pm25_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_pm25[*g_pm25_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_pm25[*g_pm25_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_pm25[*g_pm25_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							if(j<24)
+							{
+								buf[j++]=atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data)*2;
+								printf("j %d %s==>%d %d\n",j,g_history_pm25[*g_pm25_cnt-*offset-i-1].time,atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data),buf[j-1]);
+							}
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_pm25[*g_pm25_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_pm25_cnt)
+				*offset=0;
 		}
+		else
+			*offset=0;
 	}
 	//write index
+	clear_buf(fd,0x04de,10);
+	write_string(fd, 0x04de, info,strlen(info));
 	write_string(fd, 0x04a1, index_time[0],2);
 	write_string(fd, 0x04a6, index_time[1],2);
 	write_string(fd, 0x04ab, index_time[2],2);
@@ -2181,16 +2406,21 @@ void manul_set_time(int fd)
 		&& read_dgus(fd,TIME_MON_ADDR,1,mon) && read_dgus(fd,TIME_HOUR_ADDR,1,hour)
 		&& read_dgus(fd,TIME_MIN_ADDR,1,min) && read_dgus(fd,TIME_SECONDS_ADDR,1,second))
 	{
-		printf("year %s \nmon %s\nday %s\nhour %s\nmin %s\nseconds %s\n",year,mon,day,hour,min,second);
-		server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
-		server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
-		server_time[5]=atoi(year);server_time[6]=atoi(mon);
-		server_time[7]=atoi(day);server_time[8]=atoi(hour);
-		server_time[9]=atoi(min);server_time[10]=atoi(second);
-		int crc=CRC_check(server_time,11);
-		server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
-		write(fd_com,server_time,13);
-		set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
+		if(atoi(year)>0 && atoi(mon)>0 && atoi(mon)<=12 && atoi(day)>0 && atoi(day)<=31
+			&& atoi(hour)>=0 && atoi(hour)<=23 && atoi(min)>=0 && atoi(min)<=59
+			&&atoi(second)>=0 && atoi(second)<=59)
+		{
+			printf("year %s \nmon %s\nday %s\nhour %s\nmin %s\nseconds %s\n",year,mon,day,hour,min,second);
+			server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
+			server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
+			server_time[5]=atoi(year);server_time[6]=atoi(mon);
+			server_time[7]=atoi(day);server_time[8]=atoi(hour);
+			server_time[9]=atoi(min);server_time[10]=atoi(second);
+			int crc=CRC_check(server_time,11);
+			server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
+			write(fd_com,server_time,13);
+		}
+		//set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
 	}
 }
 void log_in(int fd)
@@ -2202,8 +2432,10 @@ void log_in(int fd)
 		printf("User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
-		
-			switch_pic(fd,27);
+			if(*history_done)
+				switch_pic(fd,27);
+			else
+				switch_pic(fd,2);	
 			return;
 		}
 	}
@@ -2309,8 +2541,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history CO the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_CO,&curve_co);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_CO,&curve_co);
+			}
+			else
+			{
+				switch_pic(fd_lcd,3);
+				show_history(fd_lcd,ID_CAP_CO,0);
+				begin_co=0;
+			}
 		}
 		else
 		{
@@ -2324,8 +2565,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history CO2 the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
+			}
+			else
+			{
+				switch_pic(fd_lcd,4);
+				show_history(fd_lcd,ID_CAP_CO2,0);
+				begin_co=0;
+			}
 		}
 		else
 		{
@@ -2339,8 +2589,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history HCHO the first page	
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
+			}
+			else
+			{
+				switch_pic(fd_lcd,5);
+				show_history(fd_lcd,ID_CAP_HCHO,0);
+				begin_co=0;
+			}
 		}
 		else
 		{		
@@ -2354,8 +2613,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history SHIDU the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
+			}
+			else
+			{
+				switch_pic(fd_lcd,7);
+				show_history(fd_lcd,ID_CAP_SHI_DU,0);
+				begin_co=0;
+			}
 		}
 		else
 		{
@@ -2369,8 +2637,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history TEMPERATURE the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
+			}
+			else
+			{
+				switch_pic(fd_lcd,6);
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
+				begin_co=0;
+			}
 		}
 		else
 		{
@@ -2384,8 +2661,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//show history PM25 the first page
 		if(logged)
 		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
+			if(*history_done)
+			{
+				switch_pic(fd_lcd,27);
+				show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
+			}
+			else
+			{
+				switch_pic(fd_lcd,8);
+				show_history(fd_lcd,ID_CAP_PM_25,0);
+				begin_co=0;
+			}
 		}
 		else
 		{
@@ -2454,10 +2740,10 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_TIME_SET_AUTO && (TOUCH_TIME_SET_AUTO-0x100)==data)
 	{//set time from server
-		sync_server(fd_com,0);
+		sync_server(fd_com,0,0);
 		display_time(fd_lcd,server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
-		sleep(3);
-		switch_pic(fd_lcd,18);
+		//sleep(3);
+		//switch_pic(fd_lcd,18);
 	}
 	else if(addr==TOUCH_VERIFY_SENSOR && (TOUCH_VERIFY_SENSOR-0x100)==data)
 	{//show history HCHO the first page	
@@ -2527,8 +2813,58 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
 	{//Login if didn't 
 		log_in(fd_lcd);
+		printf("lcd=>history_done %d\n",*history_done);
 		if(logged)
 		{
+			if(*history_done==0)
+			switch (g_index)
+			{
+			case 3:
+			{//co
+				switch_pic(fd_lcd,3);
+				show_history(fd_lcd,ID_CAP_CO,0);
+				begin_co=0;
+			}
+			break;
+			case 4:
+			{//co2
+				switch_pic(fd_lcd,4);
+				show_history(fd_lcd,ID_CAP_CO2,0);
+				begin_co2=0;
+			}
+			break;
+			case 5:
+			{//hcho
+				switch_pic(fd_lcd,5);
+				show_history(fd_lcd,ID_CAP_HCHO,0);
+				begin_hcho=0;
+			}
+			break;
+			case 7:
+			{//shidu
+				switch_pic(fd_lcd,7);
+				show_history(fd_lcd,ID_CAP_SHI_DU,0);
+				begin_shidu=0;
+			}
+			break;
+			case 6:
+			{//temp
+				switch_pic(fd_lcd,6);
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
+				begin_temp=0;
+			}
+			break;
+			case 8:
+			{//pm25
+				switch_pic(fd_lcd,8);
+				show_history(fd_lcd,ID_CAP_PM_25,0);
+				begin_pm25=0;
+			}
+			break;
+			default:
+				break;
+			}
+			else
 			switch (g_index)
 			{
 				case 3:
@@ -2936,7 +3272,12 @@ int main(int argc, char *argv[])
 {
 	int fpid;	
 	long i;
-	key_t shmid;	
+	key_t shmid;
+	if((history_load_done_shmid= shmget(IPC_PRIVATE, sizeof(int), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
 	if((shmid_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
@@ -3005,6 +3346,7 @@ int main(int argc, char *argv[])
 	g_state = (struct state *)shmat(state_shmid, 0, 0);
 	if(fork()==0)
 	{
+		history_done = (int *)shmat(history_load_done_shmid,0,0);
 		load_history("/home/user/history");
 		return 0;
 	}
@@ -3108,6 +3450,7 @@ int main(int argc, char *argv[])
 			g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
 			g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			printf(LCD_PROCESS"end to shmat\n");
 			while(1)
 			{
@@ -3118,11 +3461,11 @@ int main(int argc, char *argv[])
 		{
 			while(1)
 			{
-				sync_server(fd_com,0);
+				sync_server(fd_com,0,1);
 				if(server_time[0]!=0 &&server_time[5]!=0)
 				{
 					set_alarm(00,00,01);
-					sync_server(fd_com,1);
+					sync_server(fd_com,1,1);
 				}
 				else
 					sleep(10);
