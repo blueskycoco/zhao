@@ -595,8 +595,8 @@ char *doit_data(char *text,char *item_str)
 			memset(out,'\0',nLen+1);
 			memcpy(out,data->valuestring,nLen);
 		}
-		else
-			printf(LOG_PREFX"get %s failed\n",item_str);
+		//else
+		//	printf(LOG_PREFX"get %s failed\n",item_str);
 		cJSON_Delete(item_json);	
 	}
 	return out;

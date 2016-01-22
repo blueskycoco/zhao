@@ -58,6 +58,7 @@ void switch_pic(int fd,unsigned char Index);
 void write_string(int fd,unsigned int addr,char *data,int len);
 void dump_curr_time(int fd);
 void save_sensor_alarm_info();
+void clear_buf(int fd,int addr,int len);
 int g_upload=0;
 char ip[20]={0};
 char cur_date[15]={0};
@@ -699,6 +700,7 @@ void sync_server(int fd,int resend)
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
+					clear_buf(fd_lcd,VAR_USER_NAME_ADDR,40);
 					write_string(fd_lcd,VAR_USER_NAME_ADDR,cmd,strlen(cmd));
 					printf("user_name:%s\n",user_name);
 					free(user_name);
@@ -706,6 +708,7 @@ void sync_server(int fd,int resend)
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
+					clear_buf(fd_lcd,VAR_USER_PLACE_ADDR,60);
 					write_string(fd_lcd,VAR_USER_PLACE_ADDR,cmd,strlen(cmd));
 					printf("user_place:%s\n",user_place);
 					free(user_place);
@@ -714,6 +717,7 @@ void sync_server(int fd,int resend)
 				{
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
+					clear_buf(fd_lcd,VAR_USER_ADDR_ADDR,40);
 					write_string(fd_lcd,VAR_USER_ADDR_ADDR,cmd,strlen(cmd));					
 					printf("user_addr:%s\n",user_addr);
 					free(user_addr);
@@ -721,6 +725,7 @@ void sync_server(int fd,int resend)
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
+					clear_buf(fd_lcd,VAR_USER_PHONE_ADDR,40);
 					write_string(fd_lcd,VAR_USER_PHONE_ADDR,cmd,strlen(cmd));					
 					printf("user_phone:%s\n",user_phone);
 					free(user_phone);
@@ -728,6 +733,7 @@ void sync_server(int fd,int resend)
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
+					clear_buf(fd_lcd,VAR_USER_CONTRACT_ADDR,40);
 					write_string(fd_lcd,VAR_USER_CONTRACT_ADDR,cmd,strlen(cmd));
 					printf("user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
@@ -1898,8 +1904,8 @@ void draw_curve(int fd,int *data,int len)
 	cmd[0]=0x5a;cmd[1]=0xa5;cmd[2]=len*2+2;cmd[3]=0x84;cmd[4]=0x01;
 	for(i=0;i<len;i++)
 	{
-		cmd[5+i]=(data[i]&0xff00)>>8;
-		cmd[6+i]=data[i]&0x00ff;
+		cmd[5+2*i]=(data[i]&0xff00)>>8;
+		cmd[6+2*i]=data[i]&0x00ff;
 	}
 	for(i=0;i<len*2+5;i++)
 		printf("%02x ",cmd[i]);
@@ -1907,81 +1913,172 @@ void draw_curve(int fd,int *data,int len)
 	write(fd,cmd,len*2+5);
 	free(cmd);
 }
-void show_curve(int fd,char *id,int offset)
+void clear_curve(int fd)
 {
-	int buf[7]={0};
-	int i;
+	char cmd[]={0x5a,0xa5,0x02,0xeb,0x5a};
+	write(fd,cmd,5);
+}
+void show_curve(int fd,char *id,int* offset)
+{
+	int buf[24]={0};
+	char temp[10]={0},temp2[10]={0};
+	char hour1[3]={0},hour2[3]={0};
+	char index[5][4]={0};
+	char index_time[5][3]={0};
+	int i=0,j=0,m=0;
+	clear_curve(fd);
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
 		//printf("g_co_cnt %d\n",*g_co_cnt);
-		if((*g_co_cnt-offset-7)>0)
+		if((*g_co_cnt-*offset-70)>0)
 		{
 			//draw_curve(fd,g_history_co[*g_co_cnt-offset-1].data,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_co[*g_co_cnt-offset-i+1].data);
+			for(i=0;i<70;i++)
+				buf[i]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data);
 		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
 		//printf("g_co2_cnt %d\n",*g_co2_cnt);
-		if((*g_co2_cnt-offset-7)>0)
+		if((*g_co2_cnt-*offset-70)>0)
 		{
 			//draw_curve(fd,g_history_co2+*g_co2_cnt-offset-1,7);
-			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_co2[*g_co2_cnt-offset-i+1].data);
+			strcpy(index[0],"2000");
+			strcpy(index[1],"1500");
+			strcpy(index[2],"1000");
+			strcpy(index[3],"0500");
+			strcpy(index[4],"0000");
+			strcpy(index_time[0],"24");
+			strcpy(index_time[1],"18");
+			strcpy(index_time[2],"12");
+			strcpy(index_time[3],"06");
+			strcpy(index_time[4],"00");						
+			write_string(fd, 0x04ce, g_history_co2[*g_co2_cnt-*offset-1].time,10);
+			memcpy(temp,g_history_co2[*g_co2_cnt-*offset-1].time,10);
+			strcpy(hour1,"24");
+			memcpy(hour2,g_history_co2[*g_co2_cnt-*offset-1].time+11,2);
+			while(1)
+			{
+				memcpy(temp2,g_history_co2[*g_co2_cnt-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{				
+					if(strncmp(hour1,hour2,2)!=0)
+					{	
+						printf("hour1 %s,hour2 %s\n",hour1,hour2);
+						for(m=atoi(hour1);m>atoi(hour2);m--)
+						{
+							buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
+							printf("j %d %s==>%d\n",j,g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
+							if(j==24)
+								break;
+						}					
+						memcpy(hour1,hour2,2);
+					}
+					i++;
+					memcpy(hour2,g_history_co2[*g_co2_cnt-*offset-i-1].time+11,2);
+				}
+				else
+					break;
+			}
+			/*memcpy(index_time[0],g_history_co2[*g_co2_cnt-*offset-1].time+11,2);
+			printf("index_time[0] %s\n",index_time[0]);
+			if(atoi(index_time[0])-1>=0)
+				sprintf(index_time[1],"%02d",atoi(index_time[0])-1);
+			else
+				strcpy(index_time[1],"23");
+			printf("index_time[1] %s\n",index_time[1]);
+			if(atoi(index_time[1])-1>=0)
+				sprintf(index_time[2],"%02d",atoi(index_time[1])-1);
+			else
+				strcpy(index_time[2],"23");
+			printf("index_time[2] %s\n",index_time[2]);
+			if(atoi(index_time[2])-1>=0)
+				sprintf(index_time[3],"%02d",atoi(index_time[2])-1);
+			else
+				strcpy(index_time[3],"23");
+			printf("index_time[3] %s\n",index_time[3]);
+			if(atoi(index_time[3])-1>=0)
+				sprintf(index_time[4],"%02d",atoi(index_time[3])-1);
+			else
+				strcpy(index_time[4],"23");
+			printf("index_time[4] %s\n",index_time[4]);
+			for(i=0;i<*g_co2_cnt-*offset;i++)
+			{
+				memcpy(temp,g_history_co2[*g_co2_cnt-*offset-i-1].time+11,2);
+				if(strncmp(index_time[j],temp,2)==0)
+				{
+					buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
+					printf("%s==>%d\n",g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
+					if(j==5)
+						break;
+				}
+			}*/
+			printf("j is %d\n",j);
+			if(j!=24)
+			{
+				for(m=j;m<24;m++)
+					buf[m]=buf[j-1];
+				j=24;
+			}
+			*offset+=i;
+			if(*offset>=*g_co2_cnt)
+				*offset=0;
 		}
+		else
+			*offset=0;
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
 	{
 		//printf("g_co_cnt %d\n",*g_hcho_cnt);
-		if((*g_hcho_cnt-offset-7)>0)
+		if((*g_hcho_cnt-*offset-7)>0)
 		{
 			//draw_curve(fd,g_history_hcho+*g_hcho_cnt-offset-1,7);
 			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_hcho[*g_hcho_cnt-offset-i+1].data);
+				buf[i]=atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
 	{
 		//printf("g_shidu_cnt %d\n",*g_shidu_cnt);
-		if((*g_shidu_cnt-offset-7)>0)
+		if((*g_shidu_cnt-*offset-7)>0)
 		{
 			//draw_curve(fd,g_history_shidu+*g_shidu_cnt-offset-1,7);
 			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_shidu[*g_shidu_cnt-offset-i+1].data);
+				buf[i]=atoi(g_history_shidu[*g_shidu_cnt-*offset-i-1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
 	{
 		//printf("g_temp_cnt %d\n",*g_temp_cnt);
-		if((*g_temp_cnt-offset-7)>0)
+		if((*g_temp_cnt-*offset-7)>0)
 		{
 			//draw_curve(fd,g_history_temp+*g_temp_cnt-offset-1,7);
 			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_temp[*g_temp_cnt-offset-i+1].data);
+				buf[i]=atoi(g_history_temp[*g_temp_cnt-*offset-i-1].data);
 		}
 	}	
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
 	{
 		//printf("g_pm25_cnt %d\n",*g_pm25_cnt);
-		if((*g_pm25_cnt-offset-7)>0)
+		if((*g_pm25_cnt-*offset-7)>0)
 		{
 			//draw_curve(fd,g_history_pm25+*g_pm25_cnt-offset-1,7);
 			for(i=0;i<7;i++)
-				buf[i]=atoi(g_history_pm25[*g_pm25_cnt-offset-i+1].data);
+				buf[i]=atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data);
 		}
 	}
-	write_string(fd, 0x049a, g_history_co2[*g_co2_cnt-offset-0+1].time+11,5);
-	write_string(fd, 0x049f, g_history_co2[*g_co2_cnt-offset-1+1].time+11,5);
-	//write_string(fd, 0x04a4, g_history_co2[*g_co2_cnt-offset-2+1].time+11,5);
-	//write_string(fd, 0x04a9, g_history_co2[*g_co2_cnt-offset-3+1].time+11,5);
-	//write_string(fd, 0x04ae, g_history_co2[*g_co2_cnt-offset-4+1].time+11,5);
-	//write_string(fd, 0x04b3, g_history_co2[*g_co2_cnt-offset-0+1].data, 4);
-	//write_string(fd, 0x04b7, g_history_co2[*g_co2_cnt-offset-1+1].data, 4);
-	//write_string(fd, 0x04bb, g_history_co2[*g_co2_cnt-offset-2+1].data, 4);
-	//write_string(fd, 0x04bf, g_history_co2[*g_co2_cnt-offset-3+1].data, 4);
-	//write_string(fd, 0x04c3, g_history_co2[*g_co2_cnt-offset-4+1].data, 4);
-	draw_curve(fd,buf,7);
+	//write index
+	write_string(fd, 0x04a1, index_time[0],2);
+	write_string(fd, 0x04a6, index_time[1],2);
+	write_string(fd, 0x04ab, index_time[2],2);
+	write_string(fd, 0x04b0, index_time[3],2);
+	write_string(fd, 0x04b5, index_time[4],2);
+	write_string(fd, 0x04ba, index[0], 4);
+	write_string(fd, 0x04be, index[1], 4);
+	write_string(fd, 0x04c2, index[2], 4);
+	write_string(fd, 0x04c6, index[3], 4);
+	write_string(fd, 0x04ca, index[4], 4);
+	draw_curve(fd,buf,j);
 }
 int read_dgus(int fd,int addr,char len,char *out)
 {
@@ -2189,6 +2286,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 	static int begin_temp=0;
 	static int begin_shidu=0;
 	static int begin_pm25=0;
+	static int curve_co=0;
+	static int curve_co2=0;
+	static int curve_hcho=0;
+	static int curve_temp=0;
+	static int curve_shidu=0;
+	static int curve_pm25=0;
 	char * line = NULL;
 	char date1[32]={0};
 	char date2[32]={0};
@@ -2207,7 +2310,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_CO,0);
+			show_curve(fd_lcd,ID_CAP_CO,&curve_co);
 		}
 		else
 		{
@@ -2222,7 +2325,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_CO2,0);
+			show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
 		}
 		else
 		{
@@ -2237,7 +2340,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_HCHO,0);
+			show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
 		}
 		else
 		{		
@@ -2252,7 +2355,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_SHI_DU,0);
+			show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
 		}
 		else
 		{
@@ -2267,7 +2370,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_TEMPERATURE,0);
+			show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
 		}
 		else
 		{
@@ -2282,7 +2385,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		if(logged)
 		{
 			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_PM_25,0);
+			show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
 		}
 		else
 		{
@@ -2424,40 +2527,43 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
 	{//Login if didn't 
 		log_in(fd_lcd);
-		switch (g_index)
+		if(logged)
 		{
-			case 3:
-			{//co
-				show_curve(fd_lcd,ID_CAP_CO,0);
-			}
-			break;
-			case 4:
-			{//co2
-				show_curve(fd_lcd,ID_CAP_CO2,0);
-			}
-			break;
-			case 5:
-			{//hcho
-				show_curve(fd_lcd,ID_CAP_HCHO,0);
-			}
-			break;
-			case 7:
-			{//shidu
-				show_curve(fd_lcd,ID_CAP_SHI_DU,0);
-			}
-			break;
-			case 6:
-			{//temp
-				show_curve(fd_lcd,ID_CAP_TEMPERATURE,0);
-			}
-			break;
-			case 8:
-			{//pm25
-				show_curve(fd_lcd,ID_CAP_PM_25,0);
-			}
-			break;
-			default:
+			switch (g_index)
+			{
+				case 3:
+				{//co
+					show_curve(fd_lcd,ID_CAP_CO,&curve_co);
+				}
 				break;
+				case 4:
+				{//co2
+					show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
+				}
+				break;
+				case 5:
+				{//hcho
+					show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
+				}
+				break;
+				case 7:
+				{//shidu
+					show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
+				}
+				break;
+				case 6:
+				{//temp
+					show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
+				}
+				break;
+				case 8:
+				{//pm25
+					show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
+				}
+				break;
+				default:
+					break;
+			}
 		}
 	}
 	return STATE_MAIN;
