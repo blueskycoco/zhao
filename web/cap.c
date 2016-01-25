@@ -124,6 +124,7 @@ struct state{
 key_t history_load_done_shmid;
 int *history_done;
 int fd_com=0,fd_lcd=0;
+int lcd_state=1;
 struct state *g_state;
 //*******************************************************************
 //
@@ -2537,6 +2538,16 @@ unsigned short input_handle(int fd_lcd,char *input)
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
+	if(lcd_state==0)
+	{
+		lcd_on(2);
+		alarm(300);
+	}
+	else
+	{
+		alarm(0);
+		alarm(300);
+	}
 	if(addr==TOUCH_DETAIL_CO && (TOUCH_DETAIL_CO-0x100)==data)
 	{//show history CO the first page
 		if(logged)
@@ -3213,8 +3224,25 @@ int open_com_port(char *dev)
 }
 void set_upload_flag(int a)
 {
+	printf("set upload flag\n");
 	g_upload=1;
 	alarm(600);
+}
+void lcd_off(int a)
+{
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
+	write(fd_lcd,cmd,6);
+	switch_pic(fd_lcd,2);
+	lcd_state=0;
+	printf("lcd off\n");
+}
+void lcd_on(int page)
+{
+	switch_pic(fd_lcd,page);
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
+	write(fd_lcd,cmd,6);
+	lcd_state=1;
+	printf("lcd on\n");
 }
 void get_sensor_alarm_info()
 {
@@ -3452,6 +3480,8 @@ int main(int argc, char *argv[])
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			printf(LCD_PROCESS"end to shmat\n");
+			signal(SIGALRM, lcd_off);
+			alarm(300);
 			while(1)
 			{
 				lcd_loop(fd_lcd);
