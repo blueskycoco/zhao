@@ -2,7 +2,7 @@
 #include "netlib.h"
 #define HISTORY_TAG "[History Process]"
 
-void set_data(char *line,char *type,struct nano *history,int *cnt)
+void set_data(char *line,char *type,struct nano *history,long *cnt)
 {
 	char *data=doit_data(line,type);
 	if(data!=NULL)
@@ -18,7 +18,7 @@ void set_data(char *line,char *type,struct nano *history,int *cnt)
 		(*cnt)++;
 	}
 }
-void set_time(char *file_name,char *line,struct nano *history,int *cnt)
+void set_time(char *file_name,char *line,struct nano *history,long *cnt)
 {
 	char tmp[11]={0};
 	memset(history[*cnt].time,'\0',20);
