@@ -37,6 +37,7 @@
 #include "cJSON.h"
 #include "weblib.h"
 #include "web_interface.h"
+#include "dwin.h"
 //#include <iostream> 
 #define RTCDEV "/dev/rtc0"
 #define START_BYTE 0x6C
@@ -1768,13 +1769,13 @@ void show_sensor_network(int fd)
 	printf("sensor %d %d %d %d %d %d\nnet_work %d\n",g_state->sensor[0],g_state->sensor[1],g_state->sensor[2],g_state->sensor[3],g_state->sensor[4],g_state->sensor[5],
 		g_state->network_state);
 	if((g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
-		pic=11;
+		pic=STATE_E_E_PAGE;
 	else if((g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(g_state->network_state))
-		pic=10;
+		pic=STATE_E_O_PAGE;
 	else if(!(g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(g_state->network_state))
-		pic=9;
+		pic=STATE_O_O_PAGE;
 	else if(!(g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
-		pic=12;
+		pic=STATE_O_E_PAGE;
 	switch_pic(fd,pic);
 }
 void show_history(int fd_lcd,char *id,int offset)
@@ -2405,9 +2406,9 @@ void manul_set_time(int fd)
 	char hour[3]={0};
 	char min[3]={0};
 	char second[3]={0};
-	if(read_dgus(fd,TIME_YEAR_ADDR,2,year) && read_dgus(fd,TIME_DAY_ADDR,1,day)
-		&& read_dgus(fd,TIME_MON_ADDR,1,mon) && read_dgus(fd,TIME_HOUR_ADDR,1,hour)
-		&& read_dgus(fd,TIME_MIN_ADDR,1,min) && read_dgus(fd,TIME_SECONDS_ADDR,1,second))
+	if(read_dgus(fd,ADDR_TIME_YEAR,2,year) && read_dgus(fd,ADDR_TIME_DAY,1,day)
+		&& read_dgus(fd,ADDR_TIME_MONTH,1,mon) && read_dgus(fd,ADDR_TIME_HOUR,1,hour)
+		&& read_dgus(fd,ADDR_TIME_MIN,1,min) && read_dgus(fd,ADDR_TIME_SECOND,1,second))
 	{
 		if(atoi(year)>0 && atoi(mon)>0 && atoi(mon)<=12 && atoi(day)>0 && atoi(day)<=31
 			&& atoi(hour)>=0 && atoi(hour)<=23 && atoi(min)>=0 && atoi(min)<=59
@@ -2430,19 +2431,19 @@ void log_in(int fd)
 {
 	char user_name[256]={0};
 	char passwd[256]={0};
-	if(read_dgus(fd,USER_NAME_ADDR,5,user_name) && read_dgus(fd,USER_PWD_ADDR,5,passwd))
+	if(read_dgus(fd,ADDR_USER_NAME_VERIFY,5,user_name) && read_dgus(fd,ADDR_USER_PWD_VERIFY,5,passwd))
 	{
 		printf("User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
 			if(*history_done)
-				switch_pic(fd,27);
+				switch_pic(fd,CURVE_PAGE);
 			else
-				switch_pic(fd,2);	
+				switch_pic(fd,MAIN_PAGE);	
 			return;
 		}
 	}
-	switch_pic(fd,2);
+	switch_pic(fd,MAIN_PAGE);
 }
 void wifi_handle(int fd)
 {
@@ -2454,7 +2455,7 @@ void wifi_handle(int fd)
 	FILE *fp;
 	//clear_buf(fd,WIFI_AP_NAME_ADDR,20);
 	//clear_buf(fd,WIFI_AP_PWD_ADDR,20);
-	if(read_dgus(fd,WIFI_AP_NAME_ADDR,10,ap_name) && read_dgus(fd,WIFI_AP_PWD_ADDR,10,ap_passwd))
+	if(read_dgus(fd,ADDR_AP_NAME,10,ap_name) && read_dgus(fd,ADDR_AP_PASSWD,10,ap_passwd))
 	{
 		printf("AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
 		if(strlen(ap_passwd)<8)
@@ -2542,7 +2543,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(lcd_state==0)
 	{
-		lcd_on(2);
+		lcd_on(MAIN_PAGE);
 		alarm(300);
 	}
 	else
@@ -2550,18 +2551,18 @@ unsigned short input_handle(int fd_lcd,char *input)
 		alarm(0);
 		alarm(300);
 	}
-	if(addr==TOUCH_DETAIL_CO && (TOUCH_DETAIL_CO-0x100)==data)
+	if(addr==TOUCH_RUN_TIME_CO && (TOUCH_RUN_TIME_CO+0x100)==data)
 	{//show history CO the first page
 		if(logged)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_CO,&curve_co);
 			}
 			else
 			{
-				switch_pic(fd_lcd,3);
+				switch_pic(fd_lcd,LIST_CO_PAGE);
 				show_history(fd_lcd,ID_CAP_CO,0);
 				begin_co=0;
 			}
@@ -2570,9 +2571,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);
+			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}
-		g_index=3;
+		g_index=LIST_CO_PAGE;
 	}
 	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
 	{//show history CO2 the first page
@@ -2580,12 +2581,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
 			}
 			else
 			{
-				switch_pic(fd_lcd,4);
+				switch_pic(fd_lcd,LIST_CO2_PAGE);
 				show_history(fd_lcd,ID_CAP_CO2,0);
 				begin_co=0;
 			}
@@ -2594,9 +2595,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);	
+			switch_pic(fd_lcd,LOG_IN_PAGE);	
 		}
-		g_index=4;
+		g_index=LIST_CO2_PAGE;
 	}	
 	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
 	{//show history HCHO the first page	
@@ -2604,12 +2605,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
 			}
 			else
 			{
-				switch_pic(fd_lcd,5);
+				switch_pic(fd_lcd,LIST_HCHO_PAGE);
 				show_history(fd_lcd,ID_CAP_HCHO,0);
 				begin_co=0;
 			}
@@ -2618,9 +2619,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{		
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);			
+			switch_pic(fd_lcd,LOG_IN_PAGE);			
 		}
-		g_index=5;
+		g_index=LIST_HCHO_PAGE;
 	}	
 	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
 	{//show history SHIDU the first page
@@ -2628,12 +2629,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
 			}
 			else
 			{
-				switch_pic(fd_lcd,7);
+				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
 				show_history(fd_lcd,ID_CAP_SHI_DU,0);
 				begin_co=0;
 			}
@@ -2642,9 +2643,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);		
-			switch_pic(fd_lcd,16);
+			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}		
-		g_index=7;
+		g_index=LIST_SHIDU_PAGE;
 	}	
 	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
 	{//show history TEMPERATURE the first page
@@ -2652,12 +2653,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
 			}
 			else
 			{
-				switch_pic(fd_lcd,6);
+				switch_pic(fd_lcd,LIST_TEMP_PAGE);
 				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
 				begin_co=0;
 			}
@@ -2666,9 +2667,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);
+			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}		
-		g_index=6;
+		g_index=LIST_TEMP_PAGE;
 	}	
 	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
 	{//show history PM25 the first page
@@ -2676,12 +2677,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if(*history_done)
 			{
-				switch_pic(fd_lcd,27);
+				switch_pic(fd_lcd,CURVE_PAGE);
 				show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
 			}
 			else
 			{
-				switch_pic(fd_lcd,8);
+				switch_pic(fd_lcd,LIST_PM25_PAGE);
 				show_history(fd_lcd,ID_CAP_PM_25,0);
 				begin_co=0;
 			}
@@ -2690,9 +2691,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			clear_buf(fd_lcd,USER_NAME_ADDR,10);
 			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);
+			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}
-		g_index=8;
+		g_index=LIST_PM25_PAGE;
 	}	
 	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
 	{//show history CO the next page
@@ -2736,7 +2737,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		clear_buf(fd_lcd,TIME_HOUR_ADDR,2);
 		clear_buf(fd_lcd,TIME_MIN_ADDR,2);
 		clear_buf(fd_lcd,TIME_SECONDS_ADDR,2);
-		switch_pic(fd_lcd, 22);
+		switch_pic(fd_lcd, TIME_SETTING_PAGE);
 	}
 	else if(addr==TOUCH_WIFI_HANDLE&& (TOUCH_WIFI_HANDLE-0x100)==data)
 	{//WiFi Passwd changed
@@ -2759,62 +2760,51 @@ unsigned short input_handle(int fd_lcd,char *input)
 		//switch_pic(fd_lcd,18);
 	}
 	else if(addr==TOUCH_VERIFY_SENSOR && (TOUCH_VERIFY_SENSOR-0x100)==data)
-	{//show history HCHO the first page	
-		if(logged)
-		{
-			switch_pic(fd_lcd,27);
-			show_curve(fd_lcd,ID_CAP_HCHO,0);
-		}
-		else
-		{		
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
-			switch_pic(fd_lcd,16);			
-		}
-		g_index=5;
+	{//verify sensor display
+	
 	}	
 	else if(addr==TOUCH_LIST_DISPLAY&& (TOUCH_LIST_DISPLAY-0x100)==data)
 	{//show detail in list
 		switch (g_index)
 		{
-			case 3:
+			case LIST_CO_PAGE:
 			{//co
-				switch_pic(fd_lcd,3);
+				switch_pic(fd_lcd,LIST_CO_PAGE);
 				show_history(fd_lcd,ID_CAP_CO,0);
 				begin_co=0;
 			}
 			break;
-			case 4:
+			case LIST_CO2_PAGE:
 			{//co2
-				switch_pic(fd_lcd,4);
+				switch_pic(fd_lcd,LIST_CO2_PAGE);
 				show_history(fd_lcd,ID_CAP_CO2,0);
 				begin_co2=0;
 			}
 			break;
-			case 5:
+			case LIST_HCHO_PAGE:
 			{//hcho
-				switch_pic(fd_lcd,5);
+				switch_pic(fd_lcd,LIST_HCHO_PAGE);
 				show_history(fd_lcd,ID_CAP_HCHO,0);
 				begin_hcho=0;
 			}
 			break;
-			case 7:
+			case LIST_SHIDU_PAGE:
 			{//shidu
-				switch_pic(fd_lcd,7);
+				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
 				show_history(fd_lcd,ID_CAP_SHI_DU,0);
 				begin_shidu=0;
 			}
 			break;
-			case 6:
+			case LIST_TEMP_PAGE:
 			{//temp
-				switch_pic(fd_lcd,6);
+				switch_pic(fd_lcd,LIST_TEMP_PAGE);
 				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
 				begin_temp=0;
 			}
 			break;
-			case 8:
+			case LIST_PM25_PAGE:
 			{//pm25
-				switch_pic(fd_lcd,8);
+				switch_pic(fd_lcd,LIST_PM25_PAGE);
 				show_history(fd_lcd,ID_CAP_PM_25,0);
 				begin_pm25=0;
 			}
@@ -2832,44 +2822,44 @@ unsigned short input_handle(int fd_lcd,char *input)
 			if(*history_done==0)
 			switch (g_index)
 			{
-			case 3:
+			case LIST_CO_PAGE:
 			{//co
-				switch_pic(fd_lcd,3);
+				switch_pic(fd_lcd,LIST_CO_PAGE);
 				show_history(fd_lcd,ID_CAP_CO,0);
 				begin_co=0;
 			}
 			break;
-			case 4:
+			case LIST_CO2_PAGE:
 			{//co2
-				switch_pic(fd_lcd,4);
+				switch_pic(fd_lcd,LIST_CO2_PAGE);
 				show_history(fd_lcd,ID_CAP_CO2,0);
 				begin_co2=0;
 			}
 			break;
-			case 5:
+			case LIST_HCHO_PAGE:
 			{//hcho
-				switch_pic(fd_lcd,5);
+				switch_pic(fd_lcd,LIST_HCHO_PAGE);
 				show_history(fd_lcd,ID_CAP_HCHO,0);
 				begin_hcho=0;
 			}
 			break;
-			case 7:
+			case LIST_SHIDU_PAGE:
 			{//shidu
-				switch_pic(fd_lcd,7);
+				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
 				show_history(fd_lcd,ID_CAP_SHI_DU,0);
 				begin_shidu=0;
 			}
 			break;
-			case 6:
+			case LIST_TEMP_PAGE:
 			{//temp
-				switch_pic(fd_lcd,6);
+				switch_pic(fd_lcd,LIST_TEMP_PAGE);
 				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
 				begin_temp=0;
 			}
 			break;
-			case 8:
+			case LIST_PM25_PAGE:
 			{//pm25
-				switch_pic(fd_lcd,8);
+				switch_pic(fd_lcd,LIST_PM25_PAGE);
 				show_history(fd_lcd,ID_CAP_PM_25,0);
 				begin_pm25=0;
 			}
@@ -2880,32 +2870,32 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			switch (g_index)
 			{
-				case 3:
+				case LIST_CO_PAGE:
 				{//co
 					show_curve(fd_lcd,ID_CAP_CO,&curve_co);
 				}
 				break;
-				case 4:
+				case LIST_CO2_PAGE:
 				{//co2
 					show_curve(fd_lcd,ID_CAP_CO2,&curve_co2);
 				}
 				break;
-				case 5:
+				case LIST_HCHO_PAGE:
 				{//hcho
 					show_curve(fd_lcd,ID_CAP_HCHO,&curve_hcho);
 				}
 				break;
-				case 7:
+				case LIST_SHIDU_PAGE:
 				{//shidu
 					show_curve(fd_lcd,ID_CAP_SHI_DU,&curve_shidu);
 				}
 				break;
-				case 6:
+				case LIST_TEMP_PAGE:
 				{//temp
 					show_curve(fd_lcd,ID_CAP_TEMPERATURE,&curve_temp);
 				}
 				break;
-				case 8:
+				case LIST_PM25_PAGE:
 				{//pm25
 					show_curve(fd_lcd,ID_CAP_PM_25,&curve_pm25);
 				}
@@ -2923,7 +2913,7 @@ void lcd_loop(int fd)
 	int i=1;
 	int get=0;
 	char ptr[32]={0};	
-	switch_pic(fd,2);
+	switch_pic(fd,MAIN_PAGE);
 	while(1)	
 	{	
 		if(read(fd,&ch,1)==1)
@@ -3234,7 +3224,7 @@ void lcd_off(int a)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
 	write(fd_lcd,cmd,6);
-	switch_pic(fd_lcd,1);
+	switch_pic(fd_lcd,OFF_PAGE);
 	lcd_state=0;
 	printf("lcd off\n");
 }
