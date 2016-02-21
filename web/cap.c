@@ -704,22 +704,22 @@ void sync_server(int fd,int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
-					clear_buf(fd_lcd,VAR_USER_NAME_ADDR,40);
-					clear_buf(fd_lcd,VAR_USER_PLACE_ADDR,60);
-					clear_buf(fd_lcd,VAR_USER_ADDR_ADDR,40);
-					clear_buf(fd_lcd,VAR_USER_PHONE_ADDR,40);
-					clear_buf(fd_lcd,VAR_USER_CONTRACT_ADDR,40);
+					clear_buf(fd_lcd,ADDR_USER_NAME,40);
+					clear_buf(fd_lcd,ADDR_INSTALL_PLACE,60);
+					clear_buf(fd_lcd,ADDR_USER_ADDR,40);
+					clear_buf(fd_lcd,ADDR_USER_PHONE,40);
+					clear_buf(fd_lcd,ADDR_USER_CONTACTER,40);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
-					write_string(fd_lcd,VAR_USER_NAME_ADDR,cmd,strlen(cmd));
+					write_string(fd_lcd,ADDR_USER_NAME,cmd,strlen(cmd));
 					printf("user_name:%s\n",user_name);
 					free(user_name);
 				}
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
-					write_string(fd_lcd,VAR_USER_PLACE_ADDR,cmd,strlen(cmd));
+					write_string(fd_lcd,ADDR_INSTALL_PLACE,cmd,strlen(cmd));
 					printf("user_place:%s\n",user_place);
 					free(user_place);
 				}
@@ -727,21 +727,21 @@ void sync_server(int fd,int resend,int set_local)
 				{
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
-					write_string(fd_lcd,VAR_USER_ADDR_ADDR,cmd,strlen(cmd));					
+					write_string(fd_lcd,ADDR_USER_ADDR,cmd,strlen(cmd));					
 					printf("user_addr:%s\n",user_addr);
 					free(user_addr);
 				}
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
-					write_string(fd_lcd,VAR_USER_PHONE_ADDR,cmd,strlen(cmd));					
+					write_string(fd_lcd,ADDR_USER_PHONE,cmd,strlen(cmd));					
 					printf("user_phone:%s\n",user_phone);
 					free(user_phone);
 				}
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
-					write_string(fd_lcd,VAR_USER_CONTRACT_ADDR,cmd,strlen(cmd));
+					write_string(fd_lcd,ADDR_USER_CONTACTER,cmd,strlen(cmd));
 					printf("user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
 				}
@@ -1780,46 +1780,57 @@ void show_sensor_network(int fd)
 }
 void show_history(int fd_lcd,char *id,int offset)
 {	
+	char tmp[4]={0};
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
 //		printf("g_co_cnt %d\n",*g_co_cnt);
 		if((*g_co_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_CO_TIME1,g_history_co[*g_co_cnt-offset-1].time,strlen(g_history_co[*g_co_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_CO_DATA1,g_history_co[*g_co_cnt-offset-1].data,strlen(g_history_co[*g_co_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_CO_TIME2,g_history_co[*g_co_cnt-offset-2].time,strlen(g_history_co[*g_co_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_CO_DATA2,g_history_co[*g_co_cnt-offset-2].data,strlen(g_history_co[*g_co_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_CO_TIME3,g_history_co[*g_co_cnt-offset-3].time,strlen(g_history_co[*g_co_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_CO_DATA3,g_history_co[*g_co_cnt-offset-3].data,strlen(g_history_co[*g_co_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_CO_TIME4,g_history_co[*g_co_cnt-offset-4].time,strlen(g_history_co[*g_co_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_CO_DATA4,g_history_co[*g_co_cnt-offset-4].data,strlen(g_history_co[*g_co_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_CO_TIME5,g_history_co[*g_co_cnt-offset-5].time,strlen(g_history_co[*g_co_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_CO_DATA5,g_history_co[*g_co_cnt-offset-5].data,strlen(g_history_co[*g_co_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_CO_TIME6,g_history_co[*g_co_cnt-offset-6].time,strlen(g_history_co[*g_co_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_CO_DATA6,g_history_co[*g_co_cnt-offset-6].data,strlen(g_history_co[*g_co_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_CO_TIME7,g_history_co[*g_co_cnt-offset-7].time,strlen(g_history_co[*g_co_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_CO_DATA7,g_history_co[*g_co_cnt-offset-7].data,strlen(g_history_co[*g_co_cnt-offset-7].data));
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_CO_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_co_cnt/7);
+			write_string(fd_lcd,ADDR_CO_PAGE_TOTAL,tmp,strlen(tmp));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_0,g_history_co[*g_co_cnt-offset-1].time,strlen(g_history_co[*g_co_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_0,g_history_co[*g_co_cnt-offset-1].data,strlen(g_history_co[*g_co_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_1,g_history_co[*g_co_cnt-offset-2].time,strlen(g_history_co[*g_co_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_1,g_history_co[*g_co_cnt-offset-2].data,strlen(g_history_co[*g_co_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_2,g_history_co[*g_co_cnt-offset-3].time,strlen(g_history_co[*g_co_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_2,g_history_co[*g_co_cnt-offset-3].data,strlen(g_history_co[*g_co_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_3,g_history_co[*g_co_cnt-offset-4].time,strlen(g_history_co[*g_co_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_3,g_history_co[*g_co_cnt-offset-4].data,strlen(g_history_co[*g_co_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_4,g_history_co[*g_co_cnt-offset-5].time,strlen(g_history_co[*g_co_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_4,g_history_co[*g_co_cnt-offset-5].data,strlen(g_history_co[*g_co_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_5,g_history_co[*g_co_cnt-offset-6].time,strlen(g_history_co[*g_co_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_5,g_history_co[*g_co_cnt-offset-6].data,strlen(g_history_co[*g_co_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_CO_LIST_TIME_6,g_history_co[*g_co_cnt-offset-7].time,strlen(g_history_co[*g_co_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_CO_LIST_DATA_6,g_history_co[*g_co_cnt-offset-7].data,strlen(g_history_co[*g_co_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
 //		printf("g_co2_cnt %d\n",*g_co2_cnt);
 		if((*g_co2_cnt-offset-7)>0)
-		{
-			write_string(fd_lcd,VAR_CO2_TIME1,g_history_co2[*g_co2_cnt-offset-1].time,strlen(g_history_co2[*g_co2_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_CO2_DATA1,g_history_co2[*g_co2_cnt-offset-1].data,strlen(g_history_co2[*g_co2_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_CO2_TIME2,g_history_co2[*g_co2_cnt-offset-2].time,strlen(g_history_co2[*g_co2_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_CO2_DATA2,g_history_co2[*g_co2_cnt-offset-2].data,strlen(g_history_co2[*g_co2_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_CO2_TIME3,g_history_co2[*g_co2_cnt-offset-3].time,strlen(g_history_co2[*g_co2_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_CO2_DATA3,g_history_co2[*g_co2_cnt-offset-3].data,strlen(g_history_co2[*g_co2_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_CO2_TIME4,g_history_co2[*g_co2_cnt-offset-4].time,strlen(g_history_co2[*g_co2_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_CO2_DATA4,g_history_co2[*g_co2_cnt-offset-4].data,strlen(g_history_co2[*g_co2_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_CO2_TIME5,g_history_co2[*g_co2_cnt-offset-5].time,strlen(g_history_co2[*g_co2_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_CO2_DATA5,g_history_co2[*g_co2_cnt-offset-5].data,strlen(g_history_co2[*g_co2_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_CO2_TIME6,g_history_co2[*g_co2_cnt-offset-6].time,strlen(g_history_co2[*g_co2_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_CO2_DATA6,g_history_co2[*g_co2_cnt-offset-6].data,strlen(g_history_co2[*g_co2_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_CO2_TIME7,g_history_co2[*g_co2_cnt-offset-7].time,strlen(g_history_co2[*g_co2_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_CO2_DATA7,g_history_co2[*g_co2_cnt-offset-7].data,strlen(g_history_co2[*g_co2_cnt-offset-7].data));
+		{			
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_CO2_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_co2_cnt/7);			
+			write_string(fd_lcd,ADDR_CO2_PAGE_TOTAL,tmp,strlen(tmp));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_0,g_history_co2[*g_co2_cnt-offset-1].time,strlen(g_history_co2[*g_co2_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_0,g_history_co2[*g_co2_cnt-offset-1].data,strlen(g_history_co2[*g_co2_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_1,g_history_co2[*g_co2_cnt-offset-2].time,strlen(g_history_co2[*g_co2_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_1,g_history_co2[*g_co2_cnt-offset-2].data,strlen(g_history_co2[*g_co2_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_2,g_history_co2[*g_co2_cnt-offset-3].time,strlen(g_history_co2[*g_co2_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_2,g_history_co2[*g_co2_cnt-offset-3].data,strlen(g_history_co2[*g_co2_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_3,g_history_co2[*g_co2_cnt-offset-4].time,strlen(g_history_co2[*g_co2_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_3,g_history_co2[*g_co2_cnt-offset-4].data,strlen(g_history_co2[*g_co2_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_4,g_history_co2[*g_co2_cnt-offset-5].time,strlen(g_history_co2[*g_co2_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_4,g_history_co2[*g_co2_cnt-offset-5].data,strlen(g_history_co2[*g_co2_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_5,g_history_co2[*g_co2_cnt-offset-6].time,strlen(g_history_co2[*g_co2_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_5,g_history_co2[*g_co2_cnt-offset-6].data,strlen(g_history_co2[*g_co2_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_CO2_LIST_TIME_6,g_history_co2[*g_co2_cnt-offset-7].time,strlen(g_history_co2[*g_co2_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_CO2_LIST_DATA_6,g_history_co2[*g_co2_cnt-offset-7].data,strlen(g_history_co2[*g_co2_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
@@ -1827,20 +1838,25 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_co_cnt %d\n",*g_hcho_cnt);
 		if((*g_hcho_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_HCHO_TIME1,g_history_hcho[*g_hcho_cnt-offset-1].time,strlen(g_history_hcho[*g_hcho_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_HCHO_DATA1,g_history_hcho[*g_hcho_cnt-offset-1].data,strlen(g_history_hcho[*g_hcho_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_HCHO_TIME2,g_history_hcho[*g_hcho_cnt-offset-2].time,strlen(g_history_hcho[*g_hcho_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_HCHO_DATA2,g_history_hcho[*g_hcho_cnt-offset-2].data,strlen(g_history_hcho[*g_hcho_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_HCHO_TIME3,g_history_hcho[*g_hcho_cnt-offset-3].time,strlen(g_history_hcho[*g_hcho_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_HCHO_DATA3,g_history_hcho[*g_hcho_cnt-offset-3].data,strlen(g_history_hcho[*g_hcho_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_HCHO_TIME4,g_history_hcho[*g_hcho_cnt-offset-4].time,strlen(g_history_hcho[*g_hcho_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_HCHO_DATA4,g_history_hcho[*g_hcho_cnt-offset-4].data,strlen(g_history_hcho[*g_hcho_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_HCHO_TIME5,g_history_hcho[*g_hcho_cnt-offset-5].time,strlen(g_history_hcho[*g_hcho_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_HCHO_DATA5,g_history_hcho[*g_hcho_cnt-offset-5].data,strlen(g_history_hcho[*g_hcho_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_HCHO_TIME6,g_history_hcho[*g_hcho_cnt-offset-6].time,strlen(g_history_hcho[*g_hcho_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_HCHO_DATA6,g_history_hcho[*g_hcho_cnt-offset-6].data,strlen(g_history_hcho[*g_hcho_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_HCHO_TIME7,g_history_hcho[*g_hcho_cnt-offset-7].time,strlen(g_history_hcho[*g_hcho_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_HCHO_DATA7,g_history_hcho[*g_hcho_cnt-offset-7].data,strlen(g_history_hcho[*g_hcho_cnt-offset-7].data));
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_HCHO_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_hcho_cnt/7);			
+			write_string(fd_lcd,ADDR_HCHO_PAGE_TOTAL,tmp,strlen(tmp));		
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_0,g_history_hcho[*g_hcho_cnt-offset-1].time,strlen(g_history_hcho[*g_hcho_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_0,g_history_hcho[*g_hcho_cnt-offset-1].data,strlen(g_history_hcho[*g_hcho_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_1,g_history_hcho[*g_hcho_cnt-offset-2].time,strlen(g_history_hcho[*g_hcho_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_1,g_history_hcho[*g_hcho_cnt-offset-2].data,strlen(g_history_hcho[*g_hcho_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_2,g_history_hcho[*g_hcho_cnt-offset-3].time,strlen(g_history_hcho[*g_hcho_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_2,g_history_hcho[*g_hcho_cnt-offset-3].data,strlen(g_history_hcho[*g_hcho_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_3,g_history_hcho[*g_hcho_cnt-offset-4].time,strlen(g_history_hcho[*g_hcho_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_3,g_history_hcho[*g_hcho_cnt-offset-4].data,strlen(g_history_hcho[*g_hcho_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_4,g_history_hcho[*g_hcho_cnt-offset-5].time,strlen(g_history_hcho[*g_hcho_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_4,g_history_hcho[*g_hcho_cnt-offset-5].data,strlen(g_history_hcho[*g_hcho_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_5,g_history_hcho[*g_hcho_cnt-offset-6].time,strlen(g_history_hcho[*g_hcho_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_5,g_history_hcho[*g_hcho_cnt-offset-6].data,strlen(g_history_hcho[*g_hcho_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_HCHO_LIST_TIME_6,g_history_hcho[*g_hcho_cnt-offset-7].time,strlen(g_history_hcho[*g_hcho_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_HCHO_LIST_DATA_6,g_history_hcho[*g_hcho_cnt-offset-7].data,strlen(g_history_hcho[*g_hcho_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
@@ -1848,20 +1864,25 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_shidu_cnt %d\n",*g_shidu_cnt);
 		if((*g_shidu_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_SHIDU_TIME1,g_history_shidu[*g_shidu_cnt-offset-1].time,strlen(g_history_shidu[*g_shidu_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA1,g_history_shidu[*g_shidu_cnt-offset-1].data,strlen(g_history_shidu[*g_shidu_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME2,g_history_shidu[*g_shidu_cnt-offset-2].time,strlen(g_history_shidu[*g_shidu_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA2,g_history_shidu[*g_shidu_cnt-offset-2].data,strlen(g_history_shidu[*g_shidu_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME3,g_history_shidu[*g_shidu_cnt-offset-3].time,strlen(g_history_shidu[*g_shidu_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA3,g_history_shidu[*g_shidu_cnt-offset-3].data,strlen(g_history_shidu[*g_shidu_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME4,g_history_shidu[*g_shidu_cnt-offset-4].time,strlen(g_history_shidu[*g_shidu_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA4,g_history_shidu[*g_shidu_cnt-offset-4].data,strlen(g_history_shidu[*g_shidu_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME5,g_history_shidu[*g_shidu_cnt-offset-5].time,strlen(g_history_shidu[*g_shidu_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA5,g_history_shidu[*g_shidu_cnt-offset-5].data,strlen(g_history_shidu[*g_shidu_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME6,g_history_shidu[*g_shidu_cnt-offset-6].time,strlen(g_history_shidu[*g_shidu_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA6,g_history_shidu[*g_shidu_cnt-offset-6].data,strlen(g_history_shidu[*g_shidu_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_SHIDU_TIME7,g_history_shidu[*g_shidu_cnt-offset-7].time,strlen(g_history_shidu[*g_shidu_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_SHIDU_DATA7,g_history_shidu[*g_shidu_cnt-offset-7].data,strlen(g_history_shidu[*g_shidu_cnt-offset-7].data));
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_SHIDU_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_shidu_cnt/7);			
+			write_string(fd_lcd,ADDR_SHIDU_PAGE_TOTAL,tmp,strlen(tmp));		
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_0,g_history_shidu[*g_shidu_cnt-offset-1].time,strlen(g_history_shidu[*g_shidu_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_0,g_history_shidu[*g_shidu_cnt-offset-1].data,strlen(g_history_shidu[*g_shidu_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_1,g_history_shidu[*g_shidu_cnt-offset-2].time,strlen(g_history_shidu[*g_shidu_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_1,g_history_shidu[*g_shidu_cnt-offset-2].data,strlen(g_history_shidu[*g_shidu_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_2,g_history_shidu[*g_shidu_cnt-offset-3].time,strlen(g_history_shidu[*g_shidu_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_2,g_history_shidu[*g_shidu_cnt-offset-3].data,strlen(g_history_shidu[*g_shidu_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_3,g_history_shidu[*g_shidu_cnt-offset-4].time,strlen(g_history_shidu[*g_shidu_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_3,g_history_shidu[*g_shidu_cnt-offset-4].data,strlen(g_history_shidu[*g_shidu_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_4,g_history_shidu[*g_shidu_cnt-offset-5].time,strlen(g_history_shidu[*g_shidu_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_4,g_history_shidu[*g_shidu_cnt-offset-5].data,strlen(g_history_shidu[*g_shidu_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_5,g_history_shidu[*g_shidu_cnt-offset-6].time,strlen(g_history_shidu[*g_shidu_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_5,g_history_shidu[*g_shidu_cnt-offset-6].data,strlen(g_history_shidu[*g_shidu_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_TIME_6,g_history_shidu[*g_shidu_cnt-offset-7].time,strlen(g_history_shidu[*g_shidu_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_SHIDU_LIST_DATA_6,g_history_shidu[*g_shidu_cnt-offset-7].data,strlen(g_history_shidu[*g_shidu_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
@@ -1869,20 +1890,25 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_temp_cnt %d\n",*g_temp_cnt);
 		if((*g_temp_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_TEMP_TIME1,g_history_temp[*g_temp_cnt-offset-1].time,strlen(g_history_temp[*g_temp_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_TEMP_DATA1,g_history_temp[*g_temp_cnt-offset-1].data,strlen(g_history_temp[*g_temp_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_TEMP_TIME2,g_history_temp[*g_temp_cnt-offset-2].time,strlen(g_history_temp[*g_temp_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_TEMP_DATA2,g_history_temp[*g_temp_cnt-offset-2].data,strlen(g_history_temp[*g_temp_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_TEMP_TIME3,g_history_temp[*g_temp_cnt-offset-3].time,strlen(g_history_temp[*g_temp_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_TEMP_DATA3,g_history_temp[*g_temp_cnt-offset-3].data,strlen(g_history_temp[*g_temp_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_TEMP_TIME4,g_history_temp[*g_temp_cnt-offset-4].time,strlen(g_history_temp[*g_temp_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_TEMP_DATA4,g_history_temp[*g_temp_cnt-offset-4].data,strlen(g_history_temp[*g_temp_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_TEMP_TIME5,g_history_temp[*g_temp_cnt-offset-5].time,strlen(g_history_temp[*g_temp_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_TEMP_DATA5,g_history_temp[*g_temp_cnt-offset-5].data,strlen(g_history_temp[*g_temp_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_TEMP_TIME6,g_history_temp[*g_temp_cnt-offset-6].time,strlen(g_history_temp[*g_temp_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_TEMP_DATA6,g_history_temp[*g_temp_cnt-offset-6].data,strlen(g_history_temp[*g_temp_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_TEMP_TIME7,g_history_temp[*g_temp_cnt-offset-7].time,strlen(g_history_temp[*g_temp_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_TEMP_DATA7,g_history_temp[*g_temp_cnt-offset-7].data,strlen(g_history_temp[*g_temp_cnt-offset-7].data));
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_TEMP_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_temp_cnt/7);			
+			write_string(fd_lcd,ADDR_TEMP_PAGE_TOTAL,tmp,strlen(tmp));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_0,g_history_temp[*g_temp_cnt-offset-1].time,strlen(g_history_temp[*g_temp_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_0,g_history_temp[*g_temp_cnt-offset-1].data,strlen(g_history_temp[*g_temp_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_1,g_history_temp[*g_temp_cnt-offset-2].time,strlen(g_history_temp[*g_temp_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_1,g_history_temp[*g_temp_cnt-offset-2].data,strlen(g_history_temp[*g_temp_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_2,g_history_temp[*g_temp_cnt-offset-3].time,strlen(g_history_temp[*g_temp_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_2,g_history_temp[*g_temp_cnt-offset-3].data,strlen(g_history_temp[*g_temp_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_3,g_history_temp[*g_temp_cnt-offset-4].time,strlen(g_history_temp[*g_temp_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_3,g_history_temp[*g_temp_cnt-offset-4].data,strlen(g_history_temp[*g_temp_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_4,g_history_temp[*g_temp_cnt-offset-5].time,strlen(g_history_temp[*g_temp_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_4,g_history_temp[*g_temp_cnt-offset-5].data,strlen(g_history_temp[*g_temp_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_5,g_history_temp[*g_temp_cnt-offset-6].time,strlen(g_history_temp[*g_temp_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_5,g_history_temp[*g_temp_cnt-offset-6].data,strlen(g_history_temp[*g_temp_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_TEMP_LIST_TIME_6,g_history_temp[*g_temp_cnt-offset-7].time,strlen(g_history_temp[*g_temp_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_TEMP_LIST_DATA_6,g_history_temp[*g_temp_cnt-offset-7].data,strlen(g_history_temp[*g_temp_cnt-offset-7].data));
 		}
 	}
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
@@ -1890,20 +1916,25 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_pm25_cnt %d\n",*g_pm25_cnt);
 		if((*g_pm25_cnt-offset-7)>0)
 		{
-			write_string(fd_lcd,VAR_PM25_TIME1,g_history_pm25[*g_pm25_cnt-offset-1].time,strlen(g_history_pm25[*g_pm25_cnt-offset-1].time));
-			write_string(fd_lcd,VAR_PM25_DATA1,g_history_pm25[*g_pm25_cnt-offset-1].data,strlen(g_history_pm25[*g_pm25_cnt-offset-1].data));
-			write_string(fd_lcd,VAR_PM25_TIME2,g_history_pm25[*g_pm25_cnt-offset-2].time,strlen(g_history_pm25[*g_pm25_cnt-offset-2].time));
-			write_string(fd_lcd,VAR_PM25_DATA2,g_history_pm25[*g_pm25_cnt-offset-2].data,strlen(g_history_pm25[*g_pm25_cnt-offset-2].data));
-			write_string(fd_lcd,VAR_PM25_TIME3,g_history_pm25[*g_pm25_cnt-offset-3].time,strlen(g_history_pm25[*g_pm25_cnt-offset-3].time));
-			write_string(fd_lcd,VAR_PM25_DATA3,g_history_pm25[*g_pm25_cnt-offset-3].data,strlen(g_history_pm25[*g_pm25_cnt-offset-3].data));
-			write_string(fd_lcd,VAR_PM25_TIME4,g_history_pm25[*g_pm25_cnt-offset-4].time,strlen(g_history_pm25[*g_pm25_cnt-offset-4].time));
-			write_string(fd_lcd,VAR_PM25_DATA4,g_history_pm25[*g_pm25_cnt-offset-4].data,strlen(g_history_pm25[*g_pm25_cnt-offset-4].data));
-			write_string(fd_lcd,VAR_PM25_TIME5,g_history_pm25[*g_pm25_cnt-offset-5].time,strlen(g_history_pm25[*g_pm25_cnt-offset-5].time));
-			write_string(fd_lcd,VAR_PM25_DATA5,g_history_pm25[*g_pm25_cnt-offset-5].data,strlen(g_history_pm25[*g_pm25_cnt-offset-5].data));
-			write_string(fd_lcd,VAR_PM25_TIME6,g_history_pm25[*g_pm25_cnt-offset-6].time,strlen(g_history_pm25[*g_pm25_cnt-offset-6].time));
-			write_string(fd_lcd,VAR_PM25_DATA6,g_history_pm25[*g_pm25_cnt-offset-6].data,strlen(g_history_pm25[*g_pm25_cnt-offset-6].data));
-			write_string(fd_lcd,VAR_PM25_TIME7,g_history_pm25[*g_pm25_cnt-offset-7].time,strlen(g_history_pm25[*g_pm25_cnt-offset-7].time));
-			write_string(fd_lcd,VAR_PM25_DATA7,g_history_pm25[*g_pm25_cnt-offset-7].data,strlen(g_history_pm25[*g_pm25_cnt-offset-7].data));
+			sprintf(tmp,"%4d",offset/7);
+			write_string(fd_lcd,ADDR_PM25_PAGE_NUM,tmp,strlen(tmp));
+			memset(tmp,'\0',4);
+			sprintf(tmp,"%4ld",*g_pm25_cnt/7);			
+			write_string(fd_lcd,ADDR_PM25_PAGE_TOTAL,tmp,strlen(tmp));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_0,g_history_pm25[*g_pm25_cnt-offset-1].time,strlen(g_history_pm25[*g_pm25_cnt-offset-1].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_0,g_history_pm25[*g_pm25_cnt-offset-1].data,strlen(g_history_pm25[*g_pm25_cnt-offset-1].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_1,g_history_pm25[*g_pm25_cnt-offset-2].time,strlen(g_history_pm25[*g_pm25_cnt-offset-2].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_1,g_history_pm25[*g_pm25_cnt-offset-2].data,strlen(g_history_pm25[*g_pm25_cnt-offset-2].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_2,g_history_pm25[*g_pm25_cnt-offset-3].time,strlen(g_history_pm25[*g_pm25_cnt-offset-3].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_2,g_history_pm25[*g_pm25_cnt-offset-3].data,strlen(g_history_pm25[*g_pm25_cnt-offset-3].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_3,g_history_pm25[*g_pm25_cnt-offset-4].time,strlen(g_history_pm25[*g_pm25_cnt-offset-4].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_3,g_history_pm25[*g_pm25_cnt-offset-4].data,strlen(g_history_pm25[*g_pm25_cnt-offset-4].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_4,g_history_pm25[*g_pm25_cnt-offset-5].time,strlen(g_history_pm25[*g_pm25_cnt-offset-5].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_4,g_history_pm25[*g_pm25_cnt-offset-5].data,strlen(g_history_pm25[*g_pm25_cnt-offset-5].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_5,g_history_pm25[*g_pm25_cnt-offset-6].time,strlen(g_history_pm25[*g_pm25_cnt-offset-6].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_5,g_history_pm25[*g_pm25_cnt-offset-6].data,strlen(g_history_pm25[*g_pm25_cnt-offset-6].data));
+			write_string(fd_lcd,ADDR_PM25_LIST_TIME_6,g_history_pm25[*g_pm25_cnt-offset-7].time,strlen(g_history_pm25[*g_pm25_cnt-offset-7].time));
+			write_string(fd_lcd,ADDR_PM25_LIST_DATA_6,g_history_pm25[*g_pm25_cnt-offset-7].data,strlen(g_history_pm25[*g_pm25_cnt-offset-7].data));
 		}
 	}
 }
@@ -1955,7 +1986,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"CO");
-			write_string(fd, 0x04ce, g_history_co[*g_co_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_co[*g_co_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_co[*g_co_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_co[*g_co_cnt-*offset-1].time+11,2);
@@ -2013,7 +2044,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"CO2");
-			write_string(fd, 0x04ce, g_history_co2[*g_co2_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_co2[*g_co2_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_co2[*g_co2_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_co2[*g_co2_cnt-*offset-1].time+11,2);
@@ -2071,7 +2102,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"HCHO");
-			write_string(fd, 0x04ce, g_history_hcho[*g_hcho_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_hcho[*g_hcho_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_hcho[*g_hcho_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_hcho[*g_hcho_cnt-*offset-1].time+11,2);
@@ -2132,7 +2163,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[4],"00");	
 			//strcpy(info,"Humidity");
 			sprintf(info,"%s",info_l);
-			write_string(fd, 0x04ce, g_history_shidu[*g_shidu_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_shidu[*g_shidu_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_shidu[*g_shidu_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_shidu[*g_shidu_cnt-*offset-1].time+11,2);
@@ -2193,7 +2224,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[4],"00");	
 			//strcpy(info,"Temperature");
 			sprintf(info,"%s",info_l);
-			write_string(fd, 0x04ce, g_history_temp[*g_temp_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_temp[*g_temp_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_temp[*g_temp_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_temp[*g_temp_cnt-*offset-1].time+11,2);
@@ -2252,7 +2283,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"PM25");
-			write_string(fd, 0x04ce, g_history_pm25[*g_pm25_cnt-*offset-1].time,10);
+			write_string(fd, ADDR_CURVE_DATE, g_history_pm25[*g_pm25_cnt-*offset-1].time,10);
 			memcpy(temp,g_history_pm25[*g_pm25_cnt-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,g_history_pm25[*g_pm25_cnt-*offset-1].time+11,2);
@@ -2295,18 +2326,18 @@ void show_curve(int fd,char *id,int* offset)
 			*offset=0;
 	}
 	//write index
-	clear_buf(fd,0x04de,10);
-	write_string(fd, 0x04de, info,strlen(info));
-	write_string(fd, 0x04a1, index_time[0],2);
-	write_string(fd, 0x04a6, index_time[1],2);
-	write_string(fd, 0x04ab, index_time[2],2);
-	write_string(fd, 0x04b0, index_time[3],2);
-	write_string(fd, 0x04b5, index_time[4],2);
-	write_string(fd, 0x04ba, index[0], 4);
-	write_string(fd, 0x04be, index[1], 4);
-	write_string(fd, 0x04c2, index[2], 4);
-	write_string(fd, 0x04c6, index[3], 4);
-	write_string(fd, 0x04ca, index[4], 4);
+	clear_buf(fd,ADDR_CURVE_TYPE,10);
+	write_string(fd, ADDR_CURVE_TYPE, info,strlen(info));
+	write_string(fd, ADDR_CURVE_TIME_5, index_time[0],2);
+	write_string(fd, ADDR_CURVE_TIME_4, index_time[1],2);
+	write_string(fd, ADDR_CURVE_TIME_3, index_time[2],2);
+	write_string(fd, ADDR_CURVE_TIME_2, index_time[3],2);
+	write_string(fd, ADDR_CURVE_TIME_1, index_time[4],2);
+	write_string(fd, ADDR_CURVE_DATA_5, index[0], 4);
+	write_string(fd, ADDR_CURVE_DATA_4, index[1], 4);
+	write_string(fd, ADDR_CURVE_DATA_3, index[2], 4);
+	write_string(fd, ADDR_CURVE_DATA_2, index[3], 4);
+	write_string(fd, ADDR_CURVE_DATA_1, index[4], 4);
 	draw_curve(fd,buf,j);
 }
 int read_dgus(int fd,int addr,char len,char *out)
@@ -2381,22 +2412,22 @@ void display_time(int fd,int year,int mon,int day,int hour,int min,int seconds)
 {
 	char buf[5]={0};
 	sprintf(buf,"%d",year);
-	write_string(fd,TIME_YEAR_ADDR,buf,4);
+	write_string(fd,ADDR_TIME_YEAR,buf,4);
 	memset(buf,0,5);
 	sprintf(buf,"%d",day);
-	write_string(fd,TIME_DAY_ADDR,buf,2);
+	write_string(fd,ADDR_TIME_DAY,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",mon);
-	write_string(fd,TIME_MON_ADDR,buf,2);
+	write_string(fd,ADDR_TIME_MONTH,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",hour);
-	write_string(fd,TIME_HOUR_ADDR,buf,2);
+	write_string(fd,ADDR_TIME_HOUR,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",min);
-	write_string(fd,TIME_MIN_ADDR,buf,2);
+	write_string(fd,ADDR_TIME_MIN,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",seconds);
-	write_string(fd,TIME_SECONDS_ADDR,buf,2);
+	write_string(fd,ADDR_TIME_SECOND,buf,2);
 }
 void manul_set_time(int fd)
 {
@@ -2458,7 +2489,7 @@ void wifi_handle(int fd)
 	if(read_dgus(fd,ADDR_AP_NAME,10,ap_name) && read_dgus(fd,ADDR_AP_PASSWD,10,ap_passwd))
 	{
 		printf("AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
-		if(strlen(ap_passwd)<8)
+		if(strlen(ap_passwd)<8||strlen(ap_name)==0)
 			return ;
 		for(i=0;i<100;i++)
 		{
@@ -2563,19 +2594,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_CO_PAGE);
-				show_history(fd_lcd,ID_CAP_CO,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_CO,begin_co);
+				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}
 		g_index=LIST_CO_PAGE;
 	}
-	else if(addr==TOUCH_DETAIL_CO2 && (TOUCH_DETAIL_CO2-0x100)==data)
+	else if(addr==TOUCH_RUN_TIME_CO2 && (TOUCH_RUN_TIME_CO2+0x100)==data)
 	{//show history CO2 the first page
 		if(logged)
 		{
@@ -2587,19 +2618,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_CO2_PAGE);
-				show_history(fd_lcd,ID_CAP_CO2,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_CO2,begin_co2);
+				//begin_co2=0;
 			}
 		}
 		else
 		{
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);	
 		}
 		g_index=LIST_CO2_PAGE;
 	}	
-	else if(addr==TOUCH_DETAIL_HCHO && (TOUCH_DETAIL_HCHO-0x100)==data)
+	else if(addr==TOUCH_RUN_TIME_HCHO && (TOUCH_RUN_TIME_HCHO+0x100)==data)
 	{//show history HCHO the first page	
 		if(logged)
 		{
@@ -2611,19 +2642,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_HCHO_PAGE);
-				show_history(fd_lcd,ID_CAP_HCHO,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
+				//begin_co=0;
 			}
 		}
 		else
 		{		
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);			
 		}
 		g_index=LIST_HCHO_PAGE;
 	}	
-	else if(addr==TOUCH_DETAIL_SHIDU && (TOUCH_DETAIL_SHIDU-0x100)==data)
+	else if(addr==TOUCH_RUN_TIME_SHIDU && (TOUCH_RUN_TIME_SHIDU+0x100)==data)
 	{//show history SHIDU the first page
 		if(logged)
 		{
@@ -2635,19 +2666,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
-				show_history(fd_lcd,ID_CAP_SHI_DU,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
+				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);		
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}		
 		g_index=LIST_SHIDU_PAGE;
 	}	
-	else if(addr==TOUCH_DETAIL_TEMP && (TOUCH_DETAIL_TEMP-0x100)==data)
+	else if(addr==TOUCH_RUN_TIME_TEMP && (TOUCH_RUN_TIME_TEMP+0x100)==data)
 	{//show history TEMPERATURE the first page
 		if(logged)
 		{
@@ -2659,19 +2690,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_TEMP_PAGE);
-				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
+				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}		
 		g_index=LIST_TEMP_PAGE;
 	}	
-	else if(addr==TOUCH_DETAIL_PM25&& (TOUCH_DETAIL_PM25-0x100)==data)
+	else if(addr==TOUCH_RUN_TIME_PM25&& (TOUCH_RUN_TIME_PM25+0x100)==data)
 	{//show history PM25 the first page
 		if(logged)
 		{
@@ -2683,137 +2714,248 @@ unsigned short input_handle(int fd_lcd,char *input)
 			else
 			{
 				switch_pic(fd_lcd,LIST_PM25_PAGE);
-				show_history(fd_lcd,ID_CAP_PM_25,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
+				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(fd_lcd,USER_NAME_ADDR,10);
-			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
 			switch_pic(fd_lcd,LOG_IN_PAGE);
 		}
 		g_index=LIST_PM25_PAGE;
 	}	
-	else if(addr==TOUCH_UPDATE_CO && (TOUCH_UPDATE_CO-0x100)==data)
+	else if(addr==TOUCH_CO_REFRESH_PAGE && (TOUCH_CO_REFRESH_PAGE+0x100)==data)
 	{//show history CO the next page
-		begin_co+=7;
+		begin_co=0;
 		show_history(fd_lcd,ID_CAP_CO,begin_co);
 	}
-	else if(addr==TOUCH_UPDATE_CO2 && (TOUCH_UPDATE_CO2-0x100)==data)
+	else if(addr==TOUCH_CO_LAST_PAGE && (TOUCH_CO_LAST_PAGE+0x100)==data)
+	{//show history CO the next page
+		if(begin_co>=7)
+		{
+			begin_co-=7;
+			show_history(fd_lcd,ID_CAP_CO,begin_co);
+		}
+	}
+	else if(addr==TOUCH_CO_NEXT_PAGE && (TOUCH_CO_NEXT_PAGE+0x100)==data)
+	{//show history CO the next page
+		if(begin_co+7<*g_co_cnt)
+		{
+			begin_co+=7;
+			show_history(fd_lcd,ID_CAP_CO,begin_co);
+		}
+	}
+	else if(addr==TOUCH_CO2_REFRESH_PAGE && (TOUCH_CO2_REFRESH_PAGE+0x100)==data)
 	{//show history CO2 the next page
-		begin_co2+=7;
+		begin_co2=0;
 		show_history(fd_lcd,ID_CAP_CO2,begin_co2);
 	}
-	else if(addr==TOUCH_UPDATE_HCHO && (TOUCH_UPDATE_HCHO-0x100)==data)
+	else if(addr==TOUCH_CO2_LAST_PAGE && (TOUCH_CO2_LAST_PAGE+0x100)==data)
+	{//show history CO2 the next page
+		if(begin_co2>=7)
+		{
+			begin_co2-=7;
+			show_history(fd_lcd,ID_CAP_CO2,begin_co2);
+		}
+	}
+	else if(addr==TOUCH_CO2_NEXT_PAGE && (TOUCH_CO2_NEXT_PAGE+0x100)==data)
+	{//show history CO2 the next page
+		if(begin_co2+7<*g_co2_cnt)
+		{
+			begin_co2+=7;
+			show_history(fd_lcd,ID_CAP_CO2,begin_co2);
+		}
+	}
+	else if(addr==TOUCH_HCHO_REFRESH_PAGE && (TOUCH_HCHO_REFRESH_PAGE+0x100)==data)
 	{//show history HCHO the next page
-		begin_hcho+=7;
+		begin_hcho=0;
 		show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
 	}
-	else if(addr==TOUCH_UPDATE_TEMP && (TOUCH_UPDATE_TEMP-0x100)==data)
+	else if(addr==TOUCH_HCHO_LAST_PAGE && (TOUCH_HCHO_LAST_PAGE+0x100)==data)
+	{//show history HCHO the next page
+		if(begin_hcho>=7)
+		{
+			begin_hcho-=7;
+			show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
+		}
+	}
+	else if(addr==TOUCH_HCHO_NEXT_PAGE && (TOUCH_HCHO_NEXT_PAGE+0x100)==data)
+	{//show history HCHO the next page
+		if(begin_hcho+7<*g_hcho_cnt)
+		{
+			begin_hcho+=7;
+			show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
+		}
+	}
+	else if(addr==TOUCH_TEMP_REFRESH_PAGE && (TOUCH_TEMP_REFRESH_PAGE+0x100)==data)
 	{//show history TEMPERATURE the next page
-		begin_temp+=7;
+		begin_temp=0;
 		show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
 	}
-	else if(addr==TOUCH_UPDATE_SHIDU&& (TOUCH_UPDATE_SHIDU-0x100)==data)
+	else if(addr==TOUCH_TEMP_LAST_PAGE && (TOUCH_TEMP_LAST_PAGE+0x100)==data)
+	{//show history TEMP the next page
+		if(begin_temp>=7)
+		{
+			begin_temp-=7;
+			show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
+		}
+	}
+	else if(addr==TOUCH_TEMP_NEXT_PAGE && (TOUCH_TEMP_NEXT_PAGE+0x100)==data)
+	{//show history TEMP the next page
+		if(begin_temp+7<*g_temp_cnt)
+		{
+			begin_temp+=7;
+			show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
+		}
+	}
+	else if(addr==TOUCH_SHIDU_REFRESH_PAGE&& (TOUCH_SHIDU_REFRESH_PAGE+0x100)==data)
 	{//show history SHIDU the next page
-		begin_shidu+=7;
+		begin_shidu=0;
 		show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
 	}
-	else if(addr==TOUCH_UPDATE_PM25 && (TOUCH_UPDATE_PM25-0x100)==data)
+	else if(addr==TOUCH_SHIDU_LAST_PAGE && (TOUCH_SHIDU_LAST_PAGE+0x100)==data)
+	{//show history SHIDU the next page
+		if(begin_shidu>=7)
+		{
+			begin_shidu-=7;
+			show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
+		}
+	}
+	else if(addr==TOUCH_SHIDU_NEXT_PAGE && (TOUCH_SHIDU_NEXT_PAGE+0x100)==data)
+	{//show history SHIDU the next page
+		if(begin_shidu+7<*g_shidu_cnt)
+		{
+			begin_shidu+=7;
+			show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
+		}
+	}
+	else if(addr==TOUCH_PM25_REFRESH_PAGE && (TOUCH_PM25_REFRESH_PAGE+0x100)==data)
 	{//show history PM25 the next page
-		begin_pm25+=7;
+		begin_pm25=0;
 		show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
 	}
-	else if(addr==TOUCH_SENSOR_NETWORK_STATE&& (TOUCH_SENSOR_NETWORK_STATE-0x100)==data)
+	else if(addr==TOUCH_PM25_LAST_PAGE && (TOUCH_PM25_LAST_PAGE+0x100)==data)
+	{//show history PM25 the next page
+		if(begin_pm25>=7)
+		{
+			begin_pm25-=7;
+			show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
+		}
+	}
+	else if(addr==TOUCH_PM25_NEXT_PAGE && (TOUCH_PM25_NEXT_PAGE+0x100)==data)
+	{//show history PM25 the next page
+		if(begin_pm25+7<*g_pm25_cnt)
+		{
+			begin_pm25+=7;
+			show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
+		}
+	}	
+	else if(addr==TOUCH_DEVICE_STATE&& (TOUCH_DEVICE_STATE+0x100)==data)
 	{//show sensor and network state
 		show_sensor_network(fd_lcd);
 	}
-	else if(addr==TOUCH_SET_TIME&& (TOUCH_SET_TIME-0x100)==data)
+	else if(addr==TOUCH_TIME_SET&& (TOUCH_TIME_SET+0x100)==data)
 	{//set time
-		clear_buf(fd_lcd,TIME_YEAR_ADDR,4);
-		clear_buf(fd_lcd,TIME_MON_ADDR,2);
-		clear_buf(fd_lcd,TIME_DAY_ADDR,2);
-		clear_buf(fd_lcd,TIME_HOUR_ADDR,2);
-		clear_buf(fd_lcd,TIME_MIN_ADDR,2);
-		clear_buf(fd_lcd,TIME_SECONDS_ADDR,2);
-		switch_pic(fd_lcd, TIME_SETTING_PAGE);
+		clear_buf(fd_lcd,ADDR_TIME_YEAR,4);
+		clear_buf(fd_lcd,ADDR_TIME_MONTH,2);
+		clear_buf(fd_lcd,ADDR_TIME_DAY,2);
+		clear_buf(fd_lcd,ADDR_TIME_HOUR,2);
+		clear_buf(fd_lcd,ADDR_TIME_MIN,2);
+		clear_buf(fd_lcd,ADDR_TIME_SECOND,2);
+		//switch_pic(fd_lcd, TIME_SETTING_PAGE);
 	}
-	else if(addr==TOUCH_WIFI_HANDLE&& (TOUCH_WIFI_HANDLE-0x100)==data)
+	else if(addr==TOUCH_SELECT_WIFI&& (TOUCH_SELECT_WIFI+0x100)==data)
 	{//WiFi Passwd changed
 		wifi_handle(fd_lcd);
+		send_by_wifi=1;
+		write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
 	}
-	else if(addr==TOUCH_WIFI_ENTER && (TOUCH_WIFI_ENTER-0x100)==data)
+	else if(addr==TOUCH_SELECT_GPRS&& (TOUCH_SELECT_GPRS+0x100)==data)
+	{//use gprs to xfer
+		send_by_wifi=0;
+		write_string(fd_lcd,ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
+	}
+	else if(addr==TOUCH_XFER_SET&&(TOUCH_XFER_SET+0x100)==data)
 	{//enter wifi passwd setting
-		clear_buf(fd_lcd,WIFI_AP_NAME_ADDR,20);
-		clear_buf(fd_lcd,WIFI_AP_PWD_ADDR,20);
+		clear_buf(fd_lcd,ADDR_AP_NAME,20);
+		clear_buf(fd_lcd,ADDR_AP_PASSWD,20);
+		if(send_by_wifi)
+		{
+			write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
+		}
+		else
+		{
+			write_string(fd_lcd,ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
+		}
 	}
-	else if(addr==TOUCH_TIME_SET_MANUL && (TOUCH_TIME_SET_MANUL-0x100)==data)
+	else if(addr==TOUCH_TIME_CHANGE_MANUL && (TOUCH_TIME_CHANGE_MANUL+0x100)==data)
 	{//manul set time
 		manul_set_time(fd_lcd);
 	}
-	else if(addr==TOUCH_TIME_SET_AUTO && (TOUCH_TIME_SET_AUTO-0x100)==data)
+	else if(addr==TOUCH_TIME_CHANGE_SERVER && (TOUCH_TIME_CHANGE_SERVER+0x100)==data)
 	{//set time from server
 		sync_server(fd_com,0,0);
 		display_time(fd_lcd,server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
 		//sleep(3);
 		//switch_pic(fd_lcd,18);
 	}
-	else if(addr==TOUCH_VERIFY_SENSOR && (TOUCH_VERIFY_SENSOR-0x100)==data)
+	else if(addr==TOUCH_VERIFY && (TOUCH_VERIFY+0x100)==data)
 	{//verify sensor display
 	
 	}	
-	else if(addr==TOUCH_LIST_DISPLAY&& (TOUCH_LIST_DISPLAY-0x100)==data)
+	else if(addr==TOUCH_CURVE_LIST&& (TOUCH_CURVE_LIST+0x100)==data)
 	{//show detail in list
 		switch (g_index)
 		{
 			case LIST_CO_PAGE:
 			{//co
 				switch_pic(fd_lcd,LIST_CO_PAGE);
-				show_history(fd_lcd,ID_CAP_CO,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_CO,begin_co);
+				//begin_co=0;
 			}
 			break;
 			case LIST_CO2_PAGE:
 			{//co2
 				switch_pic(fd_lcd,LIST_CO2_PAGE);
-				show_history(fd_lcd,ID_CAP_CO2,0);
-				begin_co2=0;
+				show_history(fd_lcd,ID_CAP_CO2,begin_co2);
+				//begin_co2=0;
 			}
 			break;
 			case LIST_HCHO_PAGE:
 			{//hcho
 				switch_pic(fd_lcd,LIST_HCHO_PAGE);
-				show_history(fd_lcd,ID_CAP_HCHO,0);
-				begin_hcho=0;
+				show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
+				//begin_hcho=0;
 			}
 			break;
 			case LIST_SHIDU_PAGE:
 			{//shidu
 				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
-				show_history(fd_lcd,ID_CAP_SHI_DU,0);
-				begin_shidu=0;
+				show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
+				//begin_shidu=0;
 			}
 			break;
 			case LIST_TEMP_PAGE:
 			{//temp
 				switch_pic(fd_lcd,LIST_TEMP_PAGE);
-				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
-				begin_temp=0;
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
+				//begin_temp=0;
 			}
 			break;
 			case LIST_PM25_PAGE:
 			{//pm25
 				switch_pic(fd_lcd,LIST_PM25_PAGE);
-				show_history(fd_lcd,ID_CAP_PM_25,0);
-				begin_pm25=0;
+				show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
+				//begin_pm25=0;
 			}
 			break;
 			default:
 				break;
 		}
 	}
-	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
+	else if(addr==TOUCH_USER_OK_VERIFY&& (TOUCH_USER_OK_VERIFY+0x100)==data)
 	{//Login if didn't 
 		log_in(fd_lcd);
 		printf("lcd=>history_done %d\n",*history_done);
@@ -2825,43 +2967,43 @@ unsigned short input_handle(int fd_lcd,char *input)
 			case LIST_CO_PAGE:
 			{//co
 				switch_pic(fd_lcd,LIST_CO_PAGE);
-				show_history(fd_lcd,ID_CAP_CO,0);
-				begin_co=0;
+				show_history(fd_lcd,ID_CAP_CO,begin_co);
+				//begin_co=0;
 			}
 			break;
 			case LIST_CO2_PAGE:
 			{//co2
 				switch_pic(fd_lcd,LIST_CO2_PAGE);
-				show_history(fd_lcd,ID_CAP_CO2,0);
-				begin_co2=0;
+				show_history(fd_lcd,ID_CAP_CO2,begin_co2);
+				//begin_co2=0;
 			}
 			break;
 			case LIST_HCHO_PAGE:
 			{//hcho
 				switch_pic(fd_lcd,LIST_HCHO_PAGE);
-				show_history(fd_lcd,ID_CAP_HCHO,0);
-				begin_hcho=0;
+				show_history(fd_lcd,ID_CAP_HCHO,begin_hcho);
+				//begin_hcho=0;
 			}
 			break;
 			case LIST_SHIDU_PAGE:
 			{//shidu
 				switch_pic(fd_lcd,LIST_SHIDU_PAGE);
-				show_history(fd_lcd,ID_CAP_SHI_DU,0);
-				begin_shidu=0;
+				show_history(fd_lcd,ID_CAP_SHI_DU,begin_shidu);
+				//begin_shidu=0;
 			}
 			break;
 			case LIST_TEMP_PAGE:
 			{//temp
 				switch_pic(fd_lcd,LIST_TEMP_PAGE);
-				show_history(fd_lcd,ID_CAP_TEMPERATURE,0);
-				begin_temp=0;
+				show_history(fd_lcd,ID_CAP_TEMPERATURE,begin_temp);
+				//begin_temp=0;
 			}
 			break;
 			case LIST_PM25_PAGE:
 			{//pm25
 				switch_pic(fd_lcd,LIST_PM25_PAGE);
-				show_history(fd_lcd,ID_CAP_PM_25,0);
-				begin_pm25=0;
+				show_history(fd_lcd,ID_CAP_PM_25,begin_pm25);
+				//begin_pm25=0;
 			}
 			break;
 			default:
@@ -3472,8 +3614,8 @@ int main(int argc, char *argv[])
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			printf(LCD_PROCESS"end to shmat\n");
-			signal(SIGALRM, lcd_off);
-			alarm(300);
+			//signal(SIGALRM, lcd_off);
+			//alarm(300);
 			while(1)
 			{
 				lcd_loop(fd_lcd);
