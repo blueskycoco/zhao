@@ -809,7 +809,8 @@ void send_server_save_local(char *date,char *message,char save)
 			memset(g_history_co2[*g_co2_cnt].data,'\0',10);				
 			memset(g_history_co2[*g_co2_cnt].time,'\0',20);
 			strcpy(g_history_co2[*g_co2_cnt].time,date);	
-			sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
+			//sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
+			strcpy(g_history_co2[*g_co2_cnt].data,data);	
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
 			(*g_co2_cnt)++;
@@ -853,7 +854,7 @@ void send_server_save_local(char *date,char *message,char save)
 			memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);			
 			memset(g_history_pm25[*g_pm25_cnt].time,'\0',20);
 			strcpy(g_history_pm25[*g_pm25_cnt].time,date);		
-			sprintf(g_history_pm25[*g_pm25_cnt].data,"%03d",atoi(data));
+			sprintf(g_history_pm25[*g_pm25_cnt].data,"%4d",atoi(data));
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
 			(*g_pm25_cnt)++;
@@ -1042,7 +1043,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 				}
 				else
 				{	//normal data or beyond Min & Max data
-					int value=0;
+					float value=0;
 					//clear the uninsert alarm
 					if(cmd[3]==atoi(ID_CAP_CO2) && (sensor.co2&ALARM_UNINSERT))
 					{					
@@ -1117,7 +1118,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 							int temp=1;
 							for(i=0;i<cmd[7];i++)
 								temp*=10;
-							value=((cmd[5]<<8|cmd[6]))/temp;
+							value=((float)(cmd[5]<<8|cmd[6]))/(float)temp;
 						}
 					}	
 					else
@@ -1131,12 +1132,14 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 					{
 						if(cmd[3]==atoi(ID_CAP_CO2))
 						{
-							if(value<MIN_CO2)
+							//printf("CO2 %f\n",value*10000);
+							if(value*10000<MIN_CO2)
 								sensortimes.co2++;
-							else if(value>MAX_CO2)
+							else if(value*10000>MAX_CO2)
 								sensortimes.co2++;
 							else
 							{
+								//printf("remove co2 alarm\n");
 								sensortimes.co2=0;
 								if(sensor.co2&ALARM_BELOW)
 									clear_alarm(ID_CAP_CO2,ID_ALERT_BELOW);
@@ -1155,7 +1158,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
 								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
 								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_CO2)
+								if(value*10000<MIN_CO2)
 								{
 									sensor.co2|=ALARM_BELOW;
 									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
@@ -1656,8 +1659,8 @@ void load_history(const char *name)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
 					memset(g_history_co2[*g_co2_cnt].data,'\0',10);
-					//strcpy(history_co2_data[g_history_co2_cnt],data);					
-					sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
+					strcpy(g_history_co2[*g_co2_cnt].data,data);					
+					//sprintf(g_history_co2[*g_co2_cnt].data,"%04d",atoi(data));
 					free(data);
 					(*g_co2_cnt)++;
 				}
@@ -1697,7 +1700,7 @@ void load_history(const char *name)
 					//printf(LCD_PROCESS"<co>%s\n",co);
 					memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);
 					//strcpy(history_pm25_data[g_history_pm25_cnt],data);					
-					sprintf(g_history_pm25[*g_pm25_cnt].data,"%03d",atoi(data));
+					sprintf(g_history_pm25[*g_pm25_cnt].data,"%4d",atoi(data));
 					free(data);
 					(*g_pm25_cnt)++;
 				}
@@ -2904,7 +2907,22 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_VERIFY && (TOUCH_VERIFY+0x100)==data)
 	{//verify sensor display
 	
-	}	
+	}
+	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
+	{//tun zero point
+	
+	}
+	else if(addr==TOUCH_INTERFACE_SET && (TOUCH_INTERFACE_SET+0x100)==data)
+	{//set sensor interface
+	
+	}
+	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
+	{//product info
+		clear_buf(fd_lcd,ADDR_PRODUCT_NAME,40);
+		clear_buf(fd_lcd,ADDR_PRODUCT_MODE,40);
+		clear_buf(fd_lcd,ADDR_PRODUCT_ID,40);
+		write_string(fd_lcd,ADDR_PRODUCT_ID,g_uuid,strlen(g_uuid));
+	}		
 	else if(addr==TOUCH_CURVE_LIST&& (TOUCH_CURVE_LIST+0x100)==data)
 	{//show detail in list
 		switch (g_index)
@@ -3614,8 +3632,8 @@ int main(int argc, char *argv[])
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			printf(LCD_PROCESS"end to shmat\n");
-			//signal(SIGALRM, lcd_off);
-			//alarm(300);
+			signal(SIGALRM, lcd_off);
+			alarm(300);
 			while(1)
 			{
 				lcd_loop(fd_lcd);
