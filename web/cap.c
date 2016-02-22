@@ -1511,6 +1511,12 @@ void switch_pic(int fd,unsigned char Index)
 	cmd[5]=Index;
 	write(fd,cmd,6);
 }
+void buzzer(int fd,int data)
+{
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x02,0x00};
+	cmd[5]=data;
+	write(fd,cmd,6);
+}
 void write_data(int fd,unsigned int Index,int data)
 {
 	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
@@ -3583,7 +3589,7 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&mutex, NULL);
 	memset(server_time,0,13);
 	get_uuid();
-
+	buzzer(fd_lcd,0x30);
 	fpid=fork();
 	if(fpid==0)
 	{
