@@ -143,7 +143,8 @@ struct cur_zero_info
 };
 struct cur_zero_info *g_zero_info;
 key_t shmid_zero_info;
-
+void buzzer(int fd,int data);
+void cut_pic(int fd,int on);
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -895,6 +896,26 @@ void clear_alarm(char *id,char *alarm_type)
 	send_server_save_local(NULL,clear_msg,0);
 	free(clear_msg);
 }
+void co_flash_alarm()
+{
+	if(fork()==0)
+	{
+		switch_pic(fd_lcd,MAIN_PAGE);
+		buzzer(fd_lcd,0x30);
+		cut_pic(fd_lcd,1);
+		sleep(3);
+		buzzer(fd_lcd,0x30);
+		cut_pic(fd_lcd,0);
+		sleep(3);
+		buzzer(fd_lcd,0x30);
+		cut_pic(fd_lcd,1);
+		sleep(3);
+		buzzer(fd_lcd,0x30);
+		cut_pic(fd_lcd,0);
+		return ;
+	}
+	return ;
+}
 void show_factory(int fd,int zero,char *cmd,int len)
 {	
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
@@ -1237,6 +1258,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 							if(sensortimes.co==MAX_COUNT_TIMES && !sensor.co)
 							{	
 								//need send server alarm
+								co_flash_alarm();
 								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
 								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
@@ -2035,7 +2057,7 @@ void show_curve(int fd,char *id,int* offset)
 	char info[20]={0};
 	char temp[10]={0},temp2[10]={0};
 	char hour1[3]={0},hour2[3]={0};
-	char index[5][4]={0};
+	char index[5][17]={0};
 	char index_time[5][3]={0};
 	int i=0,j=0,m=0;
 	clear_curve(fd);
@@ -2102,11 +2124,11 @@ void show_curve(int fd,char *id,int* offset)
 		//printf("g_co2_cnt %d\n",*g_co2_cnt);
 		if((*g_co2_cnt-*offset)>0)
 		{
-			strcpy(index[0],"2000");
-			strcpy(index[1],"1500");
-			strcpy(index[2],"1000");
-			strcpy(index[3],"0500");
-			strcpy(index[4],"0000");
+			strcpy(index[0],"0.2000");
+			strcpy(index[1],"0.1500");
+			strcpy(index[2],"0.1000");
+			strcpy(index[3],"0.0500");
+			strcpy(index[4],"0.0000");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
@@ -2129,7 +2151,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data);
+								buf[j++]=atoi(g_history_co2[*g_co2_cnt-*offset-i-1].data+2);
 								printf("j %d %s==>%d\n",j,g_history_co2[*g_co2_cnt-*offset-i-1].time,buf[j-1]);
 							}
 						}					
@@ -2396,17 +2418,22 @@ void show_curve(int fd,char *id,int* offset)
 	}
 	//write index
 	clear_buf(fd,ADDR_CURVE_TYPE,10);
+	clear_buf(fd, ADDR_CURVE_DATA_5,16);
+	clear_buf(fd, ADDR_CURVE_DATA_4,16);
+	clear_buf(fd, ADDR_CURVE_DATA_3,16);
+	clear_buf(fd, ADDR_CURVE_DATA_2,16);
+	clear_buf(fd, ADDR_CURVE_DATA_1,16);
 	write_string(fd, ADDR_CURVE_TYPE, info,strlen(info));
 	write_string(fd, ADDR_CURVE_TIME_5, index_time[0],2);
 	write_string(fd, ADDR_CURVE_TIME_4, index_time[1],2);
 	write_string(fd, ADDR_CURVE_TIME_3, index_time[2],2);
 	write_string(fd, ADDR_CURVE_TIME_2, index_time[3],2);
 	write_string(fd, ADDR_CURVE_TIME_1, index_time[4],2);
-	write_string(fd, ADDR_CURVE_DATA_5, index[0], 4);
-	write_string(fd, ADDR_CURVE_DATA_4, index[1], 4);
-	write_string(fd, ADDR_CURVE_DATA_3, index[2], 4);
-	write_string(fd, ADDR_CURVE_DATA_2, index[3], 4);
-	write_string(fd, ADDR_CURVE_DATA_1, index[4], 4);
+	write_string(fd, ADDR_CURVE_DATA_5, index[0], strlen(index[0]));
+	write_string(fd, ADDR_CURVE_DATA_4, index[1], strlen(index[1]));
+	write_string(fd, ADDR_CURVE_DATA_3, index[2], strlen(index[2]));
+	write_string(fd, ADDR_CURVE_DATA_2, index[3], strlen(index[3]));
+	write_string(fd, ADDR_CURVE_DATA_1, index[4], strlen(index[4]));
 	draw_curve(fd,buf,j);
 }
 int read_dgus(int fd,int addr,char len,char *out)
@@ -3915,7 +3942,7 @@ int main(int argc, char *argv[])
 			signal(SIGALRM, lcd_off);
 			alarm(300);
 			printf("to get interface\n");
-			ask_interface();
+			//ask_interface();
 			printf("end get interface\n");
 			while(1)
 			{
