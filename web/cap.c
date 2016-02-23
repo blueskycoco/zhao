@@ -2693,6 +2693,7 @@ int get_interface()
 	{
 		if(read(fd_com,&ch,1)==1)
 		{
+			printf("get_interface %02x\n",ch);
 			switch (state)
 			{
 				case STATE_IDLE:
@@ -2703,7 +2704,7 @@ int get_interface()
 				break;
 				case STATE_6C:
 				{
-					if(ch==0xbb)
+					if(ch==0xaa)
 					{
 						state=STATE_AA;
 						i=0;
@@ -2764,6 +2765,13 @@ int get_interface()
 							printf("sensor_interface[%d] = %4x\n",i/2,sensor_interface[i/2]);
 						}
 					}
+					else
+					{
+						printf(CAP_PROCESS"Get Interface CRC error 0x%04X\r\n",CRC_check(cmd,message_len+5));
+						for(i=0;i<message_len+5;i++)
+							printf("0x%02x ",cmd[i]);
+					}
+
 					free(cmd);
 					return 0;						
 				}
@@ -3906,7 +3914,9 @@ int main(int argc, char *argv[])
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
 			alarm(300);
+			printf("to get interface\n");
 			ask_interface();
+			printf("end get interface\n");
 			while(1)
 			{
 				lcd_loop(fd_lcd);
