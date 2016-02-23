@@ -129,6 +129,11 @@ int *history_done;
 int fd_com=0,fd_lcd=0;
 int lcd_state=1;
 struct state *g_state;
+#define NORMAL_MODE	0
+#define TUN_ZERO_MODE	1
+#define SENSOR_VERIFY_MODE	2
+char factory_mode=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
+int sensor_interface[10]={0};
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -880,6 +885,26 @@ void clear_alarm(char *id,char *alarm_type)
 	send_server_save_local(NULL,clear_msg,0);
 	free(clear_msg);
 }
+void show_factory(int fd,int zero,char *cmd,int len)
+{	
+	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
+	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];	
+	if(crc==CRC_check(cmd,len-2))
+	{
+		if(zero)
+		{
+			if(cmd[3]==atoi(ID_CAP_CO))
+				write_data(fd_lcd,ADDR_TUN_ZERO_CO,cmd[5]<<8|cmd[6]);
+			if(cmd[3]==atoi(ID_CAP_HCHO))
+				write_data(fd_lcd,ADDR_TUN_ZERO_HCHO,cmd[5]<<8|cmd[6]);
+		}
+		else
+		{			
+			if(cmd[3]==atoi(ID_CAP_PM_25))
+				write_data(fd_lcd,ADDR_REAL_VALUE,cmd[5]<<8|cmd[6]);
+		}
+	}
+}
 /*
   *build json from cmd
   *update cap data to lcd
@@ -1377,27 +1402,27 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 					//real time update cap data
 					if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
 					{
-						write_data(fd_lcd,VAR_DATE_TIME_1,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_CO,cmd[5]<<8|cmd[6]);
 					}
 					else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
 					{						
-						write_data(fd_lcd,VAR_DATE_TIME_2,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_CO2,cmd[5]<<8|cmd[6]);
 					}
 					else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
 					{
-						write_data(fd_lcd,VAR_DATE_TIME_3,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_HCHO,cmd[5]<<8|cmd[6]);
 					}
 					else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
 					{
-						write_data(fd_lcd,VAR_DATE_TIME_4,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_TEMP,cmd[5]<<8|cmd[6]);
 					}
 					else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
 					{
-						write_data(fd_lcd,VAR_ALARM_TYPE_1,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_SHIDU,cmd[5]<<8|cmd[6]);
 					}
 					else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
 					{
-						write_data(fd_lcd,VAR_ALARM_TYPE_2,cmd[5]<<8|cmd[6]);
+						write_data(fd_lcd,ADDR_RUN_TIME_PM25,cmd[5]<<8|cmd[6]);
 					}
 					message=add_item(message,id,data);
 					//printf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
@@ -1490,7 +1515,12 @@ int get_uart(int fd_lcd,int fd)
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					if(factory_mode==NORMAL_MODE)
+						post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					else if(factory_mode==TUN_ZERO_MODE)
+						show_factory(fd_lcd,1,cmd,message_len+7);
+					else
+						show_factory(fd_lcd,0,cmd,message_len+7);
 					free(cmd);
 					return 0;						
 				}
@@ -2565,6 +2595,154 @@ void wifi_handle(int fd)
 		//system(cmd);
 	}
 }
+void tun_zero(int fd,int on)
+{
+	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x04,0x01,0x00,0x00,0x00};
+	char cmd_return_point[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
+	int crc = 0;
+	int i =0;
+	//send cap board start co & hcho
+	if(on)
+	{		
+		for(i=0;i<10;i++)
+			if(sensor_interface[i] == TYPE_SENSOR_CO_WEISHEN ||
+				sensor_interface[i] == TYPE_SENSOR_CO_DD)
+				break;
+		printf("CO interface %d %4x\n",i,sensor_interface[i]);
+		cmd_request_verify[5]=i;
+		crc=CRC_check(cmd_request_verify,6);
+		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
+		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
+		sleep(1);
+		cmd_return_point[5]=i;
+		crc=CRC_check(cmd_return_point,9);
+		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;		
+		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
+		for(i=0;i<10;i++)
+			if(sensor_interface[i] == TYPE_SENSOR_CH2O_WEISHEN ||
+				sensor_interface[i] == TYPE_SENSOR_CH2O_AERSHEN)
+				break;
+		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		cmd_request_verify[5]=i;
+		crc=CRC_check(cmd_request_verify,6);
+		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
+		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
+		sleep(1);
+		cmd_return_point[5]=i;
+		crc=CRC_check(cmd_return_point,9);
+		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;		
+		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
+	}
+	else
+	{
+
+	}
+}
+/*
+  *get cmd from lv's cap board
+*/
+int get_interface()
+{
+	char ch,state=STATE_IDLE,message_len=0;
+	char message[10],i=0,to_check[20];
+	int crc,message_type=0;
+	while(1)
+	{
+		if(read(fd_com,&ch,1)==1)
+		{
+			switch (state)
+			{
+				case STATE_IDLE:
+				{
+					if(ch==0x6c)
+						state=STATE_6C;
+				}
+				break;
+				case STATE_6C:
+				{
+					if(ch==0xbb)
+					{
+						state=STATE_AA;
+						i=0;
+					}						
+				}
+				break;
+				case STATE_AA:
+				{
+					message_type=ch<<8;
+					i=0;
+					state=STATE_MESSAGE_TYPE;
+				}
+				break;
+				case STATE_MESSAGE_TYPE:
+				{
+					message_type|=ch;
+					state=STATE_MESSAGE_LEN;
+				}
+				break;
+				case STATE_MESSAGE_LEN:
+				{
+					message_len=ch;
+					state=STATE_MESSAGE;
+					i=0;
+				}
+				break;
+				case STATE_MESSAGE:
+				{
+					if(i!=message_len)
+					{
+						message[i++]=ch;
+					}
+					else
+					{
+						state=STATE_CRC;
+						crc=ch<<8;
+					}	
+				}
+				break;
+				case STATE_CRC:
+				{
+					crc|=ch;
+					for(i=0;i<message_len;i++)
+					{
+						to_check[5+i]=message[i];
+					}
+					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
+					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
+					to_check[5+message_len+1]=crc&0xff;
+					char *cmd=(char *)malloc(message_len+7);
+					memset(cmd,'\0',message_len+7);
+					memcpy(cmd,to_check,message_len+7);
+					if(crc==CRC_check(cmd,message_len+5))
+					{
+						for(i=0;i<message_len;i=i+2)
+						{
+							sensor_interface[i/2]=(message[i]<<8)|message[i+1];
+							printf("sensor_interface[%d] = %4x\n",i/2,sensor_interface[i/2]);
+						}
+					}
+					free(cmd);
+					return 0;						
+				}
+				default:
+				{
+					i=0;
+					state=STATE_IDLE;
+				}	
+			}
+		}		
+	}
+	return 0;
+}
+
+void ask_interface()
+{
+	char cmd = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
+	int crc=CRC_check(cmd,5);
+	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
+	write(fd_com,cmd,sizeof(cmd));
+	get_interface();
+}
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
@@ -2926,9 +3104,22 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//verify sensor display
 	
 	}
-	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
-	{//tun zero point
-	
+	else if(addr==TOUCH_TUN_ZERO_BEGIN && (TOUCH_TUN_ZERO_BEGIN+0x100)==data)
+	{//tun zero point start
+		if(factory_mode!=TUN_ZERO_MODE)
+		{
+			factory_mode=TUN_ZERO_MODE;
+			tun_zero(fd_lcd,1);
+		}
+	}
+	else if((addr==TOUCH_TUN_ZERO_RETURN && (TOUCH_TUN_ZERO_RETURN+0x100)==data) || 
+		(addr==TOUCH_TUN_ZERO_END && (TOUCH_TUN_ZERO_END+0x100)==data))
+	{//tun zero point stop
+		if(factory_mode == TUN_ZERO_MODE)
+		{
+			tun_zero(fd_lcd,0);
+			factory_mode=NORMAL_MODE;
+		}
 	}
 	else if(addr==TOUCH_INTERFACE_SET && (TOUCH_INTERFACE_SET+0x100)==data)
 	{//set sensor interface
@@ -3663,6 +3854,7 @@ int main(int argc, char *argv[])
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
 			alarm(300);
+			ask_interface();
 			while(1)
 			{
 				lcd_loop(fd_lcd);
