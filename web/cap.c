@@ -134,6 +134,16 @@ struct state *g_state;
 #define SENSOR_VERIFY_MODE	2
 char factory_mode=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
 int sensor_interface[10]={0};
+struct cur_zero_info
+{
+	int cur_ch2o;
+	int cur_co;
+	//char cur_ch2o_point=0;
+	//char cur_co_point=0;
+};
+struct cur_zero_info *g_zero_info;
+key_t shmid_zero_info;
+
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -894,9 +904,17 @@ void show_factory(int fd,int zero,char *cmd,int len)
 		if(zero)
 		{
 			if(cmd[3]==atoi(ID_CAP_CO))
+			{
 				write_data(fd_lcd,ADDR_TUN_ZERO_CO,cmd[5]<<8|cmd[6]);
+				g_zero_info->cur_co=(cmd[5]<<8)|cmd[6];
+				//g_zero_info->cur_co_point=cmd[7];
+			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
+			{
 				write_data(fd_lcd,ADDR_TUN_ZERO_HCHO,cmd[5]<<8|cmd[6]);
+				g_zero_info->cur_ch2o=(cmd[5]<<8)|cmd[6];
+				//g_zero_info->cur_ch2o_point=cmd[7];
+			}
 		}
 		else
 		{			
@@ -2604,6 +2622,7 @@ void tun_zero(int fd,int on)
 	//send cap board start co & hcho
 	if(on)
 	{		
+		printf("Start Co,ch2o tun zero\n");
 		for(i=0;i<10;i++)
 			if(sensor_interface[i] == TYPE_SENSOR_CO_WEISHEN ||
 				sensor_interface[i] == TYPE_SENSOR_CO_DD)
@@ -2615,8 +2634,8 @@ void tun_zero(int fd,int on)
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 		sleep(1);
 		cmd_return_point[5]=i;
-		crc=CRC_check(cmd_return_point,9);
-		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;		
+		crc=CRC_check(cmd_return_point,10);
+		cmd_return_point[10]=(crc&0xff00)>>8;cmd_return_point[11]=crc&0x00ff;		
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 		for(i=0;i<10;i++)
 			if(sensor_interface[i] == TYPE_SENSOR_CH2O_WEISHEN ||
@@ -2629,13 +2648,37 @@ void tun_zero(int fd,int on)
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 		sleep(1);
 		cmd_return_point[5]=i;
-		crc=CRC_check(cmd_return_point,9);
-		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;		
+		crc=CRC_check(cmd_return_point,10);
+		cmd_return_point[10]=(crc&0xff00)>>8;cmd_return_point[11]=crc&0x00ff;		
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 	}
 	else
 	{
-
+		printf("Stop Co,ch2o tun zero\n");
+		for(i=0;i<10;i++)
+			if(sensor_interface[i] == TYPE_SENSOR_CH2O_WEISHEN ||
+				sensor_interface[i] == TYPE_SENSOR_CH2O_AERSHEN)
+				break;
+		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		cmd_return_point[5]=i;
+		cmd_return_point[7]=(g_zero_info->cur_ch2o>>8) & 0xff;
+		cmd_return_point[8]=(g_zero_info->cur_ch2o & 0xff);
+		//cmd_return_point[9]=g_zero_info->cur_ch2o_point;
+		crc=CRC_check(cmd_return_point,9);
+		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
+		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
+		for(i=0;i<10;i++)
+			if(sensor_interface[i] == TYPE_SENSOR_CO_WEISHEN ||
+				sensor_interface[i] == TYPE_SENSOR_CO_DD)
+				break;
+		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		cmd_return_point[5]=i;
+		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
+		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
+		//cmd_return_point[9]=g_zero_info->cur_co_point;
+		crc=CRC_check(cmd_return_point,9);
+		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
+		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 	}
 }
 /*
@@ -2737,7 +2780,7 @@ int get_interface()
 
 void ask_interface()
 {
-	char cmd = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
 	int crc=CRC_check(cmd,5);
 	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
 	write(fd_com,cmd,sizeof(cmd));
@@ -3732,6 +3775,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
+	if((shmid_zero_info = shmget(IPC_PRIVATE, sizeof(struct cur_zero_info), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+
 	g_state = (struct state *)shmat(state_shmid, 0, 0);
 	if(fork()==0)
 	{
@@ -3792,6 +3841,7 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&mutex, NULL);
 	memset(server_time,0,13);
 	get_uuid();
+	#if 0
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,1);
 	sleep(3);
@@ -3803,7 +3853,7 @@ int main(int argc, char *argv[])
 	sleep(3);
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,0);
-	
+	#endif
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -3822,6 +3872,7 @@ int main(int argc, char *argv[])
 		g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
 		g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+		g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 		printf(LCD_PROCESS"end to shmat\n");
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
@@ -3851,6 +3902,7 @@ int main(int argc, char *argv[])
 			g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
+			g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
 			alarm(300);
