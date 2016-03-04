@@ -2656,7 +2656,7 @@ void wifi_handle(int fd)
 }
 void tun_zero(int fd,int on)
 {
-	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x04,0x01,0x00,0x00,0x00};
+	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x07,0x01,0x00,0x00,0x00};
 	char cmd_return_point[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
 	int crc = 0;
 	int i =0;
@@ -2712,7 +2712,7 @@ void tun_zero(int fd,int on)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
-		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
+		printf("CO interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_return_point[5]=i;
 		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
@@ -3124,7 +3124,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_INTERFACE_SET && (TOUCH_INTERFACE_SET+0x100)==data)
 	{//set sensor interface
-	
+		sensor_interface_mem[0]=0x1234;
+		ask_interface();
+		write_string(fd_lcd,ADDR_PRODUCT_ID,g_uuid,strlen(g_uuid));
 	}
 	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
 	{//product info
