@@ -133,7 +133,8 @@ struct state *g_state;
 #define TUN_ZERO_MODE	1
 #define SENSOR_VERIFY_MODE	2
 char factory_mode=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
-int sensor_interface[10]={0};
+key_t sensor_interface_shmid;
+int *sensor_interface_mem;
 struct cur_zero_info
 {
 	int cur_ch2o;
@@ -184,7 +185,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 	int result=0,i,ltimeout=0;
 	char rcv[512]={0},ch;
 	pthread_mutex_lock(&mutex);
-	if(send_by_wifi)
+	//if(send_by_wifi)
 	{		
 		sprintf(request,"JSONStr=%s",buf);
 		printf(UPLOAD_PROCESS"send web %s\n",request);
@@ -200,6 +201,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 			g_state->network_state=0;
 		}
 	}
+	#if 0
 	else
 	{
 		//rcv=(char *)malloc(256);
@@ -281,7 +283,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	}
-	
+	#endif
 	pthread_mutex_unlock(&mutex);
 	return;
 }
@@ -1486,12 +1488,13 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 int get_uart(int fd_lcd,int fd)
 {
 	char ch,state=STATE_IDLE,message_len=0;
-	char message[10],i=0,to_check[20];
+	char message[20],i=0,to_check[30];
 	int crc,message_type=0;
 	while(1)
 	{
 		if(read(fd,&ch,1)==1)
 		{
+			//printf("get_uart %02x\n",ch);
 			switch (state)
 			{
 				case STATE_IDLE:
@@ -1556,7 +1559,18 @@ int get_uart(int fd_lcd,int fd)
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
 					if(factory_mode==NORMAL_MODE)
-						post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					{
+						if(message_type == 0x0004)
+						{
+							for(i=0;i<message_len;i=i+2)
+							{
+								sensor_interface_mem[i/2]=(message[i]<<8)|message[i+1];
+								printf("sensor_interface[%d] = %4x\n",i/2,sensor_interface_mem[i/2]);
+							}
+						}
+						else
+							post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					}
 					else if(factory_mode==TUN_ZERO_MODE)
 						show_factory(fd_lcd,1,cmd,message_len+7);
 					else
@@ -1877,7 +1891,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_co_cnt %d\n",*g_co_cnt);
 		if((*g_co_cnt-offset-7)>0)
 		{
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_CO_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_co_cnt/7);
@@ -1903,7 +1917,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_co2_cnt %d\n",*g_co2_cnt);
 		if((*g_co2_cnt-offset-7)>0)
 		{			
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_CO2_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_co2_cnt/7);			
@@ -1929,7 +1943,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_co_cnt %d\n",*g_hcho_cnt);
 		if((*g_hcho_cnt-offset-7)>0)
 		{
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_HCHO_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_hcho_cnt/7);			
@@ -1955,7 +1969,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_shidu_cnt %d\n",*g_shidu_cnt);
 		if((*g_shidu_cnt-offset-7)>0)
 		{
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_SHIDU_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_shidu_cnt/7);			
@@ -1981,7 +1995,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_temp_cnt %d\n",*g_temp_cnt);
 		if((*g_temp_cnt-offset-7)>0)
 		{
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_TEMP_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_temp_cnt/7);			
@@ -2007,7 +2021,7 @@ void show_history(int fd_lcd,char *id,int offset)
 //		printf("g_pm25_cnt %d\n",*g_pm25_cnt);
 		if((*g_pm25_cnt-offset-7)>0)
 		{
-			sprintf(tmp,"%4d",offset/7);
+			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(fd_lcd,ADDR_PM25_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_pm25_cnt/7);			
@@ -2651,10 +2665,10 @@ void tun_zero(int fd,int on)
 	{		
 		printf("Start Co,ch2o tun zero\n");
 		for(i=0;i<10;i++)
-			if(sensor_interface[i] == TYPE_SENSOR_CO_WEISHEN ||
-				sensor_interface[i] == TYPE_SENSOR_CO_DD)
+			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
+				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
-		printf("CO interface %d %4x\n",i,sensor_interface[i]);
+		printf("CO interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_request_verify[5]=i;
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
@@ -2665,10 +2679,10 @@ void tun_zero(int fd,int on)
 		cmd_return_point[10]=(crc&0xff00)>>8;cmd_return_point[11]=crc&0x00ff;		
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 		for(i=0;i<10;i++)
-			if(sensor_interface[i] == TYPE_SENSOR_CH2O_WEISHEN ||
-				sensor_interface[i] == TYPE_SENSOR_CH2O_AERSHEN)
+			if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
+				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
-		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_request_verify[5]=i;
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
@@ -2683,10 +2697,10 @@ void tun_zero(int fd,int on)
 	{
 		printf("Stop Co,ch2o tun zero\n");
 		for(i=0;i<10;i++)
-			if(sensor_interface[i] == TYPE_SENSOR_CH2O_WEISHEN ||
-				sensor_interface[i] == TYPE_SENSOR_CH2O_AERSHEN)
+			if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
+				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
-		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_return_point[5]=i;
 		cmd_return_point[7]=(g_zero_info->cur_ch2o>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_ch2o & 0xff);
@@ -2695,10 +2709,10 @@ void tun_zero(int fd,int on)
 		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 		for(i=0;i<10;i++)
-			if(sensor_interface[i] == TYPE_SENSOR_CO_WEISHEN ||
-				sensor_interface[i] == TYPE_SENSOR_CO_DD)
+			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
+				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
-		printf("CH2O interface %d %4x\n",i,sensor_interface[i]);
+		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_return_point[5]=i;
 		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
@@ -2708,118 +2722,27 @@ void tun_zero(int fd,int on)
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 	}
 }
-/*
-  *get cmd from lv's cap board
-*/
-int get_interface()
-{
-	char ch,state=STATE_IDLE,message_len=0;
-	char message[10],i=0,to_check[20];
-	int crc,message_type=0;
-	while(1)
-	{
-		if(read(fd_com,&ch,1)==1)
-		{
-			printf("get_interface %02x\n",ch);
-			switch (state)
-			{
-				case STATE_IDLE:
-				{
-					if(ch==0x6c)
-						state=STATE_6C;
-				}
-				break;
-				case STATE_6C:
-				{
-					if(ch==0xaa)
-					{
-						state=STATE_AA;
-						i=0;
-					}						
-				}
-				break;
-				case STATE_AA:
-				{
-					message_type=ch<<8;
-					i=0;
-					state=STATE_MESSAGE_TYPE;
-				}
-				break;
-				case STATE_MESSAGE_TYPE:
-				{
-					message_type|=ch;
-					state=STATE_MESSAGE_LEN;
-				}
-				break;
-				case STATE_MESSAGE_LEN:
-				{
-					message_len=ch;
-					state=STATE_MESSAGE;
-					i=0;
-				}
-				break;
-				case STATE_MESSAGE:
-				{
-					if(i!=message_len)
-					{
-						message[i++]=ch;
-					}
-					else
-					{
-						state=STATE_CRC;
-						crc=ch<<8;
-					}	
-				}
-				break;
-				case STATE_CRC:
-				{
-					crc|=ch;
-					for(i=0;i<message_len;i++)
-					{
-						to_check[5+i]=message[i];
-					}
-					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
-					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
-					to_check[5+message_len+1]=crc&0xff;
-					char *cmd=(char *)malloc(message_len+7);
-					memset(cmd,'\0',message_len+7);
-					memcpy(cmd,to_check,message_len+7);
-					if(crc==CRC_check(cmd,message_len+5))
-					{
-						for(i=0;i<message_len;i=i+2)
-						{
-							sensor_interface[i/2]=(message[i]<<8)|message[i+1];
-							printf("sensor_interface[%d] = %4x\n",i/2,sensor_interface[i/2]);
-						}
-					}
-					else
-					{
-						printf(CAP_PROCESS"Get Interface CRC error 0x%04X\r\n",CRC_check(cmd,message_len+5));
-						for(i=0;i<message_len+5;i++)
-							printf("0x%02x ",cmd[i]);
-					}
-
-					free(cmd);
-					return 0;						
-				}
-				default:
-				{
-					i=0;
-					state=STATE_IDLE;
-				}	
-			}
-		}		
-	}
-	return 0;
-}
 
 void ask_interface()
 {
+	int i = 0;
 	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
 	int crc=CRC_check(cmd,5);
 	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
+	printf("going to ask_interface begin\n");
+	for(i=0;i<7;i++)
+		printf("%02x ",cmd[i]);
+	printf("\ngoing to ask_interface end\n");
 	write(fd_com,cmd,sizeof(cmd));
-	get_interface();
+	while(1)
+	{
+		sleep(1);
+		if(sensor_interface_mem[0]==0x0000)
+			break;
+		else
+			write(fd_com,cmd,sizeof(cmd));
+			
+	}
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
@@ -3805,6 +3728,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
+	if((sensor_interface_shmid = shmget(IPC_PRIVATE, sizeof(int)*10, PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+
 	if((state_shmid= shmget(IPC_PRIVATE, sizeof(struct state), PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
@@ -3907,6 +3836,7 @@ int main(int argc, char *argv[])
 		g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
 		g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
+		sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
 		g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 		printf(LCD_PROCESS"end to shmat\n");
 		signal(SIGALRM, set_upload_flag);
@@ -3938,11 +3868,13 @@ int main(int argc, char *argv[])
 			g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
+			sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
+			sensor_interface_mem[0] = 0x1234;
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
 			alarm(300);
 			printf("to get interface\n");
-			//ask_interface();
+			ask_interface();
 			printf("end get interface\n");
 			while(1)
 			{
