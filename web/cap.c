@@ -630,6 +630,38 @@ int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char 
 	iconv_close(cd);
 	return 0;
 }
+int CaculateWeekDay(int y,int m, int d)
+{
+	if(m==1||m==2) 
+	{
+		m+=12;
+		y--;
+	}
+	int iWeek=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)%7;
+	switch(iWeek)
+	{
+		case 0: printf("m1\n"); break;
+		case 1: printf("m2\n"); break;
+		case 2: printf("m3\n"); break;
+		case 3: printf("m4\n"); break;
+		case 4: printf("m5\n"); break;
+		case 5: printf("m6\n"); break;
+		case 6: printf("m7\n"); break;
+	}
+	return iWeek;
+} 
+void set_lcd_time(int fd,char *buf)
+{
+	int i;
+	char cmd[]={0x5a,0xa5,0x0a,0x80,0x1f,0x5a,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+	for(i=0;i<7;i++)
+		cmd[i+6]=buf[i];
+	for(i=0;i<sizeof(cmd);i++)
+		printf("%02x ",cmd[i]);
+	printf("\n");
+	write(fd,cmd,sizeof(cmd));
+
+}
 #define SYNC_PREFX "[SYNC_PROCESS]"
 void sync_server(int fd,int resend,int set_local)
 {
@@ -715,6 +747,16 @@ void sync_server(int fd,int resend,int set_local)
 				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
 				if(set_local)
 				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
+				int week=CaculateWeekDay(server_time[5],server_time[6],server_time[7]);
+				char rtc_time[7];
+				rtc_time[0]=(server_time[5]/10)*16+(server_time[5]%10);
+				rtc_time[1]=(server_time[6]/10)*16+(server_time[6]%10);
+				rtc_time[2]=(server_time[7]/10)*16+(server_time[7]%10);
+				rtc_time[3]=week+1;
+				rtc_time[4]=(server_time[8]/10)*16+(server_time[8]%10);
+				rtc_time[5]=(server_time[9]/10)*16+(server_time[9]%10);
+				rtc_time[6]=(server_time[10]/10)*16+(server_time[10]%10);
+				set_lcd_time(fd_lcd,rtc_time);
 				free(starttime);
 				char *user_name=doit_data(rcv,"203");
 				char *user_place=doit_data(rcv,"211");
@@ -1062,32 +1104,32 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 				/*get cap data*/
 				if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
 				{	//check uninsert msg
-					if(cmd[3]==atoi(ID_CAP_CO2) && !sensor.co2)
+					if(cmd[3]==atoi(ID_CAP_CO2) && !(sensor.co2 & ALARM_UNINSERT))
 					{
 						sensor.co2|=ALARM_UNINSERT;
 						sensor.co2_send=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_CO) && !sensor.co)
+					else if(cmd[3]==atoi(ID_CAP_CO) && !(sensor.co & ALARM_UNINSERT))
 					{
 						sensor.co|=ALARM_UNINSERT;
 						sensor.co_send=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_HCHO) && !sensor.hcho)
+					else if(cmd[3]==atoi(ID_CAP_HCHO) && !(sensor.hcho & ALARM_UNINSERT))
 					{
 						sensor.hcho|=ALARM_UNINSERT;
 						sensor.hcho_send=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !sensor.shidu)
+					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !(sensor.shidu & ALARM_UNINSERT))
 					{
 						sensor.shidu|=ALARM_UNINSERT;
 						sensor.shidu_send=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !sensor.temp)
+					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !(sensor.temp & ALARM_UNINSERT))
 					{
 						sensor.temp|=ALARM_UNINSERT;
 						sensor.temp_send=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !sensor.pm25)
+					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !(sensor.pm25 & ALARM_UNINSERT))
 					{
 						sensor.pm25|=ALARM_UNINSERT;
 						sensor.pm25_send=0;
@@ -2672,6 +2714,9 @@ void tun_zero(int fd,int on)
 		cmd_request_verify[5]=i;
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
+		for(i=0;i<sizeof(cmd_request_verify);i++)
+			printf("%02X ",cmd_request_verify[i]);
+		printf("\n");
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 		sleep(1);
 		for(i=0;i<10;i++)
@@ -2681,7 +2726,10 @@ void tun_zero(int fd,int on)
 		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
 		cmd_request_verify[5]=i;
 		crc=CRC_check(cmd_request_verify,6);
-		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
+		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;	
+		for(i=0;i<sizeof(cmd_request_verify);i++)
+			printf("%02X ",cmd_request_verify[i]);
+		printf("\n");
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 	}
 	else
@@ -2698,6 +2746,9 @@ void tun_zero(int fd,int on)
 		cmd_return_point[8]=(g_zero_info->cur_ch2o & 0xff);
 		crc=CRC_check(cmd_return_point,9);
 		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
+		for(i=0;i<sizeof(cmd_return_point);i++)
+			printf("%02X ",cmd_return_point[i]);
+		printf("\n");
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 		for(i=0;i<10;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
@@ -2709,6 +2760,9 @@ void tun_zero(int fd,int on)
 		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
 		crc=CRC_check(cmd_return_point,9);
+		for(i=0;i<sizeof(cmd_return_point);i++)
+			printf("%02X ",cmd_return_point[i]);
+		printf("\n");
 		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 	}
@@ -2735,10 +2789,10 @@ void ask_interface()
 			
 	}
 }
-void interface_to_string(int interface,char *name)
+void interface_to_string(int interface,char *str)
 {
-	char str[20];
-	memset(str,'\0',20);	
+	//char str[20];
+	memset(str,'\0',256);	
 	switch (interface)
 	{
 		case TYPE_SENSOR_CO_WEISHEN:
@@ -2772,26 +2826,27 @@ void interface_to_string(int interface,char *name)
 			strcpy(str,"Î´Öª´«¸ÐÆ÷");
 			break;
 	}
-	code_convert("utf-8","gbk",str,strlen(str),name,256);
+	//code_convert("utf-8","gbk",str,strlen(str),name,256);
 }
 void show_cur_interface()
 {
 	char name[256]={0};
+	clear_buf(fd_lcd,ADDR_INTERFACE_1,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_2,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_3,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_4,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_5,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_6,10);
 	interface_to_string(sensor_interface_mem[0],name);
 	write_string(fd_lcd,ADDR_INTERFACE_1,name,strlen(name));
-	memset(name,'\0',256);
 	interface_to_string(sensor_interface_mem[1],name);
 	write_string(fd_lcd,ADDR_INTERFACE_2,name,strlen(name));
-	memset(name,'\0',256);
 	interface_to_string(sensor_interface_mem[2],name);
 	write_string(fd_lcd,ADDR_INTERFACE_3,name,strlen(name));
-	memset(name,'\0',256);
 	interface_to_string(sensor_interface_mem[3],name);
 	write_string(fd_lcd,ADDR_INTERFACE_4,name,strlen(name));
-	memset(name,'\0',256);
 	interface_to_string(sensor_interface_mem[4],name);
 	write_string(fd_lcd,ADDR_INTERFACE_5,name,strlen(name));
-	memset(name,'\0',256);
 	interface_to_string(sensor_interface_mem[5],name);
 	write_string(fd_lcd,ADDR_INTERFACE_6,name,strlen(name));
 }
@@ -2800,10 +2855,11 @@ void set_interface()
 	int i = 0;
 	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	
-	for(i=0;i<10;i=i+2)
+	for(i=0;i<20;i=i+2)
 	{
-		cmd[5+i]=(sensor_interface_mem[i]<<8) & 0xff;
-		cmd[5+i+1]=sensor_interface_mem[i]&0xff;
+		cmd[5+i]=(sensor_interface_mem[i/2]>>8) & 0xff;
+		cmd[5+i+1]=sensor_interface_mem[i/2]&0xff;
+		printf("%02x \n",(cmd[5+i]<<8)|cmd[6+i]);
 	}
 	int crc=CRC_check(cmd,sizeof(cmd)-2);
 	cmd[sizeof(cmd)-2]=(crc&0xff00)>>8;cmd[sizeof(cmd)-1]=crc&0x00ff; 	
@@ -3261,6 +3317,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 				&& cur_select_interface!=TYPE_SENSOR_WENSHI_RUSHI
 				&& cur_select_interface!=TYPE_SENSOR_PM25_WEISHEN))
 			sensor_interface_mem[interface_config_no]=cur_select_interface;
+			printf("save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
+			show_cur_interface();
 			switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 		}
 	}
