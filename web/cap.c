@@ -722,11 +722,11 @@ void sync_server(int fd,int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
-					clear_buf(fd_lcd,ADDR_USER_NAME,40);
-					clear_buf(fd_lcd,ADDR_INSTALL_PLACE,60);
-					clear_buf(fd_lcd,ADDR_USER_ADDR,40);
-					clear_buf(fd_lcd,ADDR_USER_PHONE,40);
-					clear_buf(fd_lcd,ADDR_USER_CONTACTER,40);
+				clear_buf(fd_lcd,ADDR_USER_NAME,40);
+				clear_buf(fd_lcd,ADDR_INSTALL_PLACE,60);
+				clear_buf(fd_lcd,ADDR_USER_ADDR,40);
+				clear_buf(fd_lcd,ADDR_USER_PHONE,40);
+				clear_buf(fd_lcd,ADDR_USER_CONTACTER,40);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
@@ -2674,10 +2674,6 @@ void tun_zero(int fd,int on)
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 		sleep(1);
-		cmd_return_point[5]=i;
-		crc=CRC_check(cmd_return_point,10);
-		cmd_return_point[10]=(crc&0xff00)>>8;cmd_return_point[11]=crc&0x00ff;		
-		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 		for(i=0;i<10;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
@@ -2687,11 +2683,6 @@ void tun_zero(int fd,int on)
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
-		sleep(1);
-		cmd_return_point[5]=i;
-		crc=CRC_check(cmd_return_point,10);
-		cmd_return_point[10]=(crc&0xff00)>>8;cmd_return_point[11]=crc&0x00ff;		
-		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
 	}
 	else
 	{
@@ -2701,10 +2692,10 @@ void tun_zero(int fd,int on)
 				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
 		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
+		printf("CH2O zero value\n",g_zero_info->cur_ch2o);
 		cmd_return_point[5]=i;
 		cmd_return_point[7]=(g_zero_info->cur_ch2o>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_ch2o & 0xff);
-		//cmd_return_point[9]=g_zero_info->cur_ch2o_point;
 		crc=CRC_check(cmd_return_point,9);
 		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
@@ -2713,10 +2704,10 @@ void tun_zero(int fd,int on)
 				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
 		printf("CO interface %d %4x\n",i,sensor_interface_mem[i]);
+		printf("CO zero value\n",g_zero_info->cur_co);
 		cmd_return_point[5]=i;
 		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
-		//cmd_return_point[9]=g_zero_info->cur_co_point;
 		crc=CRC_check(cmd_return_point,9);
 		cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
@@ -2744,6 +2735,84 @@ void ask_interface()
 			
 	}
 }
+void interface_to_string(int interface,char *name)
+{
+	char str[20];
+	memset(str,'\0',20);	
+	switch (interface)
+	{
+		case TYPE_SENSOR_CO_WEISHEN:
+			strcpy(str,"CO_ì¿Ê¢");
+			break;
+		case TYPE_SENSOR_CO_DD:
+			strcpy(str,"CO_DD");
+			break;
+		case TYPE_SENSOR_CO2_WEISHEN:
+			strcpy(str,"CO2_ì¿Ê¢");
+			break; 
+		case TYPE_SENSOR_CO2_RUDIAN:
+			strcpy(str,"CO2_Èðµä");
+			break;
+		case TYPE_SENSOR_CH2O_WEISHEN:
+			strcpy(str,"CH2O_ì¿Ê¢");
+			break;
+		case TYPE_SENSOR_CH2O_AERSHEN:
+			strcpy(str,"CH2O_°¢¶ûÉ­");
+			break;
+		case TYPE_SENSOR_PM25_WEISHEN:
+			strcpy(str,"PM2.5_ì¿Ê¢");
+			break;
+		case TYPE_SENSOR_WENSHI_RUSHI:
+			strcpy(str,"ÎÂÊª_ÈðÊ¿");
+			break;
+		case TYPE_SENSOR_QIYA_RUSHI:
+			strcpy(str,"ÆøÑ¹_ÈðÊ¿");
+			break;
+		default:
+			strcpy(str,"Î´Öª´«¸ÐÆ÷");
+			break;
+	}
+	code_convert("utf-8","gbk",str,strlen(str),name,256);
+}
+void show_cur_interface()
+{
+	char name[256]={0};
+	interface_to_string(sensor_interface_mem[0],name);
+	write_string(fd_lcd,ADDR_INTERFACE_1,name,strlen(name));
+	memset(name,'\0',256);
+	interface_to_string(sensor_interface_mem[1],name);
+	write_string(fd_lcd,ADDR_INTERFACE_2,name,strlen(name));
+	memset(name,'\0',256);
+	interface_to_string(sensor_interface_mem[2],name);
+	write_string(fd_lcd,ADDR_INTERFACE_3,name,strlen(name));
+	memset(name,'\0',256);
+	interface_to_string(sensor_interface_mem[3],name);
+	write_string(fd_lcd,ADDR_INTERFACE_4,name,strlen(name));
+	memset(name,'\0',256);
+	interface_to_string(sensor_interface_mem[4],name);
+	write_string(fd_lcd,ADDR_INTERFACE_5,name,strlen(name));
+	memset(name,'\0',256);
+	interface_to_string(sensor_interface_mem[5],name);
+	write_string(fd_lcd,ADDR_INTERFACE_6,name,strlen(name));
+}
+void set_interface()
+{
+	int i = 0;
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	
+	for(i=0;i<10;i=i+2)
+	{
+		cmd[5+i]=(sensor_interface_mem[i]<<8) & 0xff;
+		cmd[5+i+1]=sensor_interface_mem[i]&0xff;
+	}
+	int crc=CRC_check(cmd,sizeof(cmd)-2);
+	cmd[sizeof(cmd)-2]=(crc&0xff00)>>8;cmd[sizeof(cmd)-1]=crc&0x00ff; 	
+	printf("going to set_interface begin\n");
+	for(i=0;i<sizeof(cmd);i++)
+		printf("%02x ",cmd[i]);
+	printf("\ngoing to set_interface end\n");
+	write(fd_com,cmd,sizeof(cmd));
+}
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
@@ -2759,6 +2828,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 	static int curve_temp=0;
 	static int curve_shidu=0;
 	static int curve_pm25=0;
+	static int interface_config_no = 0;
+	static int cur_select_interface = TYPE_SENSOR_CO_WEISHEN;
 	char * line = NULL;
 	char date1[32]={0};
 	char date2[32]={0};
@@ -3126,7 +3197,117 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//set sensor interface
 		sensor_interface_mem[0]=0x1234;
 		ask_interface();
-		write_string(fd_lcd,ADDR_PRODUCT_ID,g_uuid,strlen(g_uuid));
+		show_cur_interface();
+	}
+	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
+	{
+		interface_config_no=0;
+		//switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_2 && (TOUCH_INTERFACE_2+0x100)==data)
+	{
+		interface_config_no=1;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_3 && (TOUCH_INTERFACE_3+0x100)==data)
+	{
+		interface_config_no=2;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_4 && (TOUCH_INTERFACE_4+0x100)==data)
+	{
+		interface_config_no=3;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_5 && (TOUCH_INTERFACE_5+0x100)==data)
+	{
+		interface_config_no=4;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}		
+	else if(addr==TOUCH_INTERFACE_6 && (TOUCH_INTERFACE_6+0x100)==data)
+	{
+		interface_config_no=5;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_7 && (TOUCH_INTERFACE_7+0x100)==data)
+	{
+		interface_config_no=6;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_8 && (TOUCH_INTERFACE_8+0x100)==data)
+	{
+		interface_config_no=7;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_9 && (TOUCH_INTERFACE_9+0x100)==data)
+	{
+		interface_config_no=8;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_10 && (TOUCH_INTERFACE_10+0x100)==data)
+	{
+		interface_config_no=9;
+		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_SET_RETURN && (TOUCH_SET_RETURN+0x100)==data)
+	{
+		if(interface_config_no!=0)
+		{
+			if((interface_config_no==1 && cur_select_interface==TYPE_SENSOR_PM25_WEISHEN)
+				||(interface_config_no==8 && cur_select_interface==TYPE_SENSOR_WENSHI_RUSHI)
+				||(interface_config_no==9 && cur_select_interface==TYPE_SENSOR_QIYA_RUSHI)
+				||(interface_config_no>1 && interface_config_no<8 
+				&& cur_select_interface!=TYPE_SENSOR_QIYA_RUSHI
+				&& cur_select_interface!=TYPE_SENSOR_WENSHI_RUSHI
+				&& cur_select_interface!=TYPE_SENSOR_PM25_WEISHEN))
+			sensor_interface_mem[interface_config_no]=cur_select_interface;
+			switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
+		}
+	}
+	else if(addr==TOUCH_INTERFACE_RETURN && (TOUCH_INTERFACE_RETURN+0x100)==data)
+	{		
+		switch_pic(fd_lcd,SYSTEM_SET_PAGE);
+	}
+	else if(addr==TOUCH_INTERFACE_OK && (TOUCH_INTERFACE_OK+0x100)==data)
+	{		
+		set_interface();
+		switch_pic(fd_lcd,SYSTEM_SET_PAGE);
+	}
+	else if(addr==TOUCH_SET_HCHO_1 && (TOUCH_SET_HCHO_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CH2O_WEISHEN;
+	}	
+	else if(addr==TOUCH_SET_HCHO_2 && (TOUCH_SET_HCHO_2+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CH2O_AERSHEN;
+	}	
+	else if(addr==TOUCH_SET_TEMP_1 && (TOUCH_SET_TEMP_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_WENSHI_RUSHI;
+	}	
+	else if(addr==TOUCH_SET_PM25_1 && (TOUCH_SET_PM25_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN;
+	}
+	else if(addr==TOUCH_SET_CO_1 && (TOUCH_SET_CO_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CO_WEISHEN;
+	}	
+	else if(addr==TOUCH_SET_CO_2 && (TOUCH_SET_CO_2+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CO_DD;
+	}	
+	else if(addr==TOUCH_SET_CO2_1 && (TOUCH_SET_CO2_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CO2_WEISHEN;
+	}	
+	else if(addr==TOUCH_SET_CO2_2 && (TOUCH_SET_CO2_2+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_CO2_RUDIAN;
+	}
+	else if(addr==TOUCH_SET_SHIDU_1 && (TOUCH_SET_SHIDU_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
 	}
 	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
 	{//product info
