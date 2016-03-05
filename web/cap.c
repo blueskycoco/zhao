@@ -942,7 +942,8 @@ void clear_alarm(char *id,char *alarm_type)
 }
 void co_flash_alarm()
 {
-	if(fork()==0)
+	int fpid=0;
+	if((fpid=fork())==0)
 	{
 		switch_pic(fd_lcd,MAIN_PAGE);
 		buzzer(fd_lcd,0x30);
@@ -958,6 +959,8 @@ void co_flash_alarm()
 		cut_pic(fd_lcd,0);
 		return ;
 	}
+	else
+		printf("[PID]%d co flash process\n",fpid);
 	return ;
 }
 void show_factory(int fd,int zero,char *cmd,int len)
@@ -1524,13 +1527,132 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 	}
 	return message;
 }
+void show_cap_value(char *buf,int len)
+{
+	int i=0;	
+	switch(buf[0]<<8|buf[1])
+	{
+		case 60:
+			printf("[CAP][CO] ");
+			break;
+		case 61:
+			printf("[CAP][CO2] ");
+			break;
+		case 62:
+			printf("[CAP][HCHO] ");
+			break;
+		case 63:
+			printf("[CAP][TEMP] ");
+			break;
+		case 64:
+			printf("[CAP][SHIDU] ");
+			break;
+		case 65:
+			printf("[CAP][PM2.5] ");
+			break;
+		case 66:
+			printf("[CAP][PM10] ");
+			break;
+		case 67:
+			printf("[CAP][NOISY] ");
+			break;
+		case 68:
+			printf("[CAP][FENGSU] ");
+			break;
+		case 69:
+			printf("[CAP][QIYA] ");
+			break;
+		case 70:
+			printf("[CAP][CHOUYANG] ");
+			break;
+		case 71:
+			printf("[CAP][SO2] ");
+			break;
+		case 72:
+			printf("[CAP][DONGQI] ");
+			break;
+		case 73:
+			printf("[CAP][ZIWAI] ");
+			break;
+		case 74:
+			printf("[CAP][TVOC] ");
+			break;
+		case 75:
+			printf("[CAP][BEN] ");
+			break;
+		case 76:
+			printf("[CAP][JIABEN] ");
+			break;
+		case 77:
+			printf("[CAP][ERJIABEN] ");
+			break;
+		case 78:
+			printf("[CAP][ANQI] ");
+			break;
+		case 79:
+			printf("[CAP][HS] ");
+			break;
+		case 160:
+			printf("[CAP][NO] ");
+			break;
+		case 161:
+			printf("[CAP][NO2] ");
+			break;
+		case 162:
+			printf("[CAP][ANQI2] ");
+			break;
+		case 163:
+			printf("[CAP][LIGHT] ");
+			break;
+		case 164:
+			printf("[CAP][WIESHENGWU] ");
+			break;
+		case 260:
+			printf("[CAP][CO_2] ");
+			break;
+		case 262:
+			printf("[CAP][CH2O] ");
+			break;
+		case 270:
+			printf("[CAP][CHOYANG2] ");
+			break;
+		case 271:
+			printf("[CAP][SO2_2] ");
+			break;
+		case 274:
+			printf("[CAP][TVOC2] ");
+			break;
+		case 275:
+			printf("[CAP][BENG_2] ");
+			break;
+		case 276:
+			printf("[CAP][JIABEN_2] ");
+			break;
+		case 277:
+			printf("[CAP][ERJIABENG_2] ");
+			break;
+		case 278:
+			printf("[CAP][ANQI_3] ");
+			break;
+		case 360:
+			printf("[CAP][NO_2] ");
+			break;
+		case 361:
+			printf("[CAP][NO2_2] ");
+			break;
+	}
+	for(i=3;i<len+3;i++)
+		printf("%02x ",buf[i]);
+	printf("\n");
+
+}
 /*
   *get cmd from lv's cap board
 */
 int get_uart(int fd_lcd,int fd)
 {
 	char ch,state=STATE_IDLE,message_len=0;
-	char message[20],i=0,to_check[30];
+	char message[256],i=0,to_check[256];
 	int crc,message_type=0;
 	while(1)
 	{
@@ -1565,6 +1687,7 @@ int get_uart(int fd_lcd,int fd)
 				{
 					message_type|=ch;
 					state=STATE_MESSAGE_LEN;
+					//printf("[MESSAGE_TYPE] %04x\n",message_type);
 				}
 				break;
 				case STATE_MESSAGE_LEN:
@@ -1593,13 +1716,14 @@ int get_uart(int fd_lcd,int fd)
 					for(i=0;i<message_len;i++)
 					{
 						to_check[5+i]=message[i];
-					}
+					}					
 					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 					to_check[5+message_len+1]=crc&0xff;
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
+					show_cap_value(to_check+2,message_len);
 					if(factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)
@@ -1657,9 +1781,13 @@ void cut_pic(int fd,int on)
 }
 void write_data(int fd,unsigned int Index,int data)
 {
+	int i = 0;
 	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
 	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
+	for(i = 0;i<sizeof(cmd);i++)
+		printf("%02x ",cmd[i]);
+	printf("\n");
 	write(fd,cmd,8);
 }
 void write_string(int fd,unsigned int addr,char *data,int len)
@@ -2822,6 +2950,12 @@ void interface_to_string(int interface,char *str)
 		case TYPE_SENSOR_QIYA_RUSHI:
 			strcpy(str,"气压_瑞士");
 			break;
+		case TYPE_SENSOR_FENGSU:
+			strcpy(str,"风速");
+			break;
+		case TYPE_SENSOR_ZHAOSHEN:
+			strcpy(str,"噪声");
+			break;
 		default:
 			strcpy(str,"未知传感器");
 			break;
@@ -2853,9 +2987,9 @@ void show_cur_interface()
 void set_interface()
 {
 	int i = 0;
-	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x14,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	
-	for(i=0;i<20;i=i+2)
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x16,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	
+	for(i=0;i<22;i=i+2)
 	{
 		cmd[5+i]=(sensor_interface_mem[i/2]>>8) & 0xff;
 		cmd[5+i+1]=sensor_interface_mem[i/2]&0xff;
@@ -2868,6 +3002,20 @@ void set_interface()
 		printf("%02x ",cmd[i]);
 	printf("\ngoing to set_interface end\n");
 	write(fd_com,cmd,sizeof(cmd));
+}
+void def_interface()
+{
+	int i = 0;
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x16,0x00,0x00,0x04,0x01,0x02,0x02,0x03,0x02,0x01,0x02,0x06,0x01,0x00,0x00,
+		0x00,0x00,0x05,0x01,0x07,0x01,0x08,0x01,0x00,0x00};	
+	int crc=CRC_check(cmd,sizeof(cmd)-2);
+	cmd[sizeof(cmd)-2]=(crc&0xff00)>>8;cmd[sizeof(cmd)-1]=crc&0x00ff; 	
+	printf("going to def_interface begin\n");
+	for(i=0;i<sizeof(cmd);i++)
+		printf("%02x ",cmd[i]);
+	printf("\ngoing to def_interface end\n");
+	write(fd_com,cmd,sizeof(cmd));
+
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
@@ -3311,11 +3459,13 @@ unsigned short input_handle(int fd_lcd,char *input)
 		{
 			if((interface_config_no==1 && cur_select_interface==TYPE_SENSOR_PM25_WEISHEN)
 				||(interface_config_no==8 && cur_select_interface==TYPE_SENSOR_WENSHI_RUSHI)
+				||(interface_config_no==10 && cur_select_interface==TYPE_SENSOR_FENGSU)
 				||(interface_config_no==9 && cur_select_interface==TYPE_SENSOR_QIYA_RUSHI)
 				||(interface_config_no>1 && interface_config_no<8 
 				&& cur_select_interface!=TYPE_SENSOR_QIYA_RUSHI
 				&& cur_select_interface!=TYPE_SENSOR_WENSHI_RUSHI
-				&& cur_select_interface!=TYPE_SENSOR_PM25_WEISHEN))
+				&& cur_select_interface!=TYPE_SENSOR_PM25_WEISHEN
+				&& cur_select_interface!=TYPE_SENSOR_FENGSU))
 			sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printf("save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
 			show_cur_interface();
@@ -3969,7 +4119,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
-	if((sensor_interface_shmid = shmget(IPC_PRIVATE, sizeof(int)*10, PERM)) == -1 )
+	if((sensor_interface_shmid = shmget(IPC_PRIVATE, sizeof(int)*11, PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
@@ -3987,12 +4137,14 @@ int main(int argc, char *argv[])
     }
 
 	g_state = (struct state *)shmat(state_shmid, 0, 0);
-	if(fork()==0)
+	if((fpid=fork())==0)
 	{
 		history_done = (int *)shmat(history_load_done_shmid,0,0);
 		load_history("/home/user/history");
 		return 0;
 	}
+	else
+		printf("[PID]%d load history process\n",fpid);
 	get_ip(ip);
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{
@@ -4089,6 +4241,7 @@ int main(int argc, char *argv[])
 	}
 	else if(fpid>0)
 	{
+		printf("[PID]%d cap process\n",fpid);
 		fpid=fork();
 		if(fpid==0)
 		{
@@ -4115,6 +4268,7 @@ int main(int argc, char *argv[])
 			signal(SIGALRM, lcd_off);
 			alarm(300);
 			printf("to get interface\n");
+			def_interface();
 			ask_interface();
 			printf("end get interface\n");
 			while(1)
@@ -4124,6 +4278,7 @@ int main(int argc, char *argv[])
 		}
 		else if(fpid>0)
 		{
+			printf("[PID]%d lcd process\n",fpid);
 			while(1)
 			{
 				sync_server(fd_com,0,1);
