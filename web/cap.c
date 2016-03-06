@@ -4281,7 +4281,7 @@ int main(int argc, char *argv[])
 		close(fd_gprs);
 		return -1;
 	}
-	config_gprs();
+	//config_gprs();
 	pthread_mutex_init(&mutex, NULL);
 	memset(server_time,0,13);
 	get_uuid();
