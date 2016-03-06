@@ -69,7 +69,8 @@ pthread_mutex_t mutex;
 char *post_message=NULL,can_send=0,*warnning_msg=NULL;
 char *server_time;
 char g_uuid[256]={0};
-char send_by_wifi=1;
+char *send_by_wifi;
+key_t send_by_wifi_shmid;
 int fd_gprs=0;
 #define ALARM_NONE		0
 #define ALARM_BELOW 	1
@@ -97,6 +98,7 @@ typedef struct _sensor_alarm {
 	char shidu_send;
 	char temp_send;
 	char pm25_send;
+	char send_by_wifi;
 }sensor_alarm;
 
 typedef struct _sensor_times {
@@ -144,6 +146,7 @@ struct cur_zero_info
 };
 struct cur_zero_info *g_zero_info;
 key_t shmid_zero_info;
+void set_net_interface();
 void buzzer(int fd,int data);
 void cut_pic(int fd,int on);
 //*******************************************************************
@@ -185,7 +188,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 	int result=0,i,ltimeout=0;
 	char rcv[512]={0},ch;
 	pthread_mutex_lock(&mutex);
-	//if(send_by_wifi)
+	if(*send_by_wifi)
 	{		
 		sprintf(request,"JSONStr=%s",buf);
 		printf(UPLOAD_PROCESS"send web %s\n",request);
@@ -201,7 +204,6 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 			g_state->network_state=0;
 		}
 	}
-	#if 0
 	else
 	{
 		//rcv=(char *)malloc(256);
@@ -210,7 +212,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 		//memset(gprs_string,'\0',strlen(buf)+strlen("POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n")+30);
 		char gprs_string[1024]={0};
 		int j=0;
-		strcpy(gprs_string,"POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 101.200.182.92:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n");
+		strcpy(gprs_string,"POST /saveData/airmessage/messMgr.do HTTP/1.1\r\nHOST: 123.57.26.24:8080\r\nAccept: */*\r\nContent-Type:application/x-www-form-urlencoded\r\n");
 		sprintf(length_string,"Content-Length:%d\r\n\r\nJSONStr=",strlen(buf)+8);
 		strcat(gprs_string,length_string);
 		strcat(gprs_string,buf);
@@ -283,7 +285,6 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 	else
 		printf(UPLOAD_PROCESS"no rcv got\n\n");
 	}
-	#endif
 	pthread_mutex_unlock(&mutex);
 	return;
 }
@@ -3344,19 +3345,21 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_SELECT_WIFI&& (TOUCH_SELECT_WIFI+0x100)==data)
 	{//WiFi Passwd changed
 		wifi_handle(fd_lcd);
-		send_by_wifi=1;
+		*send_by_wifi=1;
+		set_net_interface();
 		write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
 	}
 	else if(addr==TOUCH_SELECT_GPRS&& (TOUCH_SELECT_GPRS+0x100)==data)
 	{//use gprs to xfer
-		send_by_wifi=0;
+		*send_by_wifi=0;
+		set_net_interface();
 		write_string(fd_lcd,ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
 	}
 	else if(addr==TOUCH_XFER_SET&&(TOUCH_XFER_SET+0x100)==data)
 	{//enter wifi passwd setting
 		clear_buf(fd_lcd,ADDR_AP_NAME,20);
 		clear_buf(fd_lcd,ADDR_AP_PASSWD,20);
-		if(send_by_wifi)
+		if(*send_by_wifi)
 		{
 			write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
 		}
@@ -4049,12 +4052,95 @@ void save_sensor_alarm_info()
 	fclose(fp);
 	printf(MAIN_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
 }
+void config_gprs()
+{
+	char *cmd=(char *)malloc(512);
+	unsigned char switch_at='+';
+	unsigned char done='a';
+	usleep(20000);	
+	write(fd_gprs, (void *)&switch_at, 1);
+	usleep(1000);
+	write(fd_gprs, (void *)&switch_at, 1);
+	usleep(1000);
+	write(fd_gprs, (void *)&switch_at, 1);
+	usleep(1000);
+	write(fd_gprs, (void *)&done, 1);
+	usleep(100000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIPCFG=1,0,0,50,0,0\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIPPACK=0,"",0\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIPPACK=1,"",0\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIPSCONT=1,\"TCP\",\"123.57.26.24\", 8080,1\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIMOD=\"3\"\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CSTT=\"UNINET\"\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+ICF=3,3\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIPR=115200\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"ATW\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	usleep(10000);
+	memset(cmd,0,512);
+	strcpy(cmd,"AT+CIRESET\n");
+	write(fd_gprs,(void *)cmd, strlen(cmd));
+	sleep(1);
+	free(cmd);
+}
+void get_net_interface()
+{
+	FILE *fp=fopen("/home/user/interface.txt","r");
+	if(fp!=NULL)
+	{
+		if(fread(send_by_wifi,1,1,fp)<0)
+			*send_by_wifi=1;
+		fclose(fp);
+	}
+	else
+		*send_by_wifi=1;
+	printf("get interface is %d\n",*send_by_wifi);
+}
+void set_net_interface()
+{
+	FILE *fp=fopen("/home/user/interface.txt","w");
+	fwrite(send_by_wifi,1,1,fp);
+	fclose(fp);
+	printf("set interface is %d\n",*send_by_wifi);
+}
+
 int main(int argc, char *argv[])
 {
 	int fpid;	
 	long i;
 	key_t shmid;
+	signal(SIGCHLD, SIG_IGN);
 	if((history_load_done_shmid= shmget(IPC_PRIVATE, sizeof(int), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	if((send_by_wifi_shmid= shmget(IPC_PRIVATE, sizeof(char), PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
@@ -4195,9 +4281,12 @@ int main(int argc, char *argv[])
 		close(fd_gprs);
 		return -1;
 	}
+	config_gprs();
 	pthread_mutex_init(&mutex, NULL);
 	memset(server_time,0,13);
 	get_uuid();
+	send_by_wifi = (char *)shmat(send_by_wifi_shmid, 0, 0);
+	get_net_interface();
 	#if 0
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,1);
@@ -4216,6 +4305,7 @@ int main(int argc, char *argv[])
 	{
 		printf(LCD_PROCESS"begin to shmat1\n");
 		server_time = (char *)shmat(shmid, 0, 0);
+		send_by_wifi = (char *)shmat(send_by_wifi_shmid, 0, 0);
 		g_state = (struct state *)shmat(state_shmid, 0, 0);
 		g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
 		g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
@@ -4247,6 +4337,7 @@ int main(int argc, char *argv[])
 		{
 			printf(LCD_PROCESS"begin to shmat1\n");
 			server_time = (char *)shmat(shmid, 0, 0);
+			send_by_wifi = (char *)shmat(send_by_wifi_shmid, 0, 0);
 			g_state = (struct state *)shmat(state_shmid, 0, 0);
 			g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
 			g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
