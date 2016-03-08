@@ -1,5 +1,6 @@
 #ifndef _D_WIN_H
 #define _D_WIN_H
+#if 0
 #define MAIN_PAGE 1
 #define OFF_PAGE 27
 #define LIST_PM25_PAGE 8
@@ -18,6 +19,26 @@
 #define INTERFACE_SELECT_PAGE 14
 #define INTERFACE_ALL_PAGE 12
 #define SYSTEM_SET_PAGE 13
+#else
+#define MAIN_PAGE 1
+#define OFF_PAGE 20
+#define LIST_PM25_PAGE 8
+#define LIST_SHIDU_PAGE 7
+#define LIST_TEMP_PAGE 6
+#define LIST_HCHO_PAGE 5
+#define LIST_CO2_PAGE 4
+#define LIST_CO_PAGE 2
+#define LOG_IN_PAGE 23
+#define CURVE_PAGE	3
+#define TIME_SETTING_PAGE 25
+#define STATE_E_E_PAGE	22
+#define STATE_E_O_PAGE 21
+#define STATE_O_O_PAGE 27
+#define STATE_O_E_PAGE 9
+#define INTERFACE_SELECT_PAGE 12
+#define INTERFACE_ALL_PAGE 14
+#define SYSTEM_SET_PAGE 24
+#endif
 //page 1
 #define ADDR_RUN_TIME_CO	0x0000
 #define ADDR_RUN_TIME_CO2	0x0001
