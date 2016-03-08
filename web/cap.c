@@ -3492,13 +3492,17 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{
 		cur_select_interface=TYPE_SENSOR_CH2O_AERSHEN;
 	}	
-	else if(addr==TOUCH_SET_TEMP_1 && (TOUCH_SET_TEMP_1+0x100)==data)
+	else if(addr==TOUCH_SET_WENSHI_1 && (TOUCH_SET_WENSHI_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_WENSHI_RUSHI;
 	}	
 	else if(addr==TOUCH_SET_PM25_1 && (TOUCH_SET_PM25_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN;
+	}	
+	else if(addr==TOUCH_SET_PM25_2 && (TOUCH_SET_PM25_2+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN2;
 	}
 	else if(addr==TOUCH_SET_CO_1 && (TOUCH_SET_CO_1+0x100)==data)
 	{
@@ -3516,7 +3520,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{
 		cur_select_interface=TYPE_SENSOR_CO2_RUDIAN;
 	}
-	else if(addr==TOUCH_SET_SHIDU_1 && (TOUCH_SET_SHIDU_1+0x100)==data)
+	else if(addr==TOUCH_SET_QIYA_RUISHI && (TOUCH_SET_QIYA_RUISHI+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
 	}
