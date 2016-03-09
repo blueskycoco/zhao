@@ -134,8 +134,8 @@ struct state *g_state;
 #define NORMAL_MODE	0
 #define TUN_ZERO_MODE	1
 #define SENSOR_VERIFY_MODE	2
-char factory_mode=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
-key_t sensor_interface_shmid;
+char *factory_mode;//=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
+key_t sensor_interface_shmid,factory_mode_shmid;
 int *sensor_interface_mem;
 struct cur_zero_info
 {
@@ -915,7 +915,7 @@ void send_server_save_local(char *date,char *message,char save)
 			memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);			
 			memset(g_history_pm25[*g_pm25_cnt].time,'\0',20);
 			strcpy(g_history_pm25[*g_pm25_cnt].time,date);		
-			sprintf(g_history_pm25[*g_pm25_cnt].data,"%4d",atoi(data));
+			sprintf(g_history_pm25[*g_pm25_cnt].data,"%d",atoi(data));
 			//sprintf(history_co_data[g_history_co_cnt],"%04d",atoi(co));
 			free(data);
 			(*g_pm25_cnt)++;
@@ -968,19 +968,51 @@ void show_factory(int fd,int zero,char *cmd,int len)
 {	
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];	
+	if(zero)
+		printf("In tun zero mode\n");
+	else
+		printf("In verify mode\n");
 	if(crc==CRC_check(cmd,len-2))
 	{
+		sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
+		if(cmd[7]!=0)
+		{//have .
+			int m;
+			if(cmd[7]>strlen(data))//like 0.012
+			{
+				char tmp_buf[10]={0};
+				int dist=cmd[7]-strlen(data);
+				strcpy(tmp_buf,"0.");
+				for(m=0;m<dist;m++)
+					strcat(tmp_buf,"0");
+				strcat(tmp_buf,data);
+				strcpy(data,tmp_buf);
+			}
+			else//like 12.33
+			{
+				int left,right,number,n=1;
+				number=(cmd[5]<<8)|cmd[6];
+				for(m=0;m<cmd[7];m++)
+					n=n*10;
+				right=number%n;
+				left=number/n;
+				sprintf(data,"%d.%d",left,right);								
+			}		
+		}	
+	
 		if(zero)
 		{
 			if(cmd[3]==atoi(ID_CAP_CO))
 			{
-				write_data(fd_lcd,ADDR_TUN_ZERO_CO,cmd[5]<<8|cmd[6]);
+				//write_data(fd_lcd,ADDR_TUN_ZERO_CO,cmd[5]<<8|cmd[6]);
+				write_string(fd_lcd,ADDR_TUN_ZERO_CO,data,strlen(data));
 				g_zero_info->cur_co=(cmd[5]<<8)|cmd[6];
 				//g_zero_info->cur_co_point=cmd[7];
 			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
 			{
-				write_data(fd_lcd,ADDR_TUN_ZERO_HCHO,cmd[5]<<8|cmd[6]);
+				//write_data(fd_lcd,ADDR_TUN_ZERO_HCHO,cmd[5]<<8|cmd[6]);
+				write_string(fd_lcd,ADDR_TUN_ZERO_HCHO,data,strlen(data));
 				g_zero_info->cur_ch2o=(cmd[5]<<8)|cmd[6];
 				//g_zero_info->cur_ch2o_point=cmd[7];
 			}
@@ -988,9 +1020,12 @@ void show_factory(int fd,int zero,char *cmd,int len)
 		else
 		{			
 			if(cmd[3]==atoi(ID_CAP_PM_25))
-				write_data(fd_lcd,ADDR_REAL_VALUE,cmd[5]<<8|cmd[6]);
+				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
+				//write_data(fd_lcd,ADDR_REAL_VALUE,cmd[5]<<8|cmd[6]);
 		}
 	}
+	else
+		printf("CRC failed in zero mode\n");
 }
 /*
   *build json from cmd
@@ -1725,7 +1760,7 @@ int get_uart(int fd_lcd,int fd)
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
 					//show_cap_value(to_check+2,message_len);
-					if(factory_mode==NORMAL_MODE)
+					if(*factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)
 						{
@@ -1738,7 +1773,7 @@ int get_uart(int fd_lcd,int fd)
 						else
 							post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
 					}
-					else if(factory_mode==TUN_ZERO_MODE)
+					else if(*factory_mode==TUN_ZERO_MODE)
 						show_factory(fd_lcd,1,cmd,message_len+7);
 					else
 						show_factory(fd_lcd,0,cmd,message_len+7);
@@ -1972,8 +2007,8 @@ void load_history(const char *name)
 				{
 					//printf(LCD_PROCESS"<co>%s\n",co);
 					memset(g_history_pm25[*g_pm25_cnt].data,'\0',10);
-					//strcpy(history_pm25_data[g_history_pm25_cnt],data);					
-					sprintf(g_history_pm25[*g_pm25_cnt].data,"%4d",atoi(data));
+					//strcpy(g_history_pm25[*g_pm25_cnt].data,data);					
+					sprintf(g_history_pm25[*g_pm25_cnt].data,"%d",atoi(data));
 					free(data);
 					(*g_pm25_cnt)++;
 				}
@@ -2053,6 +2088,12 @@ void show_sensor_network(int fd)
 	else if(!(g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
 		pic=STATE_O_E_PAGE;
 	switch_pic(fd,pic);
+}
+char *remove_kong(char *input)
+{
+	while(*input==' ')
+		input++;
+	return input;
 }
 void show_history(int fd_lcd,char *id,int offset)
 {	
@@ -2196,6 +2237,13 @@ void show_history(int fd_lcd,char *id,int offset)
 			write_string(fd_lcd,ADDR_PM25_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",*g_pm25_cnt/7);			
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_0,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_1,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_2,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_3,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_4,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_5,4);
+			clear_buf(fd_lcd,ADDR_PM25_LIST_DATA_6,4);
 			write_string(fd_lcd,ADDR_PM25_PAGE_TOTAL,tmp,strlen(tmp));
 			write_string(fd_lcd,ADDR_PM25_LIST_TIME_0,g_history_pm25[*g_pm25_cnt-offset-1].time,strlen(g_history_pm25[*g_pm25_cnt-offset-1].time));
 			write_string(fd_lcd,ADDR_PM25_LIST_DATA_0,g_history_pm25[*g_pm25_cnt-offset-1].data,strlen(g_history_pm25[*g_pm25_cnt-offset-1].data));
@@ -2254,8 +2302,8 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index[0],"200");
 			strcpy(index[1],"150");
 			strcpy(index[2],"100");
-			strcpy(index[3],"050");
-			strcpy(index[4],"000");
+			strcpy(index[3],"50");
+			strcpy(index[4],"0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
@@ -2278,7 +2326,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data)*5;
+								buf[j++]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data+2)*10;
 								printf("j %d %s==>%d\n",j,g_history_co[*g_co_cnt-*offset-i-1].time,buf[j-1]);
 							}
 						}					
@@ -2367,11 +2415,11 @@ void show_curve(int fd,char *id,int* offset)
 		//printf("g_co_cnt %d\n",*g_hcho_cnt);
 		if((*g_hcho_cnt-*offset)>0)
 		{
-			strcpy(index[0],"003");
+			strcpy(index[0],"3.0");
 			strcpy(index[1],"2.5");
 			strcpy(index[2],"1.5");
-			strcpy(index[3],"001");
-			strcpy(index[4],"000");
+			strcpy(index[3],"1.0");
+			strcpy(index[4],"0.0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
@@ -2394,7 +2442,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=(atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data+2)*667)/1000;
+								buf[j++]=(atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data+2)*667)/500;
 								printf("j %d %s==>%d\n",j,g_history_hcho[*g_hcho_cnt-*offset-i-1].time,buf[j-1]);							
 							}
 						}					
@@ -2431,7 +2479,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index[1],"68");
 			strcpy(index[2],"45");
 			strcpy(index[3],"23");
-			strcpy(index[4],"00");
+			strcpy(index[4],"0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
@@ -2491,7 +2539,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index[0],"60");
 			strcpy(index[1],"40");
 			strcpy(index[2],"20");
-			strcpy(index[3],"00");
+			strcpy(index[3],"0");
 			strcpy(index[4],"-20");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
@@ -2552,7 +2600,7 @@ void show_curve(int fd,char *id,int* offset)
 			strcpy(index[1],"750");
 			strcpy(index[2],"500");
 			strcpy(index[3],"250");
-			strcpy(index[4],"000");
+			strcpy(index[4],"0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
 			strcpy(index_time[2],"12");
@@ -2735,6 +2783,16 @@ void manul_set_time(int fd)
 			int crc=CRC_check(server_time,11);
 			server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
 			write(fd_com,server_time,13);
+			int week=CaculateWeekDay(server_time[5],server_time[6],server_time[7]);
+			char rtc_time[7];
+			rtc_time[0]=(server_time[5]/10)*16+(server_time[5]%10);
+			rtc_time[1]=(server_time[6]/10)*16+(server_time[6]%10);
+			rtc_time[2]=(server_time[7]/10)*16+(server_time[7]%10);
+			rtc_time[3]=week+1;
+			rtc_time[4]=(server_time[8]/10)*16+(server_time[8]%10);
+			rtc_time[5]=(server_time[9]/10)*16+(server_time[9]%10);
+			rtc_time[6]=(server_time[10]/10)*16+(server_time[10]%10);
+			set_lcd_time(fd_lcd,rtc_time);
 		}
 		//set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
 	}
@@ -2835,7 +2893,7 @@ void tun_zero(int fd,int on)
 	if(on)
 	{		
 		printf("Start Co,ch2o tun zero\n");
-		for(i=0;i<10;i++)
+		for(i=0;i<11;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
@@ -2848,7 +2906,7 @@ void tun_zero(int fd,int on)
 		printf("\n");
 		write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 		sleep(1);
-		for(i=0;i<10;i++)
+		for(i=0;i<11;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
@@ -2864,7 +2922,7 @@ void tun_zero(int fd,int on)
 	else
 	{
 		printf("Stop Co,ch2o tun zero\n");
-		for(i=0;i<10;i++)
+		for(i=0;i<11;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
@@ -2879,7 +2937,7 @@ void tun_zero(int fd,int on)
 			printf("%02X ",cmd_return_point[i]);
 		printf("\n");
 		write(fd_com,cmd_return_point,sizeof(cmd_return_point));
-		for(i=0;i<10;i++)
+		for(i=0;i<11;i++)
 			if(sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
 				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
@@ -2925,43 +2983,53 @@ void interface_to_string(int interface,char *str)
 	switch (interface)
 	{
 		case TYPE_SENSOR_CO_WEISHEN:
-			strcpy(str,"CO_ì¿Ê¢");
+			strcpy(str,"CO_1");
 			break;
 		case TYPE_SENSOR_CO_DD:
-			strcpy(str,"CO_DD");
+			strcpy(str,"CO_2");
 			break;
 		case TYPE_SENSOR_CO2_WEISHEN:
-			strcpy(str,"CO2_ì¿Ê¢");
+			strcpy(str,"CO2_1");
 			break; 
 		case TYPE_SENSOR_CO2_RUDIAN:
-			strcpy(str,"CO2_Èðµä");
+			strcpy(str,"CO2_2");
 			break;
 		case TYPE_SENSOR_CH2O_WEISHEN:
-			strcpy(str,"CH2O_ì¿Ê¢");
+			strcpy(str,"CH2O_1");
 			break;
 		case TYPE_SENSOR_CH2O_AERSHEN:
-			strcpy(str,"CH2O_°¢¶ûÉ­");
+			strcpy(str,"CH2O_2");
 			break;
 		case TYPE_SENSOR_PM25_WEISHEN:
-			strcpy(str,"PM2.5_ì¿Ê¢");
+			strcpy(str,"PM2.5_1");
+			break;
+		case TYPE_SENSOR_PM25_WEISHEN2:
+			strcpy(str,"PM2.5_2");
 			break;
 		case TYPE_SENSOR_WENSHI_RUSHI:
-			strcpy(str,"ÎÂÊª_ÈðÊ¿");
+			strcpy(str,"ÎÂÊª_1");
 			break;
 		case TYPE_SENSOR_QIYA_RUSHI:
-			strcpy(str,"ÆøÑ¹_ÈðÊ¿");
+			strcpy(str,"ÆøÑ¹_1");
 			break;
 		case TYPE_SENSOR_FENGSU:
-			strcpy(str,"·çËÙ");
+			strcpy(str,"·çËÙ_1");
 			break;
 		case TYPE_SENSOR_ZHAOSHEN:
-			strcpy(str,"ÔëÉù");
+			strcpy(str,"ÔëÉù_1");
 			break;
 		default:
 			strcpy(str,"Î´Öª´«¸ÐÆ÷");
 			break;
 	}
 	//code_convert("utf-8","gbk",str,strlen(str),name,256);
+}
+void show_cur_select_intr(int sel)
+{
+	char name[256]={0};
+	clear_buf(fd_lcd,ADDR_CUR_SELECT,10);	
+	interface_to_string(sel,name);
+	write_string(fd_lcd,ADDR_CUR_SELECT,name,strlen(name));
 }
 void show_cur_interface()
 {
@@ -2972,6 +3040,10 @@ void show_cur_interface()
 	clear_buf(fd_lcd,ADDR_INTERFACE_4,10);
 	clear_buf(fd_lcd,ADDR_INTERFACE_5,10);
 	clear_buf(fd_lcd,ADDR_INTERFACE_6,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_7,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_8,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_9,10);
+	clear_buf(fd_lcd,ADDR_INTERFACE_10,10);	
 	interface_to_string(sensor_interface_mem[0],name);
 	write_string(fd_lcd,ADDR_INTERFACE_1,name,strlen(name));
 	interface_to_string(sensor_interface_mem[1],name);
@@ -2984,6 +3056,15 @@ void show_cur_interface()
 	write_string(fd_lcd,ADDR_INTERFACE_5,name,strlen(name));
 	interface_to_string(sensor_interface_mem[5],name);
 	write_string(fd_lcd,ADDR_INTERFACE_6,name,strlen(name));
+	interface_to_string(sensor_interface_mem[6],name);
+	write_string(fd_lcd,ADDR_INTERFACE_7,name,strlen(name));
+	interface_to_string(sensor_interface_mem[7],name);
+	write_string(fd_lcd,ADDR_INTERFACE_8,name,strlen(name));
+	interface_to_string(sensor_interface_mem[8],name);
+	write_string(fd_lcd,ADDR_INTERFACE_9,name,strlen(name));
+	interface_to_string(sensor_interface_mem[9],name);
+	write_string(fd_lcd,ADDR_INTERFACE_10,name,strlen(name));
+	
 }
 void set_interface()
 {
@@ -3021,6 +3102,7 @@ void def_interface()
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
+	static char wifi_select=0;
 	static int begin_co=0;
 	static int begin_co2=0;
 	static int begin_hcho=0;
@@ -3342,17 +3424,24 @@ unsigned short input_handle(int fd_lcd,char *input)
 		clear_buf(fd_lcd,ADDR_TIME_SECOND,2);
 		//switch_pic(fd_lcd, TIME_SETTING_PAGE);
 	}
+	else if(addr==TOUCH_SELECT_OK&& (TOUCH_SELECT_OK+0x100)==data)
+	{//WiFi Passwd changed
+		*send_by_wifi=wifi_select;
+		if(wifi_select)
+			wifi_handle(fd_lcd);
+		set_net_interface();
+	}
 	else if(addr==TOUCH_SELECT_WIFI&& (TOUCH_SELECT_WIFI+0x100)==data)
 	{//WiFi Passwd changed
-		wifi_handle(fd_lcd);
-		*send_by_wifi=1;
-		set_net_interface();
+		//wifi_handle(fd_lcd);
+		wifi_select=1;
+		//set_net_interface();
 		write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
 	}
 	else if(addr==TOUCH_SELECT_GPRS&& (TOUCH_SELECT_GPRS+0x100)==data)
 	{//use gprs to xfer
-		*send_by_wifi=0;
-		set_net_interface();
+		wifi_select=0;
+		//set_net_interface();
 		write_string(fd_lcd,ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
 	}
 	else if(addr==TOUCH_XFER_SET&&(TOUCH_XFER_SET+0x100)==data)
@@ -3368,9 +3457,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 			write_string(fd_lcd,ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
 		}
 	}
-	else if(addr==TOUCH_TIME_CHANGE_MANUL && (TOUCH_TIME_CHANGE_MANUL+0x100)==data)
+	else if(addr==TOUCH_TIME_CHANGE_OK && (TOUCH_TIME_CHANGE_OK+0x100)==data
+		|| addr==TOUCH_TIME_CHANGE_MANUL && (TOUCH_TIME_CHANGE_MANUL+0x100)==data)
 	{//manul set time
 		manul_set_time(fd_lcd);
+		if(addr==TOUCH_TIME_CHANGE_OK)
+		switch_pic(fd_lcd, SYSTEM_SET_PAGE);
 	}
 	else if(addr==TOUCH_TIME_CHANGE_SERVER && (TOUCH_TIME_CHANGE_SERVER+0x100)==data)
 	{//set time from server
@@ -3385,19 +3477,19 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_TUN_ZERO_BEGIN && (TOUCH_TUN_ZERO_BEGIN+0x100)==data)
 	{//tun zero point start
-		if(factory_mode!=TUN_ZERO_MODE)
+		if(*factory_mode!=TUN_ZERO_MODE)
 		{
-			factory_mode=TUN_ZERO_MODE;
+			*factory_mode=TUN_ZERO_MODE;
 			tun_zero(fd_lcd,1);
 		}
 	}
 	else if((addr==TOUCH_TUN_ZERO_RETURN && (TOUCH_TUN_ZERO_RETURN+0x100)==data) || 
 		(addr==TOUCH_TUN_ZERO_END && (TOUCH_TUN_ZERO_END+0x100)==data))
 	{//tun zero point stop
-		if(factory_mode == TUN_ZERO_MODE)
+		if(*factory_mode == TUN_ZERO_MODE)
 		{
 			tun_zero(fd_lcd,0);
-			factory_mode=NORMAL_MODE;
+			*factory_mode=NORMAL_MODE;
 		}
 	}
 	else if(addr==TOUCH_INTERFACE_SET && (TOUCH_INTERFACE_SET+0x100)==data)
@@ -3414,47 +3506,47 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_INTERFACE_2 && (TOUCH_INTERFACE_2+0x100)==data)
 	{
 		interface_config_no=1;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_3 && (TOUCH_INTERFACE_3+0x100)==data)
 	{
 		interface_config_no=2;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_4 && (TOUCH_INTERFACE_4+0x100)==data)
 	{
 		interface_config_no=3;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_5 && (TOUCH_INTERFACE_5+0x100)==data)
 	{
 		interface_config_no=4;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}		
 	else if(addr==TOUCH_INTERFACE_6 && (TOUCH_INTERFACE_6+0x100)==data)
 	{
 		interface_config_no=5;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_7 && (TOUCH_INTERFACE_7+0x100)==data)
 	{
 		interface_config_no=6;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_8 && (TOUCH_INTERFACE_8+0x100)==data)
 	{
 		interface_config_no=7;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_9 && (TOUCH_INTERFACE_9+0x100)==data)
 	{
 		interface_config_no=8;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_10 && (TOUCH_INTERFACE_10+0x100)==data)
 	{
 		interface_config_no=9;
-		switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
+		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
 	else if(addr==TOUCH_SET_RETURN && (TOUCH_SET_RETURN+0x100)==data)
 	{
@@ -3472,57 +3564,77 @@ unsigned short input_handle(int fd_lcd,char *input)
 			sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printf("save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
 			show_cur_interface();
-			switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
+			//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 		}
 	}
 	else if(addr==TOUCH_INTERFACE_RETURN && (TOUCH_INTERFACE_RETURN+0x100)==data)
 	{		
-		switch_pic(fd_lcd,SYSTEM_SET_PAGE);
+		//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_OK && (TOUCH_INTERFACE_OK+0x100)==data)
 	{		
 		set_interface();
-		switch_pic(fd_lcd,SYSTEM_SET_PAGE);
+		//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 	}
 	else if(addr==TOUCH_SET_HCHO_1 && (TOUCH_SET_HCHO_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CH2O_WEISHEN;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_HCHO_2 && (TOUCH_SET_HCHO_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CH2O_AERSHEN;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_WENSHI_1 && (TOUCH_SET_WENSHI_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_WENSHI_RUSHI;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_PM25_1 && (TOUCH_SET_PM25_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN;
+		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_PM25_2 && (TOUCH_SET_PM25_2+0x100)==data)
+	else if(addr==TOUCH_SET_ZAOSHEN && (TOUCH_SET_ZAOSHEN+0x100)==data)
 	{
-		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN2;
+		cur_select_interface=TYPE_SENSOR_ZHAOSHEN;
+		show_cur_select_intr(cur_select_interface);
 	}
 	else if(addr==TOUCH_SET_CO_1 && (TOUCH_SET_CO_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO_WEISHEN;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_CO_2 && (TOUCH_SET_CO_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO_DD;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_CO2_1 && (TOUCH_SET_CO2_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO2_WEISHEN;
+		show_cur_select_intr(cur_select_interface);
 	}	
 	else if(addr==TOUCH_SET_CO2_2 && (TOUCH_SET_CO2_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO2_RUDIAN;
+		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_SET_QIYA_RUISHI && (TOUCH_SET_QIYA_RUISHI+0x100)==data)
+	else if(addr==TOUCH_SET_FENGSU && (TOUCH_SET_FENGSU+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_FENGSU;
+		show_cur_select_intr(cur_select_interface);
+	}
+	else if(addr==TOUCH_SET_QIYA && (TOUCH_SET_QIYA+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
+		show_cur_select_intr(cur_select_interface);
+	}
+	else if(addr==TOUCH_UNKNOWN&& (TOUCH_UNKNOWN+0x100)==data)
+	{
+		cur_select_interface=0x00;
+		show_cur_select_intr(cur_select_interface);
 	}
 	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
 	{//product info
@@ -3999,7 +4111,7 @@ void lcd_off(int a)
 void lcd_on(int page)
 {
 	switch_pic(fd_lcd,page);
-	sleep(1);
+	usleep(100000);
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
 	write(fd_lcd,cmd,6);
 	lcd_state=1;
@@ -4215,7 +4327,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
-
+	if((factory_mode_shmid = shmget(IPC_PRIVATE, sizeof(char), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
 	if((state_shmid= shmget(IPC_PRIVATE, sizeof(struct state), PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
@@ -4325,6 +4441,7 @@ int main(int argc, char *argv[])
 		g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
 		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 		sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
+		factory_mode = (char *)shmat(factory_mode_shmid, 0, 0);
 		g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 		printf(LCD_PROCESS"end to shmat\n");
 		signal(SIGALRM, set_upload_flag);
@@ -4359,14 +4476,15 @@ int main(int argc, char *argv[])
 			history_done = (int *)shmat(history_load_done_shmid,0,0);
 			g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 			sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
+			factory_mode = (char *)shmat(factory_mode_shmid, 0, 0);
 			sensor_interface_mem[0] = 0x1234;
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
 			alarm(300);
-			printf("to get interface\n");
-			def_interface();
-			ask_interface();
-			printf("end get interface\n");
+			//printf("to get interface\n");
+			//def_interface();
+			//ask_interface();
+			//printf("end get interface\n");
 			while(1)
 			{
 				lcd_loop(fd_lcd);
