@@ -1013,7 +1013,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 			case TIME_BYTE:
 			{	//TIME_BYTE got ,we can send to server now
 				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9],cmd[10]);
-				printf(CAP_PROCESS"date is %s\r\n",date);
+				//printf(CAP_PROCESS"date is %s\r\n",date);
 				message=add_item(message,ID_DEVICE_CAP_TIME,date);
 				if(warnning_msg!=NULL)
 				{	//have alarm msg upload
@@ -1724,7 +1724,7 @@ int get_uart(int fd_lcd,int fd)
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					show_cap_value(to_check+2,message_len);
+					//show_cap_value(to_check+2,message_len);
 					if(factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)
@@ -1786,9 +1786,9 @@ void write_data(int fd,unsigned int Index,int data)
 	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
 	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
-	for(i = 0;i<sizeof(cmd);i++)
-		printf("%02x ",cmd[i]);
-	printf("\n");
+	//for(i = 0;i<sizeof(cmd);i++)
+	//	printf("%02x ",cmd[i]);
+	//printf("\n");
 	write(fd,cmd,8);
 }
 void write_string(int fd,unsigned int addr,char *data,int len)
@@ -2635,7 +2635,7 @@ int read_dgus(int fd,int addr,char len,char *out)
 	{	
 		if(read(fd,&ch,1)==1)
 		{
-			if(i>=7)
+			if(i>=7 && ch!=0xff)
 				out[i-7]=ch;
 			i++;
 			printf("==> %x\n",ch);
@@ -3999,6 +3999,7 @@ void lcd_off(int a)
 void lcd_on(int page)
 {
 	switch_pic(fd_lcd,page);
+	sleep(1);
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
 	write(fd_lcd,cmd,6);
 	lcd_state=1;
