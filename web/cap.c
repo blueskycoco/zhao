@@ -968,10 +968,12 @@ void show_factory(int fd,int zero,char *cmd,int len)
 {	
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];	
-	if(zero)
-		printf("In tun zero mode\n");
-	else
-		printf("In verify mode\n");
+	//if(zero)
+	//	printf("In tun zero mode %d %d %d\n",cmd[5],cmd[6],cmd[7]);
+	//else
+	//	printf("In verify mode\n");
+	if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
+		return ;
 	if(crc==CRC_check(cmd,len-2))
 	{
 		sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
@@ -999,18 +1001,22 @@ void show_factory(int fd,int zero,char *cmd,int len)
 				sprintf(data,"%d.%d",left,right);								
 			}		
 		}	
-	
+		//printf("data %s\n",data);
 		if(zero)
 		{
 			if(cmd[3]==atoi(ID_CAP_CO))
 			{
+				printf("In tun zero mode CO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
 				//write_data(fd_lcd,ADDR_TUN_ZERO_CO,cmd[5]<<8|cmd[6]);
 				write_string(fd_lcd,ADDR_TUN_ZERO_CO,data,strlen(data));
 				g_zero_info->cur_co=(cmd[5]<<8)|cmd[6];
 				//g_zero_info->cur_co_point=cmd[7];
 			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
-			{
+			{	
+				printf("In tun zero mode HCHO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
 				//write_data(fd_lcd,ADDR_TUN_ZERO_HCHO,cmd[5]<<8|cmd[6]);
 				write_string(fd_lcd,ADDR_TUN_ZERO_HCHO,data,strlen(data));
 				g_zero_info->cur_ch2o=(cmd[5]<<8)|cmd[6];
@@ -1019,9 +1025,12 @@ void show_factory(int fd,int zero,char *cmd,int len)
 		}
 		else
 		{			
-			if(cmd[3]==atoi(ID_CAP_PM_25))
+			if(cmd[3]==atoi(ID_CAP_PM_25))				
+			{
+				clear_buf(fd_lcd,ADDR_REAL_VALUE,4);
 				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
 				//write_data(fd_lcd,ADDR_REAL_VALUE,cmd[5]<<8|cmd[6]);
+			}
 		}
 	}
 	else
@@ -2806,14 +2815,22 @@ void log_in(int fd)
 		printf("User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
-			if(*history_done)
-				switch_pic(fd,CURVE_PAGE);
+			if(g_index!=SYSTEM_SET_PAGE)
+			{
+				if(*history_done)
+					switch_pic(fd,CURVE_PAGE);
+				else
+					switch_pic(fd,MAIN_PAGE);	
+			}
 			else
-				switch_pic(fd,MAIN_PAGE);	
+				switch_pic(fd,SENSOR_TEST_PAGE);
 			return;
 		}
 	}
-	switch_pic(fd,MAIN_PAGE);
+	if(g_index!=SYSTEM_SET_PAGE)
+		switch_pic(fd,MAIN_PAGE);
+	else
+		switch_pic(fd,SYSTEM_SET_PAGE);
 }
 void wifi_handle(int fd)
 {
@@ -2890,6 +2907,8 @@ void tun_zero(int fd,int on)
 	int crc = 0;
 	int i =0;
 	//send cap board start co & hcho
+	clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
+	clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
 	if(on)
 	{		
 		printf("Start Co,ch2o tun zero\n");
@@ -3132,7 +3151,10 @@ unsigned short input_handle(int fd_lcd,char *input)
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(lcd_state==0)
 	{
-		lcd_on(MAIN_PAGE);
+		if(g_index!=TUN_ZERO_PAGE)
+			lcd_on(MAIN_PAGE);
+		else
+			lcd_on(TUN_ZERO_PAGE);
 		alarm(300);
 	}
 	else
@@ -3475,6 +3497,12 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//verify sensor display
 	
 	}
+	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
+	{//verify sensor display
+		g_index=TUN_ZERO_PAGE;
+		clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
+		clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
+	}
 	else if(addr==TOUCH_TUN_ZERO_BEGIN && (TOUCH_TUN_ZERO_BEGIN+0x100)==data)
 	{//tun zero point start
 		if(*factory_mode!=TUN_ZERO_MODE)
@@ -3567,6 +3595,20 @@ unsigned short input_handle(int fd_lcd,char *input)
 			//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 		}
 	}
+	else if(addr==TOUCH_SENSOR_SET && (TOUCH_SENSOR_SET+0x100)==data)
+	{//show history CO2 the first page
+		if(logged)
+		{			
+			switch_pic(fd_lcd,SENSOR_TEST_PAGE);
+		}
+		else
+		{
+			clear_buf(fd_lcd,ADDR_USER_NAME_VERIFY,16);
+			clear_buf(fd_lcd,ADDR_USER_PWD_VERIFY,16);
+			switch_pic(fd_lcd,LOG_IN_PAGE);	
+		}
+		g_index=SYSTEM_SET_PAGE;
+	}	
 	else if(addr==TOUCH_INTERFACE_RETURN && (TOUCH_INTERFACE_RETURN+0x100)==data)
 	{		
 		//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
@@ -3692,6 +3734,13 @@ unsigned short input_handle(int fd_lcd,char *input)
 			default:
 				break;
 		}
+	}
+	else if(addr==TOUCH_USER_RETURN_VERIFY&& (TOUCH_USER_RETURN_VERIFY+0x100)==data)
+	{
+		if(g_index!=SYSTEM_SET_PAGE)
+			switch_pic(fd_lcd,MAIN_PAGE);
+		else
+			switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 	}
 	else if(addr==TOUCH_USER_OK_VERIFY&& (TOUCH_USER_OK_VERIFY+0x100)==data)
 	{//Login if didn't 
