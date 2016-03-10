@@ -1026,7 +1026,7 @@ void show_factory(int fd,int zero,char *cmd,int len)
 		}
 		else
 		{			
-			if(cmd[3]==atoi(jiaozhun_sensor))				
+			if(cmd[3]==*jiaozhun_sensor)				
 			{
 				clear_buf(fd_lcd,ADDR_REAL_VALUE,4);
 				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
@@ -1785,7 +1785,18 @@ int get_uart(int fd_lcd,int fd)
 					else if(*factory_mode==TUN_ZERO_MODE)
 						show_factory(fd_lcd,1,cmd,message_len+7);
 					else
+					{
+						if(message_type == 0x0003)
+						{
+							for(i=0;i<message_len;i=i+2)
+							{
+								printf("verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
+							}
+							printf(". = %d\n",message[message_len-1]);
+						}
+						else
 						show_factory(fd_lcd,0,cmd,message_len+7);
+					}
 					free(cmd);
 					return 0;						
 				}
