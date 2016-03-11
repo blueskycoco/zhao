@@ -4253,6 +4253,10 @@ unsigned short input_handle(int fd_lcd,char *input)
 		cur_select_interface=0x00;
 		show_cur_select_intr(cur_select_interface);
 	}
+	else if(addr==TOUCH_SYS_SET_RETURN&& (TOUCH_SYS_SET_RETURN+0x100)==data)
+	{
+		g_index=MAIN_PAGE;
+	}
 	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
 	{//product info
 		clear_buf(fd_lcd,ADDR_PRODUCT_NAME,40);
