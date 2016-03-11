@@ -3157,6 +3157,19 @@ void def_interface()
 	write(fd_com,cmd,sizeof(cmd));
 
 }
+int getxiuzhen()
+{
+	char data[5]={0};
+	int d=0;
+	if(read_dgus(fd_lcd,ADDR_VERIFY_VALUE,2,data))
+	{
+		if(strchr(data,'.')!=NULL)
+			d=atoi(data+2);
+		else
+			d=atoi(data);
+	}
+	return d;
+}
 void send_return(int fd,char sensor,char jp)
 {	
 	int i;
