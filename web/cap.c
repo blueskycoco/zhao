@@ -3337,14 +3337,14 @@ void clear_point()
 
 	char off7[]={0x5a,0xa5,0x15,0x82,0x08,0x62,0x00,0x06,0x00,0x01,0x00,0x13,
 				0x00,0xd7,0x02,0x1a,0x00,0xea,0x02,0x2c,0x00,0xd7,0x02,0x1a};
-	write(fd_lcd,off0,sizeof(off0));
+	write(fd_lcd,off0,sizeof(off0));/*
 	write(fd_lcd,off1,sizeof(off1));
 	write(fd_lcd,off2,sizeof(off2));
 	write(fd_lcd,off3,sizeof(off3));
 	write(fd_lcd,off4,sizeof(off4));
 	write(fd_lcd,off5,sizeof(off5));
 	write(fd_lcd,off6,sizeof(off6));
-	write(fd_lcd,off7,sizeof(off7));
+	write(fd_lcd,off7,sizeof(off7));*/
 	clear_buf(fd_lcd,ADDR_VERIFY_VALUE,5);
 	clear_buf(fd_lcd,ADDR_REAL_VALUE,5);
 }
@@ -3405,110 +3405,110 @@ void show_point(int fd,int index,char sensor)
 	{
 		case 0:
 			{
-				write(fd,cmd0,sizeof(cmd0));
+				write(fd,cmd0,sizeof(cmd0));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 1:
 			{
-				write(fd,cmd1,sizeof(cmd1));
+				write(fd,cmd1,sizeof(cmd1));/*
 				write(fd,off0,sizeof(off0));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 2:
 			{
-				write(fd,cmd2,sizeof(cmd2));
+				write(fd,cmd2,sizeof(cmd2));/*
 				write(fd,off0,sizeof(off0));
 				write(fd,off1,sizeof(off1));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 3:
 			{
-				write(fd,cmd3,sizeof(cmd3));
+				write(fd,cmd3,sizeof(cmd3));/*
 				write(fd,off0,sizeof(off0));
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 4:
 			{
-				write(fd,cmd4,sizeof(cmd4));
+				write(fd,cmd4,sizeof(cmd4));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off0,sizeof(off0));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 5:
 			{
-				write(fd,cmd5,sizeof(cmd5));
+				write(fd,cmd5,sizeof(cmd5));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off0,sizeof(off0));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 6:
 			{
-				write(fd,cmd6,sizeof(cmd6));
+				write(fd,cmd6,sizeof(cmd6));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off0,sizeof(off0));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 		case 7:
 			{
-				write(fd,cmd7,sizeof(cmd7));
+				write(fd,cmd7,sizeof(cmd7));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off0,sizeof(off0));
+				write(fd,off0,sizeof(off0));*/
 			}
 			break;
 		default:
 			{
-				write(fd,off0,sizeof(off0));
+				write(fd,off0,sizeof(off0));/*
 				write(fd,off1,sizeof(off1));
 				write(fd,off2,sizeof(off2));
 				write(fd,off3,sizeof(off3));
 				write(fd,off4,sizeof(off4));
 				write(fd,off5,sizeof(off5));
 				write(fd,off6,sizeof(off6));
-				write(fd,off7,sizeof(off7));
+				write(fd,off7,sizeof(off7));*/
 			}
 			break;
 	}
