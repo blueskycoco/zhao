@@ -3987,11 +3987,11 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
 	{
-		handle_xiuzhen(1,verify_object,verify_point);
+		//handle_xiuzhen(1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
 	{
-		handle_xiuzhen(0,verify_object,verify_point);
+		//handle_xiuzhen(0,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_SET_RETURN && (TOUCH_SET_RETURN+0x100)==data)
 	{
