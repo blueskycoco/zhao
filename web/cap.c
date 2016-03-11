@@ -135,7 +135,8 @@ struct state *g_state;
 #define TUN_ZERO_MODE	1
 #define SENSOR_VERIFY_MODE	2
 char *factory_mode;//=NORMAL_MODE;//0 is normall mode , 1 is tun zero mode , 2 is sensor verify mode
-key_t sensor_interface_shmid,factory_mode_shmid;
+int *jiaozhun_sensor;
+key_t sensor_interface_shmid,factory_mode_shmid,jiaozhun_sensor_shmid;
 int *sensor_interface_mem;
 struct cur_zero_info
 {
@@ -1025,11 +1026,10 @@ void show_factory(int fd,int zero,char *cmd,int len)
 		}
 		else
 		{			
-			if(cmd[3]==atoi(ID_CAP_PM_25))				
+			if(cmd[3]==atoi(jiaozhun_sensor))				
 			{
 				clear_buf(fd_lcd,ADDR_REAL_VALUE,4);
 				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
-				//write_data(fd_lcd,ADDR_REAL_VALUE,cmd[5]<<8|cmd[6]);
 			}
 		}
 	}
@@ -3050,39 +3050,78 @@ void show_cur_select_intr(int sel)
 	interface_to_string(sel,name);
 	write_string(fd_lcd,ADDR_CUR_SELECT,name,strlen(name));
 }
-void show_cur_interface()
+void show_cur_interface(int page)
 {
 	char name[256]={0};
-	clear_buf(fd_lcd,ADDR_INTERFACE_1,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_2,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_3,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_4,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_5,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_6,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_7,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_8,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_9,10);
-	clear_buf(fd_lcd,ADDR_INTERFACE_10,10);	
-	interface_to_string(sensor_interface_mem[0],name);
-	write_string(fd_lcd,ADDR_INTERFACE_1,name,strlen(name));
-	interface_to_string(sensor_interface_mem[1],name);
-	write_string(fd_lcd,ADDR_INTERFACE_2,name,strlen(name));
-	interface_to_string(sensor_interface_mem[2],name);
-	write_string(fd_lcd,ADDR_INTERFACE_3,name,strlen(name));
-	interface_to_string(sensor_interface_mem[3],name);
-	write_string(fd_lcd,ADDR_INTERFACE_4,name,strlen(name));
-	interface_to_string(sensor_interface_mem[4],name);
-	write_string(fd_lcd,ADDR_INTERFACE_5,name,strlen(name));
-	interface_to_string(sensor_interface_mem[5],name);
-	write_string(fd_lcd,ADDR_INTERFACE_6,name,strlen(name));
-	interface_to_string(sensor_interface_mem[6],name);
-	write_string(fd_lcd,ADDR_INTERFACE_7,name,strlen(name));
-	interface_to_string(sensor_interface_mem[7],name);
-	write_string(fd_lcd,ADDR_INTERFACE_8,name,strlen(name));
-	interface_to_string(sensor_interface_mem[8],name);
-	write_string(fd_lcd,ADDR_INTERFACE_9,name,strlen(name));
-	interface_to_string(sensor_interface_mem[9],name);
-	write_string(fd_lcd,ADDR_INTERFACE_10,name,strlen(name));
+	if(page==INTERFACE_SELECT_PAGE)
+	{
+		clear_buf(fd_lcd,ADDR_INTERFACE_1,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_2,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_3,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_4,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_5,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_6,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_7,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_8,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_9,10);
+		clear_buf(fd_lcd,ADDR_INTERFACE_10,10);	
+		interface_to_string(sensor_interface_mem[0],name);
+		write_string(fd_lcd,ADDR_INTERFACE_1,name,strlen(name));
+		interface_to_string(sensor_interface_mem[1],name);
+		write_string(fd_lcd,ADDR_INTERFACE_2,name,strlen(name));
+		interface_to_string(sensor_interface_mem[2],name);
+		write_string(fd_lcd,ADDR_INTERFACE_3,name,strlen(name));
+		interface_to_string(sensor_interface_mem[3],name);
+		write_string(fd_lcd,ADDR_INTERFACE_4,name,strlen(name));
+		interface_to_string(sensor_interface_mem[4],name);
+		write_string(fd_lcd,ADDR_INTERFACE_5,name,strlen(name));
+		interface_to_string(sensor_interface_mem[5],name);
+		write_string(fd_lcd,ADDR_INTERFACE_6,name,strlen(name));
+		interface_to_string(sensor_interface_mem[6],name);
+		write_string(fd_lcd,ADDR_INTERFACE_7,name,strlen(name));
+		interface_to_string(sensor_interface_mem[7],name);
+		write_string(fd_lcd,ADDR_INTERFACE_8,name,strlen(name));
+		interface_to_string(sensor_interface_mem[8],name);
+		write_string(fd_lcd,ADDR_INTERFACE_9,name,strlen(name));
+		interface_to_string(sensor_interface_mem[9],name);
+		write_string(fd_lcd,ADDR_INTERFACE_10,name,strlen(name));
+	}
+	else
+	{
+		clear_buf(fd_lcd,ADDR_VERIFY_HCHO,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_PM25,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT3,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT4,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT5,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT6,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT7,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_INT8,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_WENSHI,10);
+		clear_buf(fd_lcd,ADDR_VERIFY_FENGSU,10);	
+		clear_buf(fd_lcd,ADDR_VERIFY_QIYA,10);	
+		interface_to_string(sensor_interface_mem[0],name);
+		write_string(fd_lcd,ADDR_VERIFY_HCHO,name,strlen(name));
+		interface_to_string(sensor_interface_mem[1],name);
+		write_string(fd_lcd,ADDR_VERIFY_PM25,name,strlen(name));
+		interface_to_string(sensor_interface_mem[2],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT3,name,strlen(name));
+		interface_to_string(sensor_interface_mem[3],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT4,name,strlen(name));
+		interface_to_string(sensor_interface_mem[4],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT5,name,strlen(name));
+		interface_to_string(sensor_interface_mem[5],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT6,name,strlen(name));
+		interface_to_string(sensor_interface_mem[6],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT7,name,strlen(name));
+		interface_to_string(sensor_interface_mem[7],name);
+		write_string(fd_lcd,ADDR_VERIFY_INT8,name,strlen(name));
+		interface_to_string(sensor_interface_mem[8],name);
+		write_string(fd_lcd,ADDR_VERIFY_WENSHI,name,strlen(name));
+		interface_to_string(sensor_interface_mem[9],name);
+		write_string(fd_lcd,ADDR_VERIFY_FENGSU,name,strlen(name));
+		interface_to_string(sensor_interface_mem[10],name);
+		write_string(fd_lcd,ADDR_VERIFY_QIYA,name,strlen(name));
+	}
 	
 }
 void set_interface()
@@ -3118,10 +3157,255 @@ void def_interface()
 	write(fd_com,cmd,sizeof(cmd));
 
 }
+void send_return(int fd,char sensor,char jp)
+{	
+	int i;
+	char cmd_return[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
+	cmd_return[5]=sensor;
+	cmd_return[6]=jp;
+	cmd_return[7]=getxiuzhen();
+	cmd_return[8]=getxiuzhen();
+	int crc=CRC_check(cmd_return,9);
+	cmd_return[9]=(crc&0xff00)>>8;cmd_return[10]=crc&0x00ff;		
+	for(i=0;i<sizeof(cmd_return);i++)
+		printf("%02X ",cmd_return[i]);
+	printf("\n");
+	write(fd_com,cmd_return,sizeof(cmd_return));
+}
+void jiaozhun(int fd,int on,char sensor,char jp)
+{
+	char cmd_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x04,0x01,0x00,0x00,0x00};
+	int i;
+	if(on)
+	{
+		switch_pic(fd,VERIFY_PAGE);
+		if(*factory_mode!=SENSOR_VERIFY_MODE)
+		{
+			printf("Begin to JiaoZhun %d\n",sensor);
+			*factory_mode=SENSOR_VERIFY_MODE;
+			cmd_verify[5]=sensor;
+			int crc=CRC_check(cmd_verify,6);
+			cmd_verify[6]=(crc&0xff00)>>8;cmd_verify[7]=crc&0x00ff;		
+			for(i=0;i<sizeof(cmd_verify);i++)
+				printf("%02X ",cmd_verify[i]);
+			printf("\n");
+			write(fd_com,cmd_verify,sizeof(cmd_verify));
+		}
+	}
+	else
+	{
+		
+		switch_pic(fd_lcd,SENSOR_TEST_PAGE);
+		if(*factory_mode==SENSOR_VERIFY_MODE)
+		{
+			*factory_mode=NORMAL_MODE;
+			printf("End to JiaoZhun %d\n",sensor);
+			send_return(fd,sensor,jp);
+		}
+	}
+}
+char *Get_Type(int index)
+{
+	if(sensor_interface_mem[index]==TYPE_SENSOR_CO_WEISHEN ||
+		sensor_interface_mem[index]==TYPE_SENSOR_CO_DD)
+		return ID_CAP_CO;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_CO2_WEISHEN ||
+		sensor_interface_mem[index]==TYPE_SENSOR_CO2_RUDIAN)
+		return ID_CAP_CO2;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_CH2O_WEISHEN ||
+		sensor_interface_mem[index]==TYPE_SENSOR_CH2O_AERSHEN)
+		return ID_CAP_HCHO;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_PM25_WEISHEN ||
+		sensor_interface_mem[index]==TYPE_SENSOR_PM25_WEISHEN2)
+		return ID_CAP_PM_25;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_WENSHI_RUSHI)
+		return ID_CAP_TEMPERATURE;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_QIYA_RUSHI)
+		return ID_CAP_QI_YA;
+	else if(sensor_interface_mem[index]==TYPE_SENSOR_ZHAOSHEN)
+		return ID_CAP_BUZZY;
+}
+void show_point(int fd,int index,char sensor)
+{
+	char cmd0[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x00,0xb0};
+	
+	char cmd1[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x00,0xe4};
+	
+	char cmd2[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x01,0x18};
+	
+	char cmd3[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x01,0x4c};
+	
+	char cmd4[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x01,0x80};
+	
+	char cmd5[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x01,0xb4};
+	
+	char cmd6[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x01,0xe7};
+	
+	char cmd7[]={0x5a,0xa5,0x15,0x82,0x08,0x26,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xd7,0x02,0x1a};
+	
+	char off0[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x00,0xb0,0x00,0xea,0x00,0xc2,0x00,0xd7,0x00,0xb0};
+
+	char off1[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x00,0xe4,0x00,0xea,0x00,0xf6,0x00,0xd7,0x00,0xe4};
+
+	char off2[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x01,0x18,0x00,0xea,0x01,0x2a,0x00,0xd7,0x01,0x18};
+
+	char off3[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x01,0x4c,0x00,0xea,0x01,0x5e,0x00,0xd7,0x01,0x4c};
+
+	char off4[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x01,0x80,0x00,0xea,0x01,0x92,0x00,0xd7,0x01,0x80};
+
+	char off5[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x01,0xb4,0x00,0xea,0x01,0xc6,0x00,0xd7,0x01,0xb4};
+
+	char off6[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x01,0xe7,0x00,0xea,0x01,0xf9,0x00,0xd7,0x01,0xe7};
+
+	char off7[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xd7,0x02,0x1a,0x00,0xea,0x02,0x2c,0x00,0xd7,0x02,0x1a};
+	send_return(fd,sensor,index);
+	switch(index)
+	{
+		case 0:
+			{
+				write(fd,cmd0,sizeof(cmd0));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 1:
+			{
+				write(fd,cmd1,sizeof(cmd1));
+				write(fd,off0,sizeof(off0));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 2:
+			{
+				write(fd,cmd2,sizeof(cmd2));
+				write(fd,off0,sizeof(off0));
+				write(fd,off1,sizeof(off1));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 3:
+			{
+				write(fd,cmd3,sizeof(cmd3));
+				write(fd,off0,sizeof(off0));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 4:
+			{
+				write(fd,cmd4,sizeof(cmd4));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off0,sizeof(off0));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 5:
+			{
+				write(fd,cmd5,sizeof(cmd5));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off0,sizeof(off0));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 6:
+			{
+				write(fd,cmd6,sizeof(cmd6));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off0,sizeof(off0));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+		case 7:
+			{
+				write(fd,cmd7,sizeof(cmd7));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off0,sizeof(off0));
+			}
+			break;
+		default:
+			{
+				write(fd,cmd0,sizeof(cmd0));
+				write(fd,off1,sizeof(off1));
+				write(fd,off2,sizeof(off2));
+				write(fd,off3,sizeof(off3));
+				write(fd,off4,sizeof(off4));
+				write(fd,off5,sizeof(off5));
+				write(fd,off6,sizeof(off6));
+				write(fd,off7,sizeof(off7));
+			}
+			break;
+	}
+}
+void handle_xiuzhen(int up,char sensor,char jp)
+{
+	char data[5]={0};
+	int d;
+	if(read_dgus(fd_lcd,ADDR_VERIFY_VALUE,2,data))
+	{
+		if(strchr(data,'.')!=NULL)
+			d=atoi(data+2);
+		else
+			d=atoi(data);
+		send_return(fd_com,sensor,jp);
+	}
+}
 unsigned short input_handle(int fd_lcd,char *input)
 {
 	int addr=0,data=0;
 	static char wifi_select=0;
+	static char verify_object=0;
+	static char verify_point = 0;
 	static int begin_co=0;
 	static int begin_co2=0;
 	static int begin_hcho=0;
@@ -3493,9 +3777,81 @@ unsigned short input_handle(int fd_lcd,char *input)
 		//sleep(3);
 		//switch_pic(fd_lcd,18);
 	}
+	else if(addr==TOUCH_VERIFY_HCHO && (TOUCH_VERIFY_HCHO+0x100)==data)
+	{
+		verify_object=0;
+		*jiaozhun_sensor=atoi(ID_CAP_HCHO);
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_PM25 && (TOUCH_VERIFY_PM25+0x100)==data)
+	{
+		verify_object=1;
+		*jiaozhun_sensor=atoi(ID_CAP_PM_25);
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT3 && (TOUCH_VERIFY_INT3+0x100)==data)
+	{
+		verify_object=2;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT4 && (TOUCH_VERIFY_INT4+0x100)==data)
+	{
+		verify_object=3;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT5 && (TOUCH_VERIFY_INT5+0x100)==data)
+	{
+		verify_object=4;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT6 && (TOUCH_VERIFY_INT6+0x100)==data)
+	{
+		verify_object=5;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT7 && (TOUCH_VERIFY_INT7+0x100)==data)
+	{
+		verify_object=6;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_INT8 && (TOUCH_VERIFY_INT8+0x100)==data)
+	{
+		verify_object=7;
+		*jiaozhun_sensor=atoi(Get_Type(verify_object));
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_VERIFY_WENSHI && (TOUCH_VERIFY_WENSHI+0x100)==data)
+	{
+		verify_object=8;
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+		*jiaozhun_sensor=atoi(ID_CAP_TEMPERATURE);
+	}
+	else if(addr==TOUCH_VERIFY_FENGSU && (TOUCH_VERIFY_FENGSU+0x100)==data)
+	{
+		verify_object=9;
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+		*jiaozhun_sensor=atoi(ID_CAP_FENG_SU);
+	}
+	else if(addr==TOUCH_VERIFY_QIYA && (TOUCH_VERIFY_QIYA+0x100)==data)
+	{
+		verify_object=10;
+		jiaozhun(fd_lcd,1,verify_object,verify_point);
+		*jiaozhun_sensor=atoi(ID_CAP_QI_YA);
+	}
 	else if(addr==TOUCH_VERIFY && (TOUCH_VERIFY+0x100)==data)
-	{//verify sensor display
-	
+	{	//verify sensor display
+		sensor_interface_mem[0]=0x1234;
+		ask_interface();
+		show_cur_interface(VERIFY_SELECT_PAGE);
+	}
+	else if(addr==TOUCH_VERIFY_EXIT && (TOUCH_VERIFY_EXIT+0x100)==data)
+	{	//verify sensor display
+		jiaozhun(fd_lcd,0,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
 	{//verify sensor display
@@ -3524,7 +3880,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//set sensor interface
 		sensor_interface_mem[0]=0x1234;
 		ask_interface();
-		show_cur_interface();
+		show_cur_interface(INTERFACE_SELECT_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
 	{
@@ -3576,6 +3932,54 @@ unsigned short input_handle(int fd_lcd,char *input)
 		interface_config_no=9;
 		switch_pic(fd_lcd,INTERFACE_ALL_PAGE);
 	}
+	else if(addr==TOUCH_JIAOZHUN_P0 && (TOUCH_JIAOZHUN_P0+0x100)==data)
+	{
+		verify_point=0;
+		show_point(fd_lcd,0,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P1 && (TOUCH_JIAOZHUN_P1+0x100)==data)
+	{
+		verify_point=1;
+		show_point(fd_lcd,1,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P2 && (TOUCH_JIAOZHUN_P2+0x100)==data)
+	{
+		verify_point=2;
+		show_point(fd_lcd,2,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P3 && (TOUCH_JIAOZHUN_P3+0x100)==data)
+	{
+		verify_point=3;
+		show_point(fd_lcd,3,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P4 && (TOUCH_JIAOZHUN_P4+0x100)==data)
+	{
+		verify_point=4;
+		show_point(fd_lcd,4,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P5 && (TOUCH_JIAOZHUN_P5+0x100)==data)
+	{
+		verify_point=5;
+		show_point(fd_lcd,5,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P6 && (TOUCH_JIAOZHUN_P6+0x100)==data)
+	{
+		verify_point=6;
+		show_point(fd_lcd,6,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_P7 && (TOUCH_JIAOZHUN_P7+0x100)==data)
+	{
+		verify_point=7;
+		show_point(fd_lcd,7,verify_object);
+	}
+	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
+	{
+		handle_xiuzhen(1,verify_object,verify_point);
+	}
+	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
+	{
+		handle_xiuzhen(0,verify_object,verify_point);
+	}
 	else if(addr==TOUCH_SET_RETURN && (TOUCH_SET_RETURN+0x100)==data)
 	{
 		if(interface_config_no!=0)
@@ -3591,7 +3995,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 				&& cur_select_interface!=TYPE_SENSOR_FENGSU))
 			sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printf("save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
-			show_cur_interface();
+			show_cur_interface(INTERFACE_SELECT_PAGE);
 			//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 		}
 	}
@@ -4381,6 +4785,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
+	if((jiaozhun_sensor_shmid = shmget(IPC_PRIVATE, sizeof(int), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
 	if((state_shmid= shmget(IPC_PRIVATE, sizeof(struct state), PERM)) == -1 )
 	{
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
@@ -4491,6 +4900,7 @@ int main(int argc, char *argv[])
 		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
 		sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
 		factory_mode = (char *)shmat(factory_mode_shmid, 0, 0);
+		jiaozhun_sensor = (int *)shmat(jiaozhun_sensor_shmid, 0, 0);
 		g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 		printf(LCD_PROCESS"end to shmat\n");
 		signal(SIGALRM, set_upload_flag);
@@ -4526,6 +4936,7 @@ int main(int argc, char *argv[])
 			g_zero_info = (struct cur_zero_info *)shmat(shmid_zero_info, 0, 0);
 			sensor_interface_mem = (int *)shmat(sensor_interface_shmid, 0, 0);
 			factory_mode = (char *)shmat(factory_mode_shmid, 0, 0);
+			jiaozhun_sensor = (int *)shmat(jiaozhun_sensor_shmid, 0, 0);
 			sensor_interface_mem[0] = 0x1234;
 			printf(LCD_PROCESS"end to shmat\n");
 			signal(SIGALRM, lcd_off);
