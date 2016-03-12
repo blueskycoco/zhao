@@ -3579,10 +3579,14 @@ unsigned short input_handle(int fd_lcd,char *input)
 	printf(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(lcd_state==0)
 	{
-		if(g_index!=TUN_ZERO_PAGE)
-			lcd_on(MAIN_PAGE);
-		else
+		if(g_index==TUN_ZERO_PAGE)
 			lcd_on(TUN_ZERO_PAGE);
+		else if(g_index==VERIFY_SELECT_PAGE)
+			lcd_on(VERIFY_SELECT_PAGE);
+		else if(g_index==VERIFY_PAGE)
+			lcd_on(VERIFY_PAGE);
+		else
+			lcd_on(MAIN_PAGE);
 		alarm(300);
 	}
 	else
@@ -3923,66 +3927,77 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_VERIFY_HCHO && (TOUCH_VERIFY_HCHO+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=0;
 		*jiaozhun_sensor=atoi(ID_CAP_HCHO);
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_PM25 && (TOUCH_VERIFY_PM25+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;		
 		verify_object=1;
 		*jiaozhun_sensor=atoi(ID_CAP_PM_25);
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT3 && (TOUCH_VERIFY_INT3+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=2;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT4 && (TOUCH_VERIFY_INT4+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=3;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT5 && (TOUCH_VERIFY_INT5+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=4;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT6 && (TOUCH_VERIFY_INT6+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=5;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT7 && (TOUCH_VERIFY_INT7+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=6;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_INT8 && (TOUCH_VERIFY_INT8+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=7;
 		*jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 	}
 	else if(addr==TOUCH_VERIFY_WENSHI && (TOUCH_VERIFY_WENSHI+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=8;
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 		*jiaozhun_sensor=atoi(ID_CAP_TEMPERATURE);
 	}
 	else if(addr==TOUCH_VERIFY_FENGSU && (TOUCH_VERIFY_FENGSU+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=9;
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 		*jiaozhun_sensor=atoi(ID_CAP_FENG_SU);
 	}
 	else if(addr==TOUCH_VERIFY_QIYA && (TOUCH_VERIFY_QIYA+0x100)==data)
 	{
+		g_index=VERIFY_PAGE;
 		verify_object=10;
 		jiaozhun(fd_lcd,1,verify_object,verify_point);
 		*jiaozhun_sensor=atoi(ID_CAP_QI_YA);
@@ -3992,6 +4007,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 		sensor_interface_mem[0]=0x1234;
 		ask_interface();
 		show_cur_interface(VERIFY_SELECT_PAGE);
+		g_index=VERIFY_SELECT_PAGE;
 	}
 	else if(addr==TOUCH_VERIFY_EXIT && (TOUCH_VERIFY_EXIT+0x100)==data)
 	{	//verify sensor display
@@ -4007,6 +4023,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
 	{//verify sensor display
 		g_index=TUN_ZERO_PAGE;
+		ask_interface();
 		clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
 		clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
 	}
