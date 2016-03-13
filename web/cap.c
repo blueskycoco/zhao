@@ -3885,8 +3885,13 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{//WiFi Passwd changed
 		*send_by_wifi=wifi_select;
 		if(wifi_select)
+		{
 			wifi_handle(fd_lcd);
-		set_net_interface();
+			switch_pic(fd_lcd,WIFI_PAGE);
+		}
+		else
+			switch_pic(fd_lcd,GPRS_PAGE);
+		set_net_interface();		
 	}
 	else if(addr==TOUCH_SELECT_WIFI&& (TOUCH_SELECT_WIFI+0x100)==data)
 	{//WiFi Passwd changed
@@ -3894,6 +3899,10 @@ unsigned short input_handle(int fd_lcd,char *input)
 		wifi_select=1;
 		//set_net_interface();
 		write_string(fd_lcd,ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
+	}
+	else if(addr==TOUCH_SELECT_RETURN&& (TOUCH_SELECT_RETURN+0x100)==data)
+	{//use gprs to xfer
+		wifi_select=*send_by_wifi;
 	}
 	else if(addr==TOUCH_SELECT_GPRS&& (TOUCH_SELECT_GPRS+0x100)==data)
 	{//use gprs to xfer

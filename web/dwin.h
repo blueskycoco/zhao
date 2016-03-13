@@ -320,6 +320,8 @@
 #define TUN_ZERO_PAGE			28
 #define VERIFY_SELECT_PAGE		29
 #define VERIFY_PAGE				19
+#define WIFI_PAGE				16
+#define GPRS_PAGE				15
 //page 1
 #define ADDR_RUN_TIME_CO		0x0000
 #define ADDR_RUN_TIME_CO2		0x0001
