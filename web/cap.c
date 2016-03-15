@@ -2987,7 +2987,7 @@ void tun_zero(int fd,int on)
 				sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 				break;
 		printf("CO interface %d %4x\n",i,sensor_interface_mem[i]);
-		cmd_request_verify[5]=i;
+		cmd_request_verify[5]=i+1;
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
 		for(i=0;i<sizeof(cmd_request_verify);i++)
@@ -3000,7 +3000,7 @@ void tun_zero(int fd,int on)
 				sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
 		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
-		cmd_request_verify[5]=i;
+		cmd_request_verify[5]=i+1;
 		crc=CRC_check(cmd_request_verify,6);
 		cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;	
 		for(i=0;i<sizeof(cmd_request_verify);i++)
@@ -3017,7 +3017,7 @@ void tun_zero(int fd,int on)
 				break;
 		printf("CH2O interface %d %4x\n",i,sensor_interface_mem[i]);
 		printf("CH2O zero value\n",g_zero_info->cur_ch2o);
-		cmd_return_point[5]=i;
+		cmd_return_point[5]=i+1;
 		cmd_return_point[7]=(g_zero_info->cur_ch2o>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_ch2o & 0xff);
 		crc=CRC_check(cmd_return_point,9);
@@ -3032,7 +3032,7 @@ void tun_zero(int fd,int on)
 				break;
 		printf("CO interface %d %4x\n",i,sensor_interface_mem[i]);
 		printf("CO zero value\n",g_zero_info->cur_co);
-		cmd_return_point[5]=i;
+		cmd_return_point[5]=i+1;
 		cmd_return_point[7]=(g_zero_info->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_zero_info->cur_co & 0xff);
 		crc=CRC_check(cmd_return_point,9);
@@ -3269,8 +3269,8 @@ void send_return(int fd,char sensor,char jp)
 	int i;
 	char cmd_return[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
 	int xz=getxiuzhen();
-	cmd_return[5]=sensor;
-	cmd_return[6]=jp;
+	cmd_return[5]=sensor+1;
+	cmd_return[6]=jp+1;
 	cmd_return[7]=(xz>>8)&0xff;
 	cmd_return[8]=xz&0xff;
 	int crc=CRC_check(cmd_return,9);
@@ -3291,7 +3291,7 @@ void jiaozhun(int fd,int on,char sensor,char jp)
 		{
 			printf("Begin to JiaoZhun %d\n",sensor);
 			*factory_mode=SENSOR_VERIFY_MODE;
-			cmd_verify[5]=sensor;
+			cmd_verify[5]=sensor+1;
 			int crc=CRC_check(cmd_verify,6);
 			cmd_verify[6]=(crc&0xff00)>>8;cmd_verify[7]=crc&0x00ff;		
 			for(i=0;i<sizeof(cmd_verify);i++)
