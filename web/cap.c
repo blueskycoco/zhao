@@ -667,9 +667,9 @@ void set_lcd_time(int fd,char *buf)
 	char cmd[]={0x5a,0xa5,0x0a,0x80,0x1f,0x5a,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 	for(i=0;i<7;i++)
 		cmd[i+6]=buf[i];
-	for(i=0;i<sizeof(cmd);i++)
-		printf("%02x ",cmd[i]);
-	printf("\n");
+	//for(i=0;i<sizeof(cmd);i++)
+	//	printf("%02x ",cmd[i]);
+	//printf("\n");
 	write(fd,cmd,sizeof(cmd));
 
 }
@@ -1805,7 +1805,7 @@ int get_uart(int fd_lcd,int fd)
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					//show_cap_value(to_check+2,message_len);
+					show_cap_value(to_check+2,message_len);
 					if(*factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)
@@ -1913,9 +1913,9 @@ void write_string(int fd,unsigned int addr,char *data,int len)
 	cmd[4]=(addr&0xff00)>>8;cmd[5]=addr&0x00ff;
 	for(i=0;i<len;i++)
 		cmd[6+i]=data[i];
-	for(i=0;i<len+6;i++)
-		printf("%02x ",cmd[i]);
-	printf("\n<len %d>\n",len);
+	//for(i=0;i<len+6;i++)
+	//	printf("%02x ",cmd[i]);
+	//printf("\n<len %d>\n",len);
 	write(fd,cmd,len+6);
 	free(cmd);
 }
@@ -2352,9 +2352,9 @@ void draw_curve(int fd,int *data,int len)
 		cmd[5+2*i]=(data[i]&0xff00)>>8;
 		cmd[6+2*i]=data[i]&0x00ff;
 	}
-	for(i=0;i<len*2+5;i++)
-		printf("%02x ",cmd[i]);
-	printf("\n<len %d>\n",len);
+	//for(i=0;i<len*2+5;i++)
+	//	printf("%02x ",cmd[i]);
+	//printf("\n<len %d>\n",len);
 	write(fd,cmd,len*2+5);
 	free(cmd);
 }
