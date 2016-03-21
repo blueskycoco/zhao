@@ -2380,10 +2380,10 @@ void show_curve(int fd,char *id,int* offset)
 		//printf("g_co_cnt %d\n",*g_co_cnt);
 		if((*g_co_cnt-*offset)>0)
 		{
-			strcpy(index[0],"200");
-			strcpy(index[1],"150");
-			strcpy(index[2],"100");
-			strcpy(index[3],"50");
+			strcpy(index[0],"10");
+			strcpy(index[1],"7.5");
+			strcpy(index[2],"5.0");
+			strcpy(index[3],"2.5");
 			strcpy(index[4],"0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
@@ -2407,7 +2407,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data+2)*10;
+								buf[j++]=atoi(g_history_co[*g_co_cnt-*offset-i-1].data+2)*10*5;
 								printf("j %d %s==>%d\n",j,g_history_co[*g_co_cnt-*offset-i-1].time,buf[j-1]);
 							}
 						}					
@@ -2426,7 +2426,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_co_cnt)
 				*offset=0;
 		}
@@ -2484,7 +2484,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_co2_cnt)
 				*offset=0;
 		}
@@ -2496,10 +2496,10 @@ void show_curve(int fd,char *id,int* offset)
 		//printf("g_co_cnt %d\n",*g_hcho_cnt);
 		if((*g_hcho_cnt-*offset)>0)
 		{
-			strcpy(index[0],"3.0");
-			strcpy(index[1],"2.5");
-			strcpy(index[2],"1.5");
-			strcpy(index[3],"1.0");
+			strcpy(index[0],"1.00");
+			strcpy(index[1],"0.75");
+			strcpy(index[2],"0.50");
+			strcpy(index[3],"0.25");
 			strcpy(index[4],"0.0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
@@ -2523,7 +2523,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=(atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data+2)*667)/500;
+								buf[j++]=(atoi(g_history_hcho[*g_hcho_cnt-*offset-i-1].data+2)*667*3)/500;
 								printf("j %d %s==>%d\n",j,g_history_hcho[*g_hcho_cnt-*offset-i-1].time,buf[j-1]);							
 							}
 						}					
@@ -2542,7 +2542,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_hcho_cnt)
 				*offset=0;
 
@@ -2603,7 +2603,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_shidu_cnt)
 				*offset=0;
 
@@ -2665,7 +2665,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_temp_cnt)
 				*offset=0;
 		}
@@ -2677,10 +2677,10 @@ void show_curve(int fd,char *id,int* offset)
 		//printf("g_pm25_cnt %d\n",*g_pm25_cnt);
 		if((*g_pm25_cnt-*offset)>0)
 		{
-			strcpy(index[0],"1000");
-			strcpy(index[1],"750");
-			strcpy(index[2],"500");
-			strcpy(index[3],"250");
+			strcpy(index[0],"500");
+			strcpy(index[1],"375");
+			strcpy(index[2],"250");
+			strcpy(index[3],"125");
 			strcpy(index[4],"0");
 			strcpy(index_time[0],"24");
 			strcpy(index_time[1],"18");
@@ -2704,7 +2704,7 @@ void show_curve(int fd,char *id,int* offset)
 						{
 							if(j<24)
 							{
-								buf[j++]=atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data)*2;
+								buf[j++]=atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data)*2*2;
 								printf("j %d %s==>%d %d\n",j,g_history_pm25[*g_pm25_cnt-*offset-i-1].time,atoi(g_history_pm25[*g_pm25_cnt-*offset-i-1].data),buf[j-1]);
 							}
 						}					
@@ -2723,7 +2723,7 @@ void show_curve(int fd,char *id,int* offset)
 					buf[m]=buf[j-1];
 				j=24;
 			}
-			*offset+=i;
+			//*offset+=i;
 			if(*offset>=*g_pm25_cnt)
 				*offset=0;
 		}
@@ -3347,7 +3347,7 @@ void jiaozhun(int fd,int on,char sensor,char jp)
 		{
 			*factory_mode=NORMAL_MODE;
 			printf("End to JiaoZhun %d\n",sensor);
-			send_return(fd,sensor,jp);
+			//send_return(fd,sensor,jp);
 		}
 	}
 }
@@ -3460,7 +3460,7 @@ void show_point(int fd,int index,char sensor)
 	char cmd[64]={0};
 	sprintf(cmd,"%f",g_verify_info->x[index]);
 	write_string(fd,ADDR_VERIFY_VALUE,cmd,strlen(cmd));
-	send_return(fd,sensor,index);
+	//send_return(fd,sensor,index);
 	switch(index)
 	{
 		case 0:
@@ -4064,6 +4064,7 @@ unsigned short input_handle(int fd_lcd,char *input)
 	{	//verify sensor display
 		if(verify_point==0)
 			tun_zero(fd_com,0);
+		verify_point=100;
 		jiaozhun(fd_lcd,0,verify_object,verify_point);
 	}
 	else if(addr==ADDR_VERIFY_VALUE)
