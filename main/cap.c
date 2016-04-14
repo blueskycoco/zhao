@@ -1,52 +1,23 @@
 #include "uart.h"
 #include "netlib.h"
-int fd_com=0;
-extern int fd_lcd;
-extern char *server_time;
-extern struct state *g_state;
-extern struct nano *g_history_co,*g_history_temp,*g_history_shidu,*g_history_co2,*g_history_hcho,*g_history_pm25;
-extern long *g_co_cnt,*g_co2_cnt,*g_hcho_cnt,*g_temp_cnt,*g_pm25_cnt,*g_shidu_cnt;
-extern key_t state_shmid,shmid;
-extern key_t shmid_co,shmid_co2,shmid_hcho,shmid_temp,shmid_pm25,shmid_shidu;
-extern key_t shmid_co_cnt,shmid_co2_cnt,shmid_hcho_cnt,shmid_temp_cnt,shmid_pm25_cnt,shmid_shidu_cnt;
+#include "log.h"
+#define CAP_PROCESS "[CAP_PROCESS]"
+
+struct history g_history;
 int g_upload=0;
-char *post_message=NULL,can_send=0,*warnning_msg=NULL;
+char *post_message=NULL,*warnning_msg=NULL;
 extern char g_uuid[256];
 extern char ip[20];
-typedef struct _sensor_alarm {
-	char co;
-	char co2;
-	char hcho;
-	char shidu;
-	char temp;
-	char pm25;
-	char co_send;
-	char co2_send;
-	char hcho_send;
-	char shidu_send;
-	char temp_send;
-	char pm25_send;
-}sensor_alarm;
-
-typedef struct _sensor_times {
-	char co;
-	char co2;
-	char hcho;
-	char shidu;
-	char temp;
-	char pm25;
-}sensor_times;
 
 sensor_alarm sensor;
-sensor_times sensortimes;
-
-#define CAP_PROCESS "[CAP_PROCESS]"
+//set g_upload flag to make 10 mins upload once.
 void set_upload_flag(int a)
 {
-	printf(CAP_PROCESS"set upload flag\n");
+	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
 	alarm(600);
 }
+//check crc result with cap board sent.
 unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 {
 	unsigned int mid=0;
@@ -69,7 +40,7 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
-
+//format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
 {
 	memset(history[*cnt].data,'\0',10);
@@ -96,27 +67,33 @@ void send_server_save_local(char *date,char *message,char save)
 		save_to_file(date,message);
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO,g_history_co,g_co_cnt,data,date);
+			set_upload_data(ID_CAP_CO,g_history.sensor_history[SENSOR_CO],
+			g_history.cnt[SENSOR_CO],data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO2,g_history_co2,g_co2_cnt,data,date);
+			set_upload_data(ID_CAP_CO2,g_history.sensor_history[SENSOR_CO2],
+			g_history.cnt[SENSOR_CO2],data,date);
 		
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_SHI_DU,g_history_shidu,g_shidu_cnt,data,date);
+			set_upload_data(ID_CAP_SHI_DU,g_history.sensor_history[SENSOR_SHIDU],
+			g_history.cnt[SENSOR_SHIDU],data,date);
 		
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_HCHO,g_history_hcho,g_hcho_cnt,data,date);
+			set_upload_data(ID_CAP_HCHO,g_history.sensor_history[SENSOR_HCHO]),
+			g_history.cnt[SENSOR_HCHO],data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_TEMPERATURE,g_history_temp,g_temp_cnt,data,date);
+			set_upload_data(ID_CAP_TEMPERATURE,g_history.sensor_history[SENSOR_TEMP]),
+			g_history.cnt[SENSOR_TEMP],data,date);
 		
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_PM_25,g_history_pm25,g_pm25_cnt,data,date);
+			set_upload_data(ID_CAP_PM_25,g_history.sensor_history[SENSOR_PM25]),
+			g_history.cnt[SENSOR_PM25],data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
@@ -138,20 +115,44 @@ void clear_alarm(char *id,char *alarm_type)
 	send_server_save_local(NULL,clear_msg,0);
 	free(clear_msg);
 }
-
+char *build_alarm_json(char *json,char *data)
+{	
+	char error[32]={0};
+	sprintf(error,"%sth sensor possible error",data);
+	json=rm_item(json,ID_ALARM_SENSOR);
+	json=rm_item(json,ID_ALERT_CAP_FAILED);
+	json=add_item(json,ID_ALARM_SENSOR,data);
+	json=add_item(json,ID_ALERT_CAP_FAILED,error);
+	return json;
+}
+char *update_alarm(char *json,char *data,char *alarm,char *sent)
+{
+	if(*alarm&&(!(*sent)))
+	{
+		json=build_alarm_json(json,data);					
+		printfLog(CAP_PROCESS"Upload alarm msg :\n%s\n",json);
+		send_server_save_local(NULL,json,0);
+		if(json!=NULL)
+			free(json);
+		json=NULL;
+		*sent=1;
+	}
+	return json;
+}
 /*
   *build json from cmd
   *update cap data to lcd
   *create alarm and normal message to server
 */
-char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
+char *build_message(int fd,char *cmd,int len,char *message)
 {	
 	int i=0;
+	char sensor_error[]={0x65,0x72,0x72,0x6f,0x72};
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
 	int message_type=(cmd[2]<<8)|cmd[3];
 	sprintf(id,"%d",message_type);
-	//printf("crc 0x%04X,message_type %d,len %d \n",crc,message_type,len);
+	//printfLog(CAP_PROCESS"crc 0x%04X,message_type %d,len %d \n",crc,message_type,len);
 	if(crc==CRC_check(cmd,len-2))
 	{
 		i=0;
@@ -160,78 +161,27 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 			case TIME_BYTE:
 			{	//TIME_BYTE got ,we can send to server now
 				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9],cmd[10]);
-				printf(CAP_PROCESS"date is %s\r\n",date);
+				printfLog(CAP_PROCESS"date is %s\r\n",date);
 				message=add_item(message,ID_DEVICE_CAP_TIME,date);
 				if(warnning_msg!=NULL)
 				{	//have alarm msg upload
-					if(sensor.co2&&(!sensor.co2_send))
-					{
-						sprintf(error,"%sth sensor possible error",ID_CAP_CO2);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_CO2);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.co2_send=1;
-					}
-					if(sensor.co&&(!sensor.co_send))
-					{
-						sprintf(error,"%sth sensor possible error",ID_CAP_CO);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_CO);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.co_send=1;
-					}
-					if(sensor.hcho&&(!sensor.hcho_send))
-					{
-						sprintf(error,"%sth sensor possible error",ID_CAP_HCHO);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_HCHO);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.hcho_send=1;
-					}
-					if(sensor.shidu&&(!sensor.shidu_send))
-					{	
-						sprintf(error,"%sth sensor possible error",ID_CAP_SHI_DU);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_SHI_DU);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.shidu_send=1;
-					}
-					if(sensor.temp&&(!sensor.temp_send))
-					{	
-						sprintf(error,"%sth sensor possible error",ID_CAP_TEMPERATURE);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_TEMPERATURE);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.temp_send=1;
-					}
-					if(sensor.pm25&&(!sensor.pm25_send))
-					{
-						sprintf(error,"%sth sensor possible error",ID_CAP_PM_25);
-						warnning_msg=rm_item(warnning_msg,ID_ALARM_SENSOR);
-						warnning_msg=rm_item(warnning_msg,ID_ALERT_CAP_FAILED);
-						warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,ID_CAP_PM_25);
-						warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-						send_server_save_local(NULL,warnning_msg,0);
-						sensor.pm25_send=1;
-					}					
-					printf(CAP_PROCESS"Upload alarm msg :\n");
-					free(warnning_msg);
-					warnning_msg=NULL;
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO2,
+									&(sensor.alarm[SENSOR_CO2]),&(sensor.sent[SENSOR_CO2]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO,
+									&(sensor.alarm[SENSOR_CO]),&(sensor.sent[SENSOR_CO]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_HCHO,
+									&(sensor.alarm[SENSOR_HCHO]),&(sensor.sent[SENSOR_HCHO]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_SHI_DU,
+									&(sensor.alarm[SENSOR_SHIDU]),&(sensor.sent[SENSOR_SHIDU]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_TEMPERATURE,
+									&(sensor.alarm[SENSOR_TEMP]),&(sensor.sent[SENSOR_TEMP]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_PM_25,
+									&(sensor.alarm[SENSOR_PM25]),&(sensor.sent[SENSOR_PM25]));
 				}
 				if(g_upload)
 				{
 					g_upload=0;
-					printf(CAP_PROCESS"Upload data msg :\n");
+					printfLog(CAP_PROCESS"Upload data msg :\n");
 					send_server_save_local(date,message,1);
 					
 				}
@@ -253,7 +203,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 			default:
 			{
 				/*get cap data*/
-				if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
+				if(memcmp(cmd+5,sensor_error,5)==0)
 				{	//check uninsert msg
 					if(cmd[3]==atoi(ID_CAP_CO2) && !sensor.co2)
 					{
@@ -385,7 +335,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 						//if(g_upload)
 							value=(cmd[5]<<8|cmd[6]);
 					}
-					//printf(CAP_PROCESS"Value %d\n",value);
+					//printfLog(CAP_PROCESS"Value %d\n",value);
 					#if 1
 					//if(g_upload)
 					{
@@ -657,7 +607,7 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 						write_data(fd_lcd,VAR_ALARM_TYPE_2,cmd[5]<<8|cmd[6]);
 					}
 					message=add_item(message,id,data);
-					//printf(SUB_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
+					//printfLog(CAP_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
 					return message;
 				}
 			}
@@ -666,9 +616,9 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 	}
 	else
 	{
-		printf(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check(cmd,len-2));
+		printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check(cmd,len-2));
 		for(i=0;i<len;i++)
-			printf("0x%02x ",cmd[i]);
+			printfLog(CAP_PROCESS"0x%02x ",cmd[i]);
 	}
 	return message;
 }
@@ -676,11 +626,16 @@ char *build_message(int fd,int fd_lcd,char *cmd,int len,char *message)
 /*
   *get cmd from lv's cap board
 */
-int get_uart(int fd_lcd,int fd)
+int cap_board_mon(int fd)
 {
-	char ch,state=STATE_IDLE,message_len=0;
-	char message[10],i=0,to_check[20];
-	int crc,message_type=0;
+	char 	ch = 0;
+	char 	state=STATE_IDLE;
+	int 	message_len=0;
+	char 	message[10]={0};
+	int 	i=0;
+	char 	to_check[20]={0};
+	int 	crc=0;
+	int 	message_type=0;
 	while(1)
 	{
 		if(read(fd,&ch,1)==1)
@@ -748,7 +703,7 @@ int get_uart(int fd_lcd,int fd)
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					post_message=build_message(fd,cmd,message_len+7,post_message);
 					free(cmd);
 					return 0;						
 				}
@@ -768,42 +723,43 @@ int get_uart(int fd_lcd,int fd)
 */
 int cap_init()
 {
-	int fpid;
-	if((fd_com=open_com_port("/dev/ttySP0"))<0)
+	int fpid = 0;
+	int fd = 0;
+	/*if((shmid_history = shmget(IPC_PRIVATE, sizeof(struct history)*100000, PERM)) == -1 )
 	{
-		perror("open_port cap error");
+        printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);
+    }*/
+	if((fd=open_com_port("/dev/ttySP0"))<0)
+	{
+		printfLog(CAP_PROCESS"open_port cap error");
 		return -1;
 	}
-	if(set_opt(fd_com,9600,8,'N',1)<0)
+	if(set_opt(fd,9600,8,'N',1)<0)
 	{
-		perror(" set_opt cap error");
+		printfLog(CAP_PROCESS"set_opt cap error");
 		return -1;
 	}
 
 	fpid=fork();
 	if(fpid==0)
 	{
-		printf(CAP_PROCESS"begin to shmat\n");
-		server_time = (char *)shmat(shmid, 0, 0);
-		g_state = (struct state *)shmat(state_shmid, 0, 0);
-		g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
-		g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
-		g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
-		g_history_shidu = (struct nano *)shmat(shmid_shidu, 0, 0);
-		g_history_temp = (struct nano *)shmat(shmid_temp, 0, 0);
-		g_history_pm25 = (struct nano *)shmat(shmid_pm25, 0, 0);
-		g_co_cnt = (long *)shmat(shmid_co_cnt, 0, 0);
-		g_co2_cnt = (long *)shmat(shmid_co2_cnt, 0, 0);
-		g_hcho_cnt = (long *)shmat(shmid_hcho_cnt, 0, 0);
-		g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
-		g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
-		g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
-		printf(CAP_PROCESS"end to shmat\n");
+		g_history.sensor_history[SENSOR_CO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO], 0, 0);
+		g_history.sensor_history[SENSOR_CO2] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO2], 0, 0);
+		g_history.sensor_history[SENSOR_HCHO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_HCHO], 0, 0);
+		g_history.sensor_history[SENSOR_TEMP] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_TEMP], 0, 0);
+		g_history.sensor_history[SENSOR_SHIDU] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_SHIDU], 0, 0);
+		g_history.sensor_history[SENSOR_PM25] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_PM25], 0, 0);
+		g_history.cnt[SENSOR_CO] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO], 0, 0);
+		g_history.cnt[SENSOR_CO2] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO2], 0, 0);
+		g_history.cnt[SENSOR_HCHO] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_HCHO], 0, 0);
+		g_history.cnt[SENSOR_TEMP] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_TEMP], 0, 0);
+		g_history.cnt[SENSOR_SHIDU] = (long *)shmat(g_history.shmid_cnt[SENSOR_SHIDU], 0, 0);
+		g_history.cnt[SENSOR_PM25] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_PM25], 0, 0);
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)
-		{
-			get_uart(fd_lcd,fd_com);
-		}
+			cap_board_mon(fd);
 	}
+	return 0;
 }

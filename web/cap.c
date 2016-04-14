@@ -5136,21 +5136,21 @@ int main(int argc, char *argv[])
 	}
 	if(set_opt(fd_lcd,115200,8,'N',1)<0)
 	{
-		perror(" set_opt cap error");
+		perror(" set_opt lcd error");
 		close(fd_com);
 		close(fd_lcd);
 		return -1;
 	}
 	if((fd_gprs=open_com_port("/dev/ttySP2"))<0)
 	{
-		perror("open_port lcd error");
+		perror("open_port gprs error");
 		close(fd_com);
 		close(fd_lcd);
 		return -1;
 	}
 	if(set_opt(fd_gprs,115200,8,'N',1)<0)
 	{
-		perror(" set_opt cap error");
+		perror(" set_opt gprs error");
 		close(fd_com);
 		close(fd_lcd);
 		close(fd_gprs);
