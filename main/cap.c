@@ -67,33 +67,33 @@ void send_server_save_local(char *date,char *message,char save)
 		save_to_file(date,message);
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO,g_history.sensor_history[SENSOR_CO],
-			g_history.cnt[SENSOR_CO],data,date);
+			set_upload_data(ID_CAP_CO,&(g_history.sensor_history[SENSOR_CO]),
+			&(g_history.cnt[SENSOR_CO]),data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO2,g_history.sensor_history[SENSOR_CO2],
-			g_history.cnt[SENSOR_CO2],data,date);
+			set_upload_data(ID_CAP_CO2,&(g_history.sensor_history[SENSOR_CO2]),
+			&(g_history.cnt[SENSOR_CO2]),data,date);
 		
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_SHI_DU,g_history.sensor_history[SENSOR_SHIDU],
-			g_history.cnt[SENSOR_SHIDU],data,date);
+			set_upload_data(ID_CAP_SHI_DU,&(g_history.sensor_history[SENSOR_SHIDU]),
+			&(g_history.cnt[SENSOR_SHIDU]),data,date);
 		
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_HCHO,g_history.sensor_history[SENSOR_HCHO]),
-			g_history.cnt[SENSOR_HCHO],data,date);
+			set_upload_data(ID_CAP_HCHO,&(g_history.sensor_history[SENSOR_HCHO]),
+			&(g_history.cnt[SENSOR_HCHO]),data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_TEMPERATURE,g_history.sensor_history[SENSOR_TEMP]),
-			g_history.cnt[SENSOR_TEMP],data,date);
+			set_upload_data(ID_CAP_TEMPERATURE,&(g_history.sensor_history[SENSOR_TEMP]),
+			&(g_history.cnt[SENSOR_TEMP]),data,date);
 		
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_PM_25,g_history.sensor_history[SENSOR_PM25]),
-			g_history.cnt[SENSOR_PM25],data,date);
+			set_upload_data(ID_CAP_PM_25,&(g_history.sensor_history[SENSOR_PM25]),
+			&(g_history.cnt[SENSOR_PM25]),data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
@@ -132,12 +132,136 @@ char *update_alarm(char *json,char *data,char *alarm,char *sent)
 		json=build_alarm_json(json,data);					
 		printfLog(CAP_PROCESS"Upload alarm msg :\n%s\n",json);
 		send_server_save_local(NULL,json,0);
-		if(json!=NULL)
-			free(json);
-		json=NULL;
 		*sent=1;
 	}
 	return json;
+}
+char *count_sensor_value(char cmd,char *json,int value)
+{
+	char *times;
+	char *sent;
+	int min,max;
+	char *alarm;
+	char id[256]={0};
+	if(cmd==atoi(ID_CAP_CO2))
+	{
+		times=&(sensor.times[SENSOR_CO2]);
+		sent=&(sensor.sent[SENSOR_CO2]);
+		min=MIN_CO2;
+		max=MAX_CO2;
+		alarm=&(sensor.alarm[SENSOR_CO2]);
+		strcpy(id,ID_CAP_CO2);
+	}
+	else if(cmd==atoi(ID_CAP_CO))
+	{
+		times=&(sensor.times[SENSOR_CO]);
+		sent=&(sensor.sent[SENSOR_CO]);
+		min=MIN_CO;
+		max=MAX_CO;
+		alarm=&(sensor.alarm[SENSOR_CO]);
+		strcpy(id,ID_CAP_CO);
+	}
+	else if(cmd==atoi(ID_CAP_CO))
+	{
+		times=&(sensor.times[SENSOR_HCHO]);
+		sent=&(sensor.sent[SENSOR_HCHO]);
+		min=MIN_HCHO;
+		max=MAX_HCHO;
+		alarm=&(sensor.alarm[SENSOR_HCHO]);
+		strcpy(id,ID_CAP_HCHO);
+	}
+	else if(cmd==atoi(ID_CAP_TEMPERATURE))
+	{
+		times=&(sensor.times[SENSOR_TEMP]);
+		sent=&(sensor.sent[SENSOR_TEMP]);
+		min=MIN_TEMP;
+		max=MAX_TEMP;
+		alarm=&(sensor.alarm[SENSOR_TEMP]);
+		strcpy(id,ID_CAP_TEMPERATURE);
+	}
+	else if(cmd==atoi(ID_CAP_SHI_DU))
+	{
+		times=&(sensor.times[SENSOR_SHIDU]);
+		sent=&(sensor.sent[SENSOR_SHIDU]);
+		min=MIN_SHIDU;
+		max=MAX_SHIDU;
+		alarm=&(sensor.alarm[SENSOR_SHIDU]);
+		strcpy(id,ID_CAP_SHI_DU);
+	}
+	else if(cmd==atoi(ID_CAP_PM_25))
+	{
+		times=&(sensor.times[SENSOR_PM25]);
+		sent=&(sensor.sent[SENSOR_PM25]);
+		min=MIN_PM25;
+		max=MAX_PM25;
+		alarm=&(sensor.alarm[SENSOR_PM25]);
+		strcpy(id,ID_CAP_PM_25);
+	}
+	if(value<min)
+		(*times)++;
+	else if(value>max)
+		(*times)++;
+	else
+	{
+		*times=0;
+		if(*alarm&ALARM_BELOW)
+			clear_alarm(id,ID_ALERT_BELOW);
+		if(*alarm&ALARM_UP)
+			clear_alarm(id,ID_ALERT_UP);
+		if(*alarm&ALARM_BELOW||*alarm&ALARM_UP)
+		{
+			*alarm=ALARM_NONE;
+			save_sensor_alarm_info();	
+		}	
+	}
+	if(*times==MAX_COUNT_TIMES && !(*alarm))
+	{	
+		//need send server alarm
+		json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
+		json=add_item(json,ID_DEVICE_UID,g_uuid);
+		json=add_item(json,ID_DEVICE_IP_ADDR,ip);
+		json=add_item(json,ID_DEVICE_PORT,"9517");
+		if(value<min)
+		{
+			*alarm|=ALARM_BELOW;
+			json=add_item(json,ID_ALARM_TYPE,ID_ALERT_BELOW);
+		}
+		else
+		{
+			*alarm|=ALARM_UP;
+			json=add_item(json,ID_ALARM_TYPE,ID_ALERT_UP);
+		}
+		save_sensor_alarm_info();	
+		*sent=0;
+	}
+	return json;
+}
+void update_dwin_real_value(char *id,int value)
+{
+	if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
+	{
+		write_dwin_real(VAR_DATE_TIME_1,value);
+	}
+	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
+	{						
+		write_dwin_real(VAR_DATE_TIME_2,value);
+	}
+	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
+	{
+		write_dwin_real(VAR_DATE_TIME_3,value);
+	}
+	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
+	{
+		write_dwin_real(VAR_DATE_TIME_4,value);
+	}
+	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
+	{
+		write_dwin_real(VAR_ALARM_TYPE_1,value);
+	}
+	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
+	{
+		write_dwin_real(VAR_ALARM_TYPE_2,value);
+	}
 }
 /*
   *build json from cmd
@@ -177,13 +301,15 @@ char *build_message(int fd,char *cmd,int len,char *message)
 									&(sensor.alarm[SENSOR_TEMP]),&(sensor.sent[SENSOR_TEMP]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_PM_25,
 									&(sensor.alarm[SENSOR_PM25]),&(sensor.sent[SENSOR_PM25]));
+					if(warnning_msg!=NULL)
+						free(warnning_msg);
+					warnning_msg=NULL;
 				}
 				if(g_upload)
 				{
 					g_upload=0;
 					printfLog(CAP_PROCESS"Upload data msg :\n");
 					send_server_save_local(date,message,1);
-					
 				}
 				free(message);
 				message=NULL;
@@ -204,47 +330,45 @@ char *build_message(int fd,char *cmd,int len,char *message)
 			{
 				/*get cap data*/
 				if(memcmp(cmd+5,sensor_error,5)==0)
-				{	//check uninsert msg
+				{	
+					//error got from cap board,check uninsert msg
 					if(cmd[3]==atoi(ID_CAP_CO2) && !sensor.co2)
 					{
-						sensor.co2|=ALARM_UNINSERT;
-						sensor.co2_send=0;
+						sensor.alarm[SENSOR_CO2]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_CO2]=0;
 					}
 					else if(cmd[3]==atoi(ID_CAP_CO) && !sensor.co)
 					{
-						sensor.co|=ALARM_UNINSERT;
-						sensor.co_send=0;
+						sensor.alarm[SENSOR_CO]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_CO]=0;
 					}
 					else if(cmd[3]==atoi(ID_CAP_HCHO) && !sensor.hcho)
 					{
-						sensor.hcho|=ALARM_UNINSERT;
-						sensor.hcho_send=0;
+						sensor.alarm[SENSOR_HCHO]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_HCHO]=0;
 					}
 					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !sensor.shidu)
 					{
-						sensor.shidu|=ALARM_UNINSERT;
-						sensor.shidu_send=0;
+						sensor.alarm[SENSOR_SHIDU]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_SHIDU]=0;
 					}
 					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !sensor.temp)
 					{
-						sensor.temp|=ALARM_UNINSERT;
-						sensor.temp_send=0;
+						sensor.alarm[SENSOR_TEMP]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_TEMP]=0;
 					}
 					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !sensor.pm25)
 					{
-						sensor.pm25|=ALARM_UNINSERT;
-						sensor.pm25_send=0;
+						sensor.alarm[SENSOR_PM25]|=ALARM_UNINSERT;
+						sensor.sent[SENSOR_PM25]=0;
 					}
 					else 
 						return message;
 					//inform server
-					//sprintf(error,"%dth sensor possible error",message_type);
 					warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 					warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
 					warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
 					warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-					//warnning_msg=add_item(warnning_msg,ID_ALERT_CAP_FAILED,error);
-					//warnning_msg=add_item(warnning_msg,ID_ALARM_SENSOR,id);
 					warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UNINSERT);
 					memset(error,'\0',32);
 					save_sensor_alarm_info();					
@@ -254,40 +378,40 @@ char *build_message(int fd,char *cmd,int len,char *message)
 				{	//normal data or beyond Min & Max data
 					int value=0;
 					//clear the uninsert alarm
-					if(cmd[3]==atoi(ID_CAP_CO2) && (sensor.co2&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO2) && (sensor.alarm[SENSOR_CO2]&ALARM_UNINSERT))
 					{					
 						clear_alarm(ID_CAP_CO2,ID_ALERT_UNINSERT);						
-						sensor.co2&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_CO2]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_CO) && (sensor.co&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO) && (sensor.alarm[SENSOR_CO]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_CO,ID_ALERT_UNINSERT);
-						sensor.co&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_CO]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_HCHO) && (sensor.hcho&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_HCHO) && (sensor.alarm[SENSOR_HCHO]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_HCHO,ID_ALERT_UNINSERT);
-						sensor.hcho&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_HCHO]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_SHI_DU) && (sensor.shidu&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_SHI_DU) && (sensor.alarm[SENSOR_SHIDU]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_SHI_DU,ID_ALERT_UNINSERT);
-						sensor.shidu&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_SHIDU]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& (sensor.temp&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& (sensor.alarm[SENSOR_TEMP]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_TEMPERATURE,ID_ALERT_UNINSERT);
-						sensor.temp&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_TEMP]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_PM_25)&& (sensor.pm25&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_PM_25)&& (sensor.alarm[SENSOR_PM25]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_PM_25,ID_ALERT_UNINSERT);
-						sensor.pm25&=~ALARM_UNINSERT;	
+						sensor.alarm[SENSOR_PM25]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
 					if(message==NULL)
@@ -322,290 +446,19 @@ char *build_message(int fd,char *cmd,int len,char *message)
 							left=number/n;
 							sprintf(data,"%d.%d",left,right);								
 						}
-						//if(g_upload)
-						{
-							int temp=1;
-							for(i=0;i<cmd[7];i++)
-								temp*=10;
-							value=((cmd[5]<<8|cmd[6]))/temp;
-						}
+						int temp=1;
+						for(i=0;i<cmd[7];i++)
+							temp*=10;
+						value=((cmd[5]<<8|cmd[6]))/temp;
 					}	
 					else
 					{
-						//if(g_upload)
 							value=(cmd[5]<<8|cmd[6]);
 					}
 					//printfLog(CAP_PROCESS"Value %d\n",value);
-					#if 1
-					//if(g_upload)
-					{
-						if(cmd[3]==atoi(ID_CAP_CO2))
-						{
-							if(value<MIN_CO2)
-								sensortimes.co2++;
-							else if(value>MAX_CO2)
-								sensortimes.co2++;
-							else
-							{
-								sensortimes.co2=0;
-								if(sensor.co2&ALARM_BELOW)
-									clear_alarm(ID_CAP_CO2,ID_ALERT_BELOW);
-								if(sensor.co2&ALARM_UP)
-									clear_alarm(ID_CAP_CO2,ID_ALERT_UP);
-								if(sensor.co2&ALARM_BELOW||sensor.co2&ALARM_UP)
-								{
-									sensor.co2=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}	
-							}
-							if(sensortimes.co2==MAX_COUNT_TIMES && !sensor.co2)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_CO2)
-								{
-									sensor.co2|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.co2|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();	
-								sensor.co2_send=0;
-							}
-						}
-						if(cmd[3]==atoi(ID_CAP_CO))
-						{
-							if(value<MIN_CO)
-								sensortimes.co++;
-							else if(value>MAX_CO)
-								sensortimes.co++;
-							else
-							{
-								sensortimes.co=0;								
-								if(sensor.co&ALARM_BELOW)
-									clear_alarm(ID_CAP_CO,ID_ALERT_BELOW);
-								if(sensor.co&ALARM_UP)
-									clear_alarm(ID_CAP_CO,ID_ALERT_UP);
-								if(sensor.co&ALARM_BELOW||sensor.co&ALARM_UP)
-								{
-									sensor.co=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}
-							}
-							if(sensortimes.co==MAX_COUNT_TIMES && !sensor.co)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_CO)
-								{
-									sensor.co|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.co|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();
-								sensor.co_send=0;								
-							}
-						}
-						if(cmd[3]==atoi(ID_CAP_HCHO))
-						{
-							if(value<MIN_HCHO)
-								sensortimes.hcho++;
-							else if(value>MAX_HCHO)
-								sensortimes.hcho++;
-							else
-							{
-								sensortimes.hcho=0;
-								if(sensor.hcho&ALARM_BELOW)
-									clear_alarm(ID_CAP_HCHO,ID_ALERT_BELOW);
-								if(sensor.hcho&ALARM_UP)
-									clear_alarm(ID_CAP_HCHO,ID_ALERT_UP);	
-								if(sensor.hcho&ALARM_BELOW||sensor.hcho&ALARM_UP)
-								{
-									sensor.hcho=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}
-							}
-							if(sensortimes.hcho==MAX_COUNT_TIMES && !sensor.hcho)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_HCHO)
-								{
-									sensor.hcho|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.hcho|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();	
-								sensor.hcho_send=0;				
-							}
-						}
-						if(cmd[3]==atoi(ID_CAP_SHI_DU))
-						{
-							if(value<MIN_SHIDU)
-								sensortimes.shidu++;
-							else if(value>MAX_SHIDU)
-								sensortimes.shidu++;
-							else
-							{
-								sensortimes.shidu=0;								
-								if(sensor.shidu&ALARM_BELOW)
-									clear_alarm(ID_CAP_SHI_DU,ID_ALERT_BELOW);
-								if(sensor.shidu&ALARM_UP)
-									clear_alarm(ID_CAP_SHI_DU,ID_ALERT_UP);
-								if(sensor.shidu&ALARM_BELOW||sensor.shidu&ALARM_UP)
-								{
-									sensor.shidu=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}	
-							}
-							if(sensortimes.shidu==MAX_COUNT_TIMES && !sensor.shidu)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_SHIDU)
-								{
-									sensor.shidu|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.shidu|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();	
-								sensor.shidu_send=0;				
-							}
-						}
-						if(cmd[3]==atoi(ID_CAP_TEMPERATURE))
-						{
-							if(value<MIN_TEMP)
-								sensortimes.temp++;
-							else if(value>MAX_TEMP)
-								sensortimes.temp++;
-							else
-							{
-								sensortimes.temp=0;
-								if(sensor.temp&ALARM_BELOW)
-									clear_alarm(ID_CAP_TEMPERATURE,ID_ALERT_BELOW);
-								if(sensor.temp&ALARM_UP)
-									clear_alarm(ID_CAP_TEMPERATURE,ID_ALERT_UP);
-								if(sensor.temp&ALARM_BELOW||sensor.temp&ALARM_UP)
-								{
-									sensor.temp=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}	
-							}
-							if(sensortimes.temp==MAX_COUNT_TIMES&& !sensor.temp)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_TEMP)
-								{
-									sensor.temp|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.temp|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();	
-								sensor.temp_send=0;				
-							}
-						}
-						if(cmd[3]==atoi(ID_CAP_PM_25))
-						{
-							if(value<MIN_PM25)
-								sensortimes.pm25++;
-							else if(value>MAX_PM25)
-								sensortimes.pm25++;
-							else
-							{
-								sensortimes.pm25=0;
-								if(sensor.pm25&ALARM_BELOW)
-									clear_alarm(ID_CAP_PM_25,ID_ALERT_BELOW);
-								if(sensor.pm25&ALARM_UP)
-									clear_alarm(ID_CAP_PM_25,ID_ALERT_UP);
-								if(sensor.pm25&ALARM_BELOW||sensor.pm25&ALARM_UP)
-								{
-									sensor.pm25=ALARM_NONE;
-									save_sensor_alarm_info();	
-								}	
-							}
-							if(sensortimes.pm25==MAX_COUNT_TIMES&& !sensor.pm25)
-							{	
-								//need send server alarm
-								warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-								warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
-								if(value<MIN_PM25)
-								{
-									sensor.pm25|=ALARM_BELOW;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_BELOW);
-								}
-								else
-								{
-									sensor.pm25|=ALARM_UP;
-									warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UP);
-								}
-								save_sensor_alarm_info();	
-								sensor.pm25_send=0;				
-							}
-						}			
-					}
-					#endif
+					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
 					//real time update cap data
-					if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
-					{
-						write_data(fd_lcd,VAR_DATE_TIME_1,cmd[5]<<8|cmd[6]);
-					}
-					else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-					{						
-						write_data(fd_lcd,VAR_DATE_TIME_2,cmd[5]<<8|cmd[6]);
-					}
-					else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
-					{
-						write_data(fd_lcd,VAR_DATE_TIME_3,cmd[5]<<8|cmd[6]);
-					}
-					else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
-					{
-						write_data(fd_lcd,VAR_DATE_TIME_4,cmd[5]<<8|cmd[6]);
-					}
-					else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
-					{
-						write_data(fd_lcd,VAR_ALARM_TYPE_1,cmd[5]<<8|cmd[6]);
-					}
-					else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
-					{
-						write_data(fd_lcd,VAR_ALARM_TYPE_2,cmd[5]<<8|cmd[6]);
-					}
+					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
 					message=add_item(message,id,data);
 					//printfLog(CAP_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
 					return message;
@@ -744,17 +597,17 @@ int cap_init()
 	fpid=fork();
 	if(fpid==0)
 	{
-		g_history.sensor_history[SENSOR_CO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO], 0, 0);
-		g_history.sensor_history[SENSOR_CO2] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO2], 0, 0);
+		g_history.sensor_history[SENSOR_CO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO], 	 0, 0);
+		g_history.sensor_history[SENSOR_CO2] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO2],  0, 0);
 		g_history.sensor_history[SENSOR_HCHO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_HCHO], 0, 0);
 		g_history.sensor_history[SENSOR_TEMP] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_TEMP], 0, 0);
-		g_history.sensor_history[SENSOR_SHIDU] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_SHIDU], 0, 0);
+		g_history.sensor_history[SENSOR_SHIDU] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_SHIDU],0, 0);
 		g_history.sensor_history[SENSOR_PM25] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_PM25], 0, 0);
-		g_history.cnt[SENSOR_CO] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO], 0, 0);
-		g_history.cnt[SENSOR_CO2] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO2], 0, 0);
+		g_history.cnt[SENSOR_CO] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO],   0, 0);
+		g_history.cnt[SENSOR_CO2] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO2],  0, 0);
 		g_history.cnt[SENSOR_HCHO] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_HCHO], 0, 0);
 		g_history.cnt[SENSOR_TEMP] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_TEMP], 0, 0);
-		g_history.cnt[SENSOR_SHIDU] = (long *)shmat(g_history.shmid_cnt[SENSOR_SHIDU], 0, 0);
+		g_history.cnt[SENSOR_SHIDU] = (long *)shmat(g_history.shmid_cnt[SENSOR_SHIDU],0, 0);
 		g_history.cnt[SENSOR_PM25] 	= (long *)shmat(g_history.shmid_cnt[SENSOR_PM25], 0, 0);
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);

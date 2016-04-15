@@ -1,4 +1,4 @@
-
+#define MISC_PROCESS	"MISC"
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
@@ -241,54 +241,57 @@ int open_com_port(char *dev)
 }
 void get_sensor_alarm_info()
 {
-	sensortimes.co=0;
-	sensortimes.co2=0;
-	sensortimes.hcho=0;
-	sensortimes.shidu=0;
-	sensortimes.temp=0;
-	sensortimes.pm25=0;
+	sensor.times[SENSOR_CO]		=0;
+	sensor.times[SENSOR_CO2]	=0;
+	sensor.times[SENSOR_HCHO]	=0;
+	sensor.times[SENSOR_SHIDU]	=0;
+	sensor.times[SENSOR_TEMP]	=0;
+	sensor.times[SENSOR_PM25]	=0;
 	FILE *fp=fopen(CONFIG_FILE,"r");
 	if(fp==NULL)
 	{
-		sensor.co=0;
-		sensor.co2=0;
-		sensor.hcho=0;
-		sensor.shidu=0;
-		sensor.temp=0;
-		sensor.pm25=0;
-		sensor.co_send=0;
-		sensor.co2_send=0;
-		sensor.hcho_send=0;
-		sensor.shidu_send=0;
-		sensor.temp_send=0;
-		sensor.pm25_send=0;
+		sensor.alarm[SENSOR_CO]		=0;
+		sensor.alarm[SENSOR_CO2]	=0;
+		sensor.alarm[SENSOR_HCHO]	=0;
+		sensor.alarm[SENSOR_SHIDU]	=0;
+		sensor.alarm[SENSOR_TEMP]	=0;
+		sensor.alarm[SENSOR_PM25]	=0;
+		sensor.sent[SENSOR_CO]		=0;
+		sensor.sent[SENSOR_CO2]		=0;
+		sensor.sent[SENSOR_HCHO]	=0;
+		sensor.sent[SENSOR_SHIDU]	=0;
+		sensor.sent[SENSOR_TEMP]	=0;
+		sensor.sent[SENSOR_PM25]	=0;
 		fp=fopen(CONFIG_FILE,"w");
 		fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);	
 		fclose(fp);
 		return;
 	}
 	fread(&sensor,sizeof(struct _sensor_alarm),1,fp);
-	g_state->sensor[0]=sensor.co;
-	g_state->sensor[1]=sensor.co2;
-	g_state->sensor[2]=sensor.hcho;
-	g_state->sensor[3]=sensor.shidu;
-	g_state->sensor[4]=sensor.temp;
-	g_state->sensor[5]=sensor.pm25;
-
+	g_state->sensor_state[SENSOR_CO]	=sensor.alarm[SENSOR_CO];
+	g_state->sensor_state[SENSOR_CO2]	=sensor.alarm[SENSOR_CO2];
+	g_state->sensor_state[SENSOR_HCHO]	=sensor.alarm[SENSOR_HCHO];
+	g_state->sensor_state[SENSOR_SHIDU]	=sensor.alarm[SENSOR_SHIDU];
+	g_state->sensor_state[SENSOR_TEMP]	=sensor.alarm[SENSOR_TEMP];
+	g_state->sensor_state[SENSOR_PM25]	=sensor.alarm[SENSOR_PM25];
 	fclose(fp);
-	printf(MAIN_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
+	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
+		sensor.alarm[SENSOR_CO],sensor.alarm[SENSOR_CO2],sensor.alarm[SENSOR_HCHO],
+		sensor.alarm[SENSOR_SHIDU],sensor.alarm[SENSOR_TEMP],sensor.alarm[SENSOR_PM25]);
 }
 void save_sensor_alarm_info()
 {
 	FILE *fp=fopen(CONFIG_FILE,"w");
-	g_state->sensor[0]=sensor.co;
-	g_state->sensor[1]=sensor.co2;
-	g_state->sensor[2]=sensor.hcho;
-	g_state->sensor[3]=sensor.shidu;
-	g_state->sensor[4]=sensor.temp;
-	g_state->sensor[5]=sensor.pm25;
+	g_state->sensor_state[SENSOR_CO]	=sensor.alarm[SENSOR_CO];
+	g_state->sensor_state[SENSOR_CO2]	=sensor.alarm[SENSOR_CO2];
+	g_state->sensor_state[SENSOR_HCHO]	=sensor.alarm[SENSOR_HCHO];
+	g_state->sensor_state[SENSOR_SHIDU]	=sensor.alarm[SENSOR_SHIDU];
+	g_state->sensor_state[SENSOR_TEMP]	=sensor.alarm[SENSOR_TEMP];
+	g_state->sensor_state[SENSOR_PM25]	=sensor.alarm[SENSOR_PM25];
 	fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);
 	fclose(fp);
-	printf(MAIN_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
+	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
+		sensor.alarm[SENSOR_CO],sensor.alarm[SENSOR_CO2],sensor.alarm[SENSOR_HCHO],
+		sensor.alarm[SENSOR_SHIDU],sensor.alarm[SENSOR_TEMP],sensor.alarm[SENSOR_PM25]);
 }
 
