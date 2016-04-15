@@ -34,7 +34,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	int valopt,ret; 
 	int imode=1,i=0;
 	if((he = gethostbyname(host))==NULL){  
-		printf(NET_LIB_TAG"gethostbyname failed\n");
+		printfLog(NET_LIB_TAG"gethostbyname failed\n");
 		return -1;  
 	}  
 
@@ -52,7 +52,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	{
 		if(errno!=EINPROGRESS)
 		{
-			printf(NET_LIB_TAG"connect failed\n");
+			printfLog(NET_LIB_TAG"connect failed\n");
 			close(socket_fd);
 			return -1;
 		}
@@ -72,13 +72,13 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 		/* no readable or writable socket, timeout */
 		close(socket_fd);
 		errno = ETIMEDOUT;
-		printf(NET_LIB_TAG"Error no readable or writable socket, timeout\n");
+		printfLog(NET_LIB_TAG"Error no readable or writable socket, timeout\n");
 		return -1;
 	}
 	else if (ret < 0) {
 		/* select error */
 		close(socket_fd);
-		printf(NET_LIB_TAG"Error select error\n");
+		printfLog(NET_LIB_TAG"Error select error\n");
 		return -1;
 	}
 
@@ -92,7 +92,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 		/* connect error */
 		close(socket_fd);
 		errno = error;
-		printf(NET_LIB_TAG"Error %s\n",strerror(errno));
+		printfLog(NET_LIB_TAG"Error %s\n",strerror(errno));
 		return -1;
 	}
 	return socket_fd;  
@@ -117,7 +117,7 @@ static int http_tcpclient_recv(int socket,char *lpbuff,int timeout){
 	}
 	else
 	{
-		printf(NET_LIB_TAG"recv time out\n");
+		printfLog(NET_LIB_TAG"recv time out\n");
 		return -1;
 	}
 	return recvnum;  
@@ -145,7 +145,7 @@ static int http_tcpclient_send(int socket,char *buff,int size,int timeout){
 		}
 		else
 		{
-			printf(NET_LIB_TAG"sent time out\n");
+			printfLog(NET_LIB_TAG"sent time out\n");
 			return -1;
 		}
 	}  
@@ -197,7 +197,7 @@ static char *http_parse_result(const char*lpbuf)
 	char *response = NULL;  
 	ptmp = (char*)strstr(lpbuf,"HTTP/1.1");  
 	if(!ptmp){  
-		printf(NET_LIB_TAG"http/1.1 not faind\n%s\n",lpbuf);  
+		printfLog(NET_LIB_TAG"http/1.1 not faind\n%s\n",lpbuf);  
 		return NULL;  
 	}  
 	//printf(NET_LIB_TAG"%s",lpbuf);
@@ -205,7 +205,7 @@ static char *http_parse_result(const char*lpbuf)
 	{  
 		if(strstr(lpbuf,"ok")==NULL)
 		{
-			printf(NET_LIB_TAG"result:\n%s\n",lpbuf);  
+			printfLog(NET_LIB_TAG"result:\n%s\n",lpbuf);  
 			return NULL;  
 		}
 		else
@@ -218,12 +218,12 @@ static char *http_parse_result(const char*lpbuf)
 
 	ptmp = (char*)strstr(lpbuf,"\r\n\r\n");  
 	if(!ptmp){  
-		printf(NET_LIB_TAG"ptmp is NULL\n");  
+		printfLog(NET_LIB_TAG"ptmp is NULL\n");  
 		return NULL;  
 	}  
 	response = (char *)malloc(strlen(ptmp)+1);  
 	if(!response){  
-		printf(NET_LIB_TAG"malloc failed \n");  
+		printfLog(NET_LIB_TAG"malloc failed \n");  
 		return NULL;  
 	}  
 	strcpy(response,ptmp+4);  
@@ -243,33 +243,33 @@ char * http_post(const char *url,const char *post_str,int timeout){
 	char *response = NULL;  
 
 	if(!url || !post_str){  
-		printf(NET_LIB_TAG"      failed!\n");  
+		printfLog(NET_LIB_TAG"      failed!\n");  
 		return NULL;  
 	}  
 
 	if(http_parse_url(url,host_addr,file,&port)){  
-		printf(NET_LIB_TAG"http_parse_url failed!\n");  
+		printfLog(NET_LIB_TAG"http_parse_url failed!\n");  
 		return NULL;  
 	}  
 	//printf(NET_LIB_TAG"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
 
 	socket_fd = http_tcpclient_create(host_addr,port,timeout);  
 	if(socket_fd < 0){  
-		printf(NET_LIB_TAG"http_tcpclient_create failed\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_create failed\n");  
 		return NULL;  
 	}  
 
 	sprintf(lpbuf,HTTP_POST,file,host_addr,port,(int)strlen(post_str),post_str);  
 
 	if(http_tcpclient_send(socket_fd,lpbuf,strlen(lpbuf),timeout) < 0){  
-		printf(NET_LIB_TAG"http_tcpclient_send failed..\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_send failed..\n");  
 		return NULL;  
 	}  
 	//printf(NET_LIB_TAG"POST Sent:\n%s\n",lpbuf);  
 	memset(lpbuf,0,BUFFER_SIZE*4);
 	/*it's time to recv from server*/  
 	if((len=http_tcpclient_recv(socket_fd,lpbuf,timeout)) <= 0){  
-		printf(NET_LIB_TAG"http_tcpclient_recv failed\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_recv failed\n");  
 		return NULL;  
 	}
 	
@@ -293,32 +293,32 @@ char * http_get(const char *url,int timeout)
 	int len=0;  
 
 	if(!url){  
-		printf(NET_LIB_TAG"      failed!\n");  
+		printfLog(NET_LIB_TAG"      failed!\n");  
 		return NULL;  
 	}  
 
 	if(http_parse_url(url,host_addr,file,&port)){  
-		printf(NET_LIB_TAG"http_parse_url failed!\n");  
+		printfLog(NET_LIB_TAG"http_parse_url failed!\n");  
 		return NULL;  
 	}  
 	//printf(NET_LIB_TAG"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
 
 	socket_fd =  http_tcpclient_create(host_addr,port,timeout);  
 	if(socket_fd < 0){  
-		printf(NET_LIB_TAG"http_tcpclient_create failed\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_create failed\n");  
 		return NULL;  
 	}  
 
 	sprintf(lpbuf,HTTP_GET,file,host_addr,port);  
 
 	if(http_tcpclient_send(socket_fd,lpbuf,strlen(lpbuf),timeout) < 0){  
-		printf(NET_LIB_TAG"http_tcpclient_send failed..\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_send failed..\n");  
 		return NULL;  
 	}  
 	//printf(NET_LIB_TAG"GET Sent:\n%s\n",lpbuf);  
 	memset(lpbuf,0,BUFFER_SIZE*4);
 	if((len=http_tcpclient_recv(socket_fd,lpbuf,timeout)) <= 0){  
-		printf(NET_LIB_TAG"http_tcpclient_recv failed\n");  
+		printfLog(NET_LIB_TAG"http_tcpclient_recv failed\n");  
 		return NULL;  
 	}
 	else
@@ -335,7 +335,7 @@ char doit_ack(char *text,const char *item_str)
 	char result=0;cJSON *json,*item_json;
 
 	json=cJSON_Parse(text);
-	if (!json) {printf(NET_LIB_TAG"Error ack before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!json) {printfLog(NET_LIB_TAG"Error ack before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 		item_json=cJSON_GetObjectItem(json,item_str);
@@ -352,7 +352,7 @@ char *doit(char *text,const char *item_str)
 	char *out=NULL;cJSON *json,*item_json;
 
 	json=cJSON_Parse(text);
-	if (!json) {printf(NET_LIB_TAG"Error it before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!json) {printfLog(NET_LIB_TAG"Error it before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 		item_json = cJSON_GetObjectItem(json, item_str);
@@ -377,7 +377,7 @@ char *doit_data(char *text,char *item_str)
 	char *out=NULL;cJSON *item_json;
 
 	item_json=cJSON_Parse(text);
-	if (!item_json) {printf(NET_LIB_TAG"Error data before: [%s]\n",cJSON_GetErrorPtr());}
+	if (!item_json) {printfLog(NET_LIB_TAG"Error data before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
 	 		 

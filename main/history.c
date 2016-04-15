@@ -1,7 +1,22 @@
+#include <unistd.h>  
+#include <stdlib.h>  
+#include <stdio.h>
+#include <time.h>
+#include <string.h>  
+#include <errno.h>  
+#include <sys/msg.h>  
+#include <signal.h>
+#include <fnmatch.h> 
+#include <termios.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <dirent.h>
+#include <sys/types.h>
 #include "history.h"
 #include "netlib.h"
-#define HISTORY_TAG "[History Process]"
-
+#include "log.h"
+#define HISTORY "[History Process]"
+extern struct history g_history;
 void set_data(char *line,char *type,struct nano *history,long *cnt)
 {
 	char *data=doit_data(line,type);
@@ -40,27 +55,27 @@ void load_history(const char *name)
 	char mon_j[3]={0},mon_m[3]={0};
 	char day_j[3]={0},day_m[3]={0};
 	
-	printf(HISTORY_TAG"begin to shmat\n");
-	g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
-	g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
-	g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
-	g_history_shidu = (struct nano *)shmat(shmid_shidu, 0, 0);
-	g_history_temp = (struct nano *)shmat(shmid_temp, 0, 0);
-	g_history_pm25 = (struct nano *)shmat(shmid_pm25, 0, 0);
-	g_co_cnt = (long *)shmat(shmid_co_cnt, 0, 0);
-	g_co2_cnt = (long *)shmat(shmid_co2_cnt, 0, 0);
-	g_hcho_cnt = (long *)shmat(shmid_hcho_cnt, 0, 0);
-	g_temp_cnt = (long *)shmat(shmid_temp_cnt, 0, 0);
-	g_shidu_cnt = (long *)shmat(shmid_shidu_cnt, 0, 0);
-	g_pm25_cnt = (long *)shmat(shmid_pm25_cnt, 0, 0);
-	history_done = (int *)shmat(history_load_done_shmid,0,0);
-	printf(HISTORY_TAG"end to shmat\n");
-	*history_done=0;
-	printf(HISTORY_TAG"load=>history_done %d\n",*history_done);
+	printfLog(HISTORY"begin to shmat\n");	
+	g_history.sensor_history[SENSOR_CO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO],	 0, 0);
+	g_history.sensor_history[SENSOR_CO2]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO2],  0, 0);
+	g_history.sensor_history[SENSOR_HCHO]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_HCHO], 0, 0);
+	g_history.sensor_history[SENSOR_TEMP]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_TEMP], 0, 0);
+	g_history.sensor_history[SENSOR_SHIDU]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_SHIDU],0, 0);
+	g_history.sensor_history[SENSOR_PM25]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_PM25], 0, 0);
+	g_history.cnt[SENSOR_CO]	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO],   0, 0);
+	g_history.cnt[SENSOR_CO2]	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO2],  0, 0);
+	g_history.cnt[SENSOR_HCHO]	= (long *)shmat(g_history.shmid_cnt[SENSOR_HCHO], 0, 0);
+	g_history.cnt[SENSOR_TEMP]	= (long *)shmat(g_history.shmid_cnt[SENSOR_TEMP], 0, 0);
+	g_history.cnt[SENSOR_SHIDU] = (long *)shmat(g_history.shmid_cnt[SENSOR_SHIDU],0, 0);
+	g_history.cnt[SENSOR_PM25]	= (long *)shmat(g_history.shmid_cnt[SENSOR_PM25], 0, 0);
+	g_history.history_done 		= (int *) shmat(g_history.history_load_done_shmid,0, 0);
+	printfLog(HISTORY"end to shmat\n");
+	*(g_history.history_done)=0;
+	printfLog(HISTORY"load=>history_done %d\n",*(g_history.history_done));
 	d = opendir(name);
 	if(d == 0)
 	{
-		printf(HISTORY_TAG"open failed %s , %s",name,strerror(errno));
+		printfLog(HISTORY"open failed %s , %s",name,strerror(errno));
 		return;
 	}
 	
@@ -128,7 +143,7 @@ void load_history(const char *name)
 		char *line=NULL;
 		char file_path[32]={0};
 		int len;
-		printf(HISTORY_TAG"==> %s\n",file_list[j]);
+		printfLog(HISTORY"==> %s\n",file_list[j]);
 		strcpy(file_path,"/home/user/history/");
 		strcat(file_path,file_list[j]);
 		FILE *fp = fopen(file_path, "r");
@@ -137,27 +152,27 @@ void load_history(const char *name)
 			if((cnt%2)!=0)
 			{
 				//get co,co2,hcho,pm25,shidu,temp
-				set_data(line,ID_CAP_CO,g_history_co,g_co_cnt);
-				set_data(line,ID_CAP_CO2,g_history_co2,g_co2_cnt);
-				set_data(line,ID_CAP_HCHO,g_history_hcho,g_hcho_cnt);
-				set_data(line,ID_CAP_SHI_DU,g_history_shidu,g_shidu_cnt);
-				set_data(line,ID_CAP_TEMPERATURE,g_history_temp,g_temp_cnt);
-				set_data(line,ID_CAP_PM_25,g_history_pm25,g_pm25_cnt);
+				set_data(line,ID_CAP_CO,		g_history.sensor_history[SENSOR_CO],	g_history.cnt[SENSOR_CO]);
+				set_data(line,ID_CAP_CO2,		g_history.sensor_history[SENSOR_CO2],	g_history.cnt[SENSOR_CO2]);
+				set_data(line,ID_CAP_HCHO,		g_history.sensor_history[SENSOR_HCHO],	g_history.cnt[SENSOR_HCHO]);
+				set_data(line,ID_CAP_SHI_DU,	g_history.sensor_history[SENSOR_SHIDU],	g_history.cnt[SENSOR_SHIDU]);
+				set_data(line,ID_CAP_TEMPERATURE,g_history.sensor_history[SENSOR_TEMP],	g_history.cnt[SENSOR_TEMP]);
+				set_data(line,ID_CAP_PM_25,		g_history.sensor_history[SENSOR_PM25],	g_history.cnt[SENSOR_PM25]);
 			}
 			else
 			{
-				set_time(file_list[j],line,g_history_co,g_co_cnt);
-				set_time(file_list[j],line,g_history_co2,g_co2_cnt);
-				set_time(file_list[j],line,g_history_temp,g_temp_cnt);
-				set_time(file_list[j],line,g_history_hcho,g_hcho_cnt);
-				set_time(file_list[j],line,g_history_shidu,g_shidu_cnt);
-				set_time(file_list[j],line,g_history_pm25,g_pm25_cnt);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_CO],	g_history.cnt[SENSOR_CO]);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_CO2],g_history.cnt[SENSOR_CO2]);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_HCHO],g_history.cnt[SENSOR_HCHO]);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_SHIDU],g_history.cnt[SENSOR_SHIDU]);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_TEMP],g_history.cnt[SENSOR_TEMP]);
+				set_time(file_list[j],line,g_history.sensor_history[SENSOR_PM25],g_history.cnt[SENSOR_PM25]);
 			}
 			cnt++;
 		}
 		fclose(fp);
 	}
 	*history_done=1;
-	printf(HISTORY_TAG"load=>history_done %d\n",*history_done);
+	printfLog(HISTORY"load=>history_done %d\n",*history_done);
 }
 

@@ -1,6 +1,6 @@
 #ifndef _UART_H
 #define _UART_H
-#define SENSOR_NO	10
+#define SENSOR_NO		10
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
 #define SENSOR_HCHO		2
@@ -11,25 +11,32 @@ struct nano{
 	char time[20];
 	char data[10];
 };
-struct state{
-	char network_state;
-	char sensor_state[SENSOR_NO];
-};
-struct misc{	
-	struct state misc_state;			//network state and sensor state
-	char server_time[32];				//current time
-};
 struct history{
-	struct 	*nano sensor_history[SENSOR_NO];	//cap sensor history data and time
-	long 	*cnt[SENSOR_NO];				//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count
-	key_t 	shmid_history[SENSOR_NO];
-	key_t 	shmid_cnt[SENSOR_NO];
+	struct nano co;
+	struct nano co2;
+	struct nano hcho;
+	struct nano temp;
+	struct nano shidu;
+	struct nano pm25;
 };
-typedef struct _sensor_alarm {
-	char alarm[SENSOR_NO];
-	char sent[SENSOR_NO];
-	char times[SENSOR_NO];
-}sensor_alarm;
-
+struct share_memory{
+	long 	cnt[SENSOR_NO];			//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count	
+	char 	history_done;			//history load done by history process
+	char 	send_by_wifi;			//send by wifi	
+	char 	network_state;			//network state,ok or failed
+	char 	sensor_state[SENSOR_NO];//co/co2/ch20/pm25/temp/shidu state
+	char 	server_time[32];		//current time	
+	char 	alarm[SENSOR_NO];		//alarm state
+	char 	sent[SENSOR_NO];		//had send state
+	char 	times[SENSOR_NO];		//wrong times
+	int 	sensor_interface_mem[11];
+	char	factory_mode;
+	int 	jiaozhun_sensor;	
+	int 	cur_ch2o;
+	int 	cur_co;	
+	float 	p[8];
+	float 	x[8];
+	char 	y;
+};
 int cap_init();
 #endif

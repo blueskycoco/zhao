@@ -1,9 +1,20 @@
+#include <fnmatch.h> 
+#include <signal.h>
+#include <sys/ipc.h>  
+#include <sys/shm.h>  
+#include <linux/rtc.h>
+#include <sys/time.h>
+#include "misc.h"
 #define MISC_PROCESS	"MISC"
+#define RTCDEV 			"/dev/rtc0"
+extern sensor_alarm sensor;
+extern struct state *g_state;
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
-	if  ( tcgetattr( fd,&oldtio)  !=  0) { 
-		perror("SetupSerial 1");
+	if  ( tcgetattr( fd,&oldtio)  !=  0)
+	{
+		printfLog(MISC_PROCESS"SetupSerial 1");
 		return -1;
 	}
 	bzero( &newtio, sizeof( newtio ) );
@@ -69,10 +80,10 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 	tcflush(fd,TCIFLUSH);
 	if((tcsetattr(fd,TCSANOW,&newtio))!=0)
 	{
-		perror("com set error");
+		printfLog(MISC_PROCESS"com set error");
 		return -1;
 	}
-	printf("set done!\n");
+	printfLog(MISC_PROCESS"set done!\n");
 	return 0;
 }
 void dump_curr_time(int fd)
@@ -83,11 +94,11 @@ void dump_curr_time(int fd)
 	/* Read the current RTC time/date */
 	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
 	if (retval == -1) {
-		perror("RTC_RD_TIME ioctl");
+		printfLog(MISC_PROCESS"RTC_RD_TIME ioctl error");
 		exit(errno);
 	}
 
-	printf(MAIN_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
+	printfLog(MISC_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 			rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 			rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
 	//if(*out!=NULL)
@@ -104,7 +115,7 @@ void set_time(int year,int mon,int day,int hour,int minute,int second)
 	fd = open(RTCDEV, O_RDWR);
 
 	if (fd == -1) {
-		perror("RTC open (RTCDEV node missing?)");
+		printfLog(MISC_PROCESS"RTC open (RTCDEV node missing?)");
 		exit(errno);
 	}
 	rtc_tm.tm_mday = day;
@@ -116,7 +127,7 @@ void set_time(int year,int mon,int day,int hour,int minute,int second)
 	/* Read the current RTC time/date */
 	retval = ioctl(fd, RTC_SET_TIME, &rtc_tm);
 	if (retval == -1) {
-		perror("RTC_SET_TIME ioctl");
+		printfLog(MISC_PROCESS"RTC_SET_TIME ioctl error");
 		exit(errno);
 	}
 	dump_curr_time(fd);
@@ -132,21 +143,21 @@ int set_alarm(int hour,int mintue,int sec)
 	fd = open(RTCDEV, O_RDONLY);
 
 	if (fd == -1) {
-		perror("RTC open (RTCDEV node missing?)");
+		printfLog(MISC_PROCESS"RTC open (RTCDEV node missing?)");
 		exit(errno);
 	}
 
 	/* Read the current RTC time/date */
 	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
 	if (retval == -1) {
-		perror("RTC_RD_TIME ioctl");
+		printfLog(MISC_PROCESS"RTC_RD_TIME ioctl error");
 		exit(errno);
 	}
 
 	dump_curr_time(fd);
 #if 1
 	sprintf(cur_date,"%04d-%02d-%02d.dat",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
-	printf(MAIN_PROCESS"cur_date %s\n",cur_date);
+	printfLog(MISC_PROCESS"cur_date %s\n",cur_date);
 	if(rtc_tm.tm_sec!=sec||rtc_tm.tm_min!=mintue||rtc_tm.tm_hour!=hour)
 	{
 		rtc_tm.tm_sec=sec;
@@ -154,7 +165,7 @@ int set_alarm(int hour,int mintue,int sec)
 		rtc_tm.tm_hour=hour;
 	}
 	else
-		printf(MAIN_PROCESS"no alarm tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec	);
+		printfLog(MISC_PROCESS"no alarm tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec	);
 #else	
 	rtc_tm.tm_sec += sec;
 	if (rtc_tm.tm_sec >= 60) {
@@ -180,36 +191,36 @@ int set_alarm(int hour,int mintue,int sec)
 	if (rtc_tm.tm_hour == 24)
 		rtc_tm.tm_hour = 0;
 #endif
-	printf(MAIN_PROCESS"tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);		
+	printfLog(MISC_PROCESS"tm_hour %02d,tm_min %02d,tm_sec %02d\r\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);		
 	retval = ioctl(fd, RTC_ALM_SET, &rtc_tm);
 	if (retval == -1) {
-		perror("RTC_ALM_SET ioctl");
+		printfLog(MISC_PROCESS"RTC_ALM_SET ioctl error");
 		exit(errno);
 	}
 
 	/* Enable alarm interrupts */
 	retval = ioctl(fd, RTC_AIE_ON, 0);
 	if (retval == -1) {
-		perror("RTC_AIE_ON ioctl");
+		printfLog(MISC_PROCESS"RTC_AIE_ON ioctl error");
 		exit(errno);
 	}
 
-	printf(MAIN_PROCESS"Alarm will trigger in %02d:%02d:%02d\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);
+	printfLog(MISC_PROCESS"Alarm will trigger in %02d:%02d:%02d\n",rtc_tm.tm_hour,rtc_tm.tm_min,rtc_tm.tm_sec);
 
 	/* This blocks until the alarm ring causes an interrupt */
 	retval = read(fd, &data, sizeof(unsigned long));
 	if (retval == -1) {
-		perror("read");
+		perror("read error");
 		exit(errno);
 	}
 
 	/* Disable alarm interrupts */
 	retval = ioctl(fd, RTC_AIE_OFF, 0);
 	if (retval == -1) {
-		perror("RTC_AIE_OFF ioctl");
+		perror("RTC_AIE_OFF ioctl error");
 		exit(errno);
 	}
-	printf(MAIN_PROCESS"Alarm has triggered\n");
+	printfLog(MISC_PROCESS"Alarm has triggered\n");
 
 	dump_curr_time(fd);
 	close(fd);
@@ -221,24 +232,131 @@ int open_com_port(char *dev)
 	long  vdisable;
 	fd = open(dev, O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
-		perror("Can't Open Serial ttySAC3");
+		printfLog(MISC_PROCESS"Can't Open Serial ttySAC3");
 		return(-1);
 	}
 	else 
-		printf("open tts/0 .....\n");
+		printfLog(MISC_PROCESS"open tts/0 .....\n");
 
 	if(fcntl(fd, F_SETFL, FNDELAY)<0)
-		printf("fcntl failed!\n");
+		printfLog(MISC_PROCESS"fcntl failed!\n");
 	else
-		printf("fcntl=%d\n",fcntl(fd, F_SETFL,FNDELAY));
+		printfLog(MISC_PROCESS"fcntl=%d\n",fcntl(fd, F_SETFL,FNDELAY));
 	if(isatty(STDIN_FILENO)==0)
 
-		printf("standard input is not a terminal device\n");
+		printfLog(MISC_PROCESS"standard input is not a terminal device\n");
 	else
-		printf("isatty success!\n");
-	printf("fd-open=%d\n",fd);
+		printfLog(MISC_PROCESS"isatty success!\n");
+	printfLog(MISC_PROCESS"fd-open=%d\n",fd);
 	return fd;
 }
+int ping_server()
+{
+	char cmd[256]={0};
+	char ret[256]={0};
+	FILE *fp;
+	sprintf(cmd,"ping -W 1 -c 1 123.57.26.24");
+	if((fp=popen(cmd,"r"))!=NULL)
+	{
+		memset(ret,0,256);
+		fread(ret,sizeof(char),sizeof(ret),fp);
+		pclose(fp);
+		printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
+		if(strstr(ret,"from")!=NULL)
+		{
+			g_state->network_state=1;
+			return 1;				
+		}
+	}
+	g_state->network_state=0;
+	return 0;
+}
+int GetIP_v4_and_v6_linux(int family,char *address,int size)
+{
+	struct ifaddrs *ifap0,*ifap;
+	char buf[NI_MAXHOST];
+	//char *interface = "ra0";
+	struct sockaddr_in *addr4;
+	struct sockaddr_in6 *addr6;
+	int ret;
+	if(NULL == address)
+	{
+		printfLog(MISC_PROCESS"in address");  
+		return -1;
+	}
+	if(getifaddrs(&ifap0))
+	{
+		printfLog(MISC_PROCESS"getifaddrs error");  
+		return -1;
+	}
+	for(ifap = ifap0;ifap!=NULL;ifap=ifap->ifa_next)
+	{
+		if(strcmp(ETH_NAME,ifap->ifa_name)!=0) continue; 
+		if(ifap->ifa_addr == NULL) continue;
+		if((ifap->ifa_flags & IFF_UP) == 0) continue;
+		if(family!=ifap->ifa_addr->sa_family) continue;
+
+		if(AF_INET == ifap->ifa_addr->sa_family)
+		{ 
+
+			addr4 = (struct sockaddr_in *)ifap->ifa_addr;
+			if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr4->sin_addr),buf,NI_MAXHOST))
+			{
+				if(size <=strlen(buf)) break;
+				strcpy(address,buf);
+				printfLog(MISC_PROCESS"address %s\n",address);
+				freeifaddrs(ifap0);
+				return 0;
+			}
+			else 
+			{
+				printfLog(MISC_PROCESS"inet_ntop error\r\n");
+				break;  
+			}
+		}
+		else if(AF_INET6 == ifap->ifa_addr->sa_family)
+		{
+			addr6 = (struct sockaddr_in6*) ifap->ifa_addr;
+			if(IN6_IS_ADDR_MULTICAST(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_LINKLOCAL(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_LOOPBACK(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_UNSPECIFIED(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(IN6_IS_ADDR_SITELOCAL(&addr6->sin6_addr))
+			{
+				continue;
+			}
+			if(NULL != inet_ntop(ifap->ifa_addr->sa_family,(void *)&(addr6->sin6_addr),buf,NI_MAXHOST))
+			{
+				if(size <= strlen(buf)) break;
+				strcpy(address,buf);
+				freeifaddrs(ifap0);
+				return 0;
+			}
+			else break; 
+		} 
+	}
+	freeifaddrs(ifap0);
+	return -1;
+}
+void get_ip(char *ip)
+{
+	GetIP_v4_and_v6_linux(AF_INET,ip,16);
+	printfLog(MISC_PROCESS"ip addrss %s\n", ip);
+	return ;
+}
+
 void get_sensor_alarm_info()
 {
 	sensor.times[SENSOR_CO]		=0;
