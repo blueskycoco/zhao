@@ -412,4 +412,214 @@ void save_sensor_alarm_info()
 		sensor.alarm[SENSOR_CO],sensor.alarm[SENSOR_CO2],sensor.alarm[SENSOR_HCHO],
 		sensor.alarm[SENSOR_SHIDU],sensor.alarm[SENSOR_TEMP],sensor.alarm[SENSOR_PM25]);
 }
+void set_net_interface()
+{
+	FILE *fp=fopen("/home/user/interface.txt","w");
+	fwrite(g_share_memory->send_by_wifi,1,1,fp);
+	fclose(fp);
+	printf("set interface is %d\n",g_share_memory->send_by_wifi);
+}
+int CaculateWeekDay(int y,int m, int d)
+{
+	if(m==1||m==2) 
+	{
+		m+=12;
+		y--;
+	}
+	int iWeek=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)%7;
+	switch(iWeek)
+	{
+		case 0: printf("m1\n"); break;
+		case 1: printf("m2\n"); break;
+		case 2: printf("m3\n"); break;
+		case 3: printf("m4\n"); break;
+		case 4: printf("m5\n"); break;
+		case 5: printf("m6\n"); break;
+		case 6: printf("m7\n"); break;
+	}
+	return iWeek;
+} 
+//check crc result with cap board sent.
+unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
+{
+	unsigned int mid=0;
+	unsigned char times=0,Data_index=0;
+	unsigned int CRC=0xFFFF;
+	while(Data_length)
+	{
+		CRC=Data[Data_index]^CRC;
+		for(times=0;times<8;times++)
+		{
+			mid=CRC;
+			CRC=CRC>>1;
+			if(mid & 0x0001)
+			{
+				CRC=CRC^0xA001;
+			}
+		}
+		Data_index++;
+		Data_length--;
+	}
+	return CRC;
+}
+void sync_server(int fd,int resend,int set_local)
+{
+	int i,j;
+	char text_out[512]={0};
+	char *sync_message=NULL,*rcv=NULL;
+	if(resend)
+		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_ASK_RE_DATA);
+	else
+		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
+	sync_message=add_item(sync_message,ID_DEVICE_UID,g_uuid);
+	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
+	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
+	printf(SYNC_PREFX"<sync GET>%s\n",sync_message);
+	send_web_post(URL,sync_message,9,&rcv);
+	free(sync_message);
+	//free(out1);
+	if(rcv!=NULL&&strlen(rcv)!=0)
+	{	
+		int len=strlen(rcv);
+		printf(SYNC_PREFX"<=== %s\n",rcv);
+		printf(SYNC_PREFX"send ok\n");
+		char *starttime=NULL;
+		char *tmp=NULL;
+		if(resend)
+		{
+
+			starttime=doit_data(rcv,(char *)"101");
+			tmp=doit_data(rcv,(char *)"102");
+			if(starttime!=NULL && tmp!=NULL)
+			{
+				printf(SYNC_PREFX"%s\r\n",tmp);
+				printf(SYNC_PREFX"%s\r\n",starttime);
+				resend_history(starttime,tmp);
+				free(starttime);
+				free(tmp);
+			}
+		}
+		else
+		{
+			//strcpy(rcv,"{\"30\":\"1234abcd\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
+			//if(atoi(type)==5)
+			//{
+			char year[3]={0},month[3]={0},day[3]={0},hour[3]={0},minute[3]={0},second[3]={0};
+			unsigned int crc=0;
+			starttime=doit_data(rcv,(char *)"104");
+			if(starttime!=NULL){
+				server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
+				server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
+				memcpy(year,starttime+2,2);
+				memcpy(month,starttime+5,2);
+				memcpy(day,starttime+8,2);
+				memcpy(hour,starttime+11,2);
+				memcpy(minute,starttime+14,2);
+				memcpy(second,starttime+17,2);
+				server_time[5]=atoi(year);server_time[6]=atoi(month);
+				server_time[7]=atoi(day);server_time[8]=atoi(hour);
+				server_time[9]=atoi(minute);server_time[10]=atoi(second);
+				crc=CRC_check(server_time,11);
+				server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
+				write(fd,server_time,13);
+				printf(SYNC_PREFX"SERVER TIME %s\r\n",starttime);
+				//tmp=doit_data(rcv+4,(char *)"211");
+				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
+				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
+				if(set_local)
+				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
+				int week=CaculateWeekDay(server_time[5],server_time[6],server_time[7]);
+				char rtc_time[7];
+				rtc_time[0]=(server_time[5]/10)*16+(server_time[5]%10);
+				rtc_time[1]=(server_time[6]/10)*16+(server_time[6]%10);
+				rtc_time[2]=(server_time[7]/10)*16+(server_time[7]%10);
+				rtc_time[3]=week+1;
+				rtc_time[4]=(server_time[8]/10)*16+(server_time[8]%10);
+				rtc_time[5]=(server_time[9]/10)*16+(server_time[9]%10);
+				rtc_time[6]=(server_time[10]/10)*16+(server_time[10]%10);
+				set_lcd_time(fd_lcd,rtc_time);
+				free(starttime);
+				char *user_name=doit_data(rcv,"203");
+				char *user_place=doit_data(rcv,"211");
+				char *user_addr=doit_data(rcv,"200");
+				char *user_phone=doit_data(rcv,"202");
+				char *user_contraceer=doit_data(rcv,"201");				
+				char cmd[256]={0};
+				clear_buf(fd_lcd,ADDR_USER_NAME,40);
+				clear_buf(fd_lcd,ADDR_INSTALL_PLACE,60);
+				clear_buf(fd_lcd,ADDR_USER_ADDR,40);
+				clear_buf(fd_lcd,ADDR_USER_PHONE,40);
+				clear_buf(fd_lcd,ADDR_USER_CONTACTER,40);
+				if(user_name && strlen(user_name)>0)
+				{
+					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
+					write_string(fd_lcd,ADDR_USER_NAME,cmd,strlen(cmd));
+					printf("user_name:%s\n",user_name);
+					free(user_name);
+				}
+				if(user_place && strlen(user_place)>0)
+				{		
+				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
+					write_string(fd_lcd,ADDR_INSTALL_PLACE,cmd,strlen(cmd));
+					printf("user_place:%s\n",user_place);
+					free(user_place);
+				}
+				if(user_addr && strlen(user_addr)>0)
+				{
+				
+					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
+					write_string(fd_lcd,ADDR_USER_ADDR,cmd,strlen(cmd));					
+					printf("user_addr:%s\n",user_addr);
+					free(user_addr);
+				}
+				if(user_phone && strlen(user_phone)>0)
+				{
+					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
+					write_string(fd_lcd,ADDR_USER_PHONE,cmd,strlen(cmd));					
+					printf("user_phone:%s\n",user_phone);
+					free(user_phone);
+				}
+				if(user_contraceer && strlen(user_contraceer)>0)
+				{
+					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
+					write_string(fd_lcd,ADDR_USER_CONTACTER,cmd,strlen(cmd));
+					printf("user_contraceer:%s\n",user_contraceer);
+					free(user_contraceer);
+				}
+			}
+			//else if(atoi(type)==6)
+			//{
+			//}
+		}
+		free(rcv);
+		rcv=NULL;
+	}
+		return ;
+}
+
+void ask_interface()
+{
+	int i = 0;
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
+	int crc=CRC_check(cmd,5);
+	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
+	printf("going to ask_interface begin\n");
+	for(i=0;i<7;i++)
+		printf("%02x ",cmd[i]);
+	printf("\ngoing to ask_interface end\n");
+	write(fd_com,cmd,sizeof(cmd));
+	i=0;
+	while(1)
+	{
+		if(i>20)
+			break;
+		sleep(1);
+		if(sensor_interface_mem[0]==0x0000)
+			break;
+		else
+			write(fd_com,cmd,sizeof(cmd));
+		i++;
+			
+	}
+}
 

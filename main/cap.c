@@ -11,37 +11,12 @@ int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
 extern char g_uuid[256];
 extern char ip[20];
-
-sensor_alarm sensor;
 //set g_upload flag to make 10 mins upload once.
 void set_upload_flag(int a)
 {
 	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
 	alarm(600);
-}
-//check crc result with cap board sent.
-unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
-{
-	unsigned int mid=0;
-	unsigned char times=0,Data_index=0;
-	unsigned int CRC=0xFFFF;
-	while(Data_length)
-	{
-		CRC=Data[Data_index]^CRC;
-		for(times=0;times<8;times++)
-		{
-			mid=CRC;
-			CRC=CRC>>1;
-			if(mid & 0x0001)
-			{
-				CRC=CRC^0xA001;
-			}
-		}
-		Data_index++;
-		Data_length--;
-	}
-	return CRC;
 }
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
@@ -335,35 +310,35 @@ char *build_message(int fd,char *cmd,int len,char *message)
 				if(memcmp(cmd+5,sensor_error,5)==0)
 				{	
 					//error got from cap board,check uninsert msg
-					if(cmd[3]==atoi(ID_CAP_CO2) && !(g_share_memory->alarm[SENSOR_CO2]))
+					if(cmd[3]==atoi(ID_CAP_CO2) && !(g_share_memory->alarm[SENSOR_CO2] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_CO2]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_CO2]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_CO) && !(g_share_memory->alarm[SENSOR_CO]))
+					else if(cmd[3]==atoi(ID_CAP_CO) && !(g_share_memory->alarm[SENSOR_CO] & ALARM_UNINSERT))
 					{
-						sensor.alarm[SENSOR_CO]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_CO]=0;
+						g_share_memory->alarm[SENSOR_CO]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_CO]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_HCHO) && !(g_share_memory->alarm[SENSOR_HCHO]))
+					else if(cmd[3]==atoi(ID_CAP_HCHO) && !(g_share_memory->alarm[SENSOR_HCHO] & ALARM_UNINSERT))
 					{
-						sensor.alarm[SENSOR_HCHO]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_HCHO]=0;
+						g_share_memory->alarm[SENSOR_HCHO]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_HCHO]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !(g_share_memory->alarm[SENSOR_SHIDU]))
+					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !(g_share_memory->alarm[SENSOR_SHIDU] & ALARM_UNINSERT))
 					{
-						sensor.alarm[SENSOR_SHIDU]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_SHIDU]=0;
+						g_share_memory->alarm[SENSOR_SHIDU]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_SHIDU]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !(g_share_memory->alarm[SENSOR_TEMP]))
+					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !(g_share_memory->alarm[SENSOR_TEMP] & ALARM_UNINSERT))
 					{
-						sensor.alarm[SENSOR_TEMP]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_TEMP]=0;
+						g_share_memory->alarm[SENSOR_TEMP]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_TEMP]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !(g_share_memory->alarm[SENSOR_PM25]))
+					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !(g_share_memory->alarm[SENSOR_PM25] & ALARM_UNINSERT))
 					{
-						sensor.alarm[SENSOR_PM25]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_PM25]=0;
+						g_share_memory->alarm[SENSOR_PM25]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_PM25]=0;
 					}
 					else 
 						return message;
@@ -381,40 +356,40 @@ char *build_message(int fd,char *cmd,int len,char *message)
 				{	//normal data or beyond Min & Max data
 					int value=0;
 					//clear the uninsert alarm
-					if(cmd[3]==atoi(ID_CAP_CO2) && (sensor.alarm[SENSOR_CO2]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO2) && (g_share_memory->alarm[SENSOR_CO2]&ALARM_UNINSERT))
 					{					
 						clear_alarm(ID_CAP_CO2,ID_ALERT_UNINSERT);						
-						sensor.alarm[SENSOR_CO2]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_CO2]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_CO) && (sensor.alarm[SENSOR_CO]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO) && (g_share_memory->alarm[SENSOR_CO]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_CO,ID_ALERT_UNINSERT);
-						sensor.alarm[SENSOR_CO]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_CO]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_HCHO) && (sensor.alarm[SENSOR_HCHO]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_HCHO) && (g_share_memory->alarm[SENSOR_HCHO]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_HCHO,ID_ALERT_UNINSERT);
-						sensor.alarm[SENSOR_HCHO]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_HCHO]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_SHI_DU) && (sensor.alarm[SENSOR_SHIDU]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_SHI_DU) && (g_share_memory->alarm[SENSOR_SHIDU]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_SHI_DU,ID_ALERT_UNINSERT);
-						sensor.alarm[SENSOR_SHIDU]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_SHIDU]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& (sensor.alarm[SENSOR_TEMP]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& (g_share_memory->alarm[SENSOR_TEMP]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_TEMPERATURE,ID_ALERT_UNINSERT);
-						sensor.alarm[SENSOR_TEMP]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_TEMP]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
-					if(cmd[3]==atoi(ID_CAP_PM_25)&& (sensor.alarm[SENSOR_PM25]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_PM_25)&& (g_share_memory->alarm[SENSOR_PM25]&ALARM_UNINSERT))
 					{
 						clear_alarm(ID_CAP_PM_25,ID_ALERT_UNINSERT);
-						sensor.alarm[SENSOR_PM25]&=~ALARM_UNINSERT;	
+						g_share_memory->alarm[SENSOR_PM25]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
 					if(message==NULL)
@@ -477,6 +452,107 @@ char *build_message(int fd,char *cmd,int len,char *message)
 			printfLog(CAP_PROCESS"0x%02x ",cmd[i]);
 	}
 	return message;
+}
+void return_zero_point(int fd,int co)
+{
+	int crc = 0;
+	int i =0;
+	char cmd_return_point[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
+	if(co)
+	{
+		for(i=0;i<11;i++)
+			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
+			g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
+			break;
+		printf("CO interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
+		printf("CO zero value\n",g_share_memory->cur_co);
+		cmd_return_point[7]=(g_share_memory->cur_co>>8) & 0xff;
+		cmd_return_point[8]=(g_share_memory->cur_co & 0xff);
+	}
+	else
+	{
+		for(i=0;i<11;i++)
+			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
+				g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
+				break;
+		printf("CH2O interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
+		printf("CH2O zero value\n",g_share_memory->cur_ch2o);
+		cmd_return_point[7]=(g_share_memory->cur_ch2o>>8) & 0xff;
+		cmd_return_point[8]=(g_share_memory->cur_ch2o & 0xff);
+	}
+	cmd_return_point[5]=i+1;
+	crc=CRC_check(cmd_return_point,9);
+	cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
+	for(i=0;i<sizeof(cmd_return_point);i++)
+		printf("%02X ",cmd_return_point[i]);
+	printf("\n");
+	write(fd,cmd_return_point,sizeof(cmd_return_point));
+}
+
+void show_factory(int fd,int zero,char *cmd,int len)
+{	
+	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
+	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
+	if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
+		return ;
+	if(crc==CRC_check(cmd,len-2))
+	{
+		sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
+		if(cmd[7]!=0)
+		{//have .
+			int m;
+			if(cmd[7]>strlen(data))//like 0.012
+			{
+				char tmp_buf[10]={0};
+				int dist=cmd[7]-strlen(data);
+				strcpy(tmp_buf,"0.");
+				for(m=0;m<dist;m++)
+					strcat(tmp_buf,"0");
+				strcat(tmp_buf,data);
+				strcpy(data,tmp_buf);
+			}
+			else//like 12.33
+			{
+				int left,right,number,n=1;
+				number=(cmd[5]<<8)|cmd[6];
+				for(m=0;m<cmd[7];m++)
+					n=n*10;
+				right=number%n;
+				left=number/n;
+				sprintf(data,"%d.%d",left,right);								
+			}		
+		}	
+		//printf("data %s\n",data);
+		if(zero)
+		{
+			if(cmd[3]==atoi(ID_CAP_CO))
+			{
+				printf("In tun zero mode CO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
+				write_string(fd_lcd,ADDR_TUN_ZERO_CO,data,strlen(data));
+				g_share_memory->cur_co=(cmd[5]<<8)|cmd[6];
+				return_zero_point(fd,1);
+			}
+			if(cmd[3]==atoi(ID_CAP_HCHO))
+			{	
+				printf("In tun zero mode HCHO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
+				write_string(fd_lcd,ADDR_TUN_ZERO_HCHO,data,strlen(data));
+				g_share_memory->cur_ch2o=(cmd[5]<<8)|cmd[6];
+				return_zero_point(fd,0);
+			}
+		}
+		else
+		{
+			if(cmd[3]==g_share_memory->jiaozhun_sensor)				
+			{
+				clear_buf(fd_lcd,ADDR_REAL_VALUE,4);
+				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
+			}
+		}
+	}
+	else
+		printf("CRC failed in zero mode\n");
 }
 
 /*
@@ -559,9 +635,59 @@ int cap_board_mon(int fd)
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					post_message=build_message(fd,cmd,message_len+7,post_message);
+					show_cap_value(to_check+2,message_len);
+					if(g_share_memory->factory_mode==NORMAL_MODE)
+					{
+						if(message_type == 0x0004)
+						{
+							for(i=0;i<message_len;i=i+2)
+							{
+								g_share_memory->sensor_interface_mem[i/2]=(message[i]<<8)|message[i+1];
+								printf("sensor_interface[%d] = %4x\n",i/2,g_share_memory->sensor_interface_mem[i/2]);
+							}
+						}
+						else
+							post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+					}
+					else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
+						show_factory(fd_lcd,1,cmd,message_len+7);
+					else
+					{
+						if(message_type == 0x0003)
+						{							
+							g_share_memory->y=message[message_len-1];
+							printf(". = %d\n",message[message_len-1]);
+							for(i=0;i<16;i=i+2)
+							{
+								g_share_memory->p[i/2]=(message[i]<<8)|message[i+1];
+								if(g_share_memory->y!=0)
+								{
+									int m=1,j=0;
+									for(j=0;j<g_share_memory->y;j++)
+										m=m*10;
+									g_share_memory->p[i/2]=g_share_memory->p[i/2]/m;	
+								}
+								printf("verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
+							}
+							for(i=16;i<32;i=i+2)
+							{
+								g_share_memory->x[(i-16)/2]=(message[i]<<8)|message[i+1];
+								if(g_share_memory->y!=0)
+								{
+									int m=1,j=0;
+									for(j=0;j<g_share_memory->y;j++)
+										m=m*10;
+									g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/m;	
+								}
+								printf("xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
+							}
+							show_verify_point();
+						}
+						else
+						show_factory(fd_lcd,0,cmd,message_len+7);
+					}
 					free(cmd);
-					return 0;						
+					return 0;											
 				}
 				default:
 				{

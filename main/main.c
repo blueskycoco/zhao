@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,0);
 	#endif
+	cap_init();
 	fpid=fork();
 	if(fpid==0)
 	{
