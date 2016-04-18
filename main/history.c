@@ -16,19 +16,23 @@
 #include "netlib.h"
 #include "log.h"
 #define HISTORY "[History Process]"
-extern struct history g_history;
+extern struct history *sensor_history;
+extern struct share_memory *g_share_memory;
+extern key_t  shmid_share_memory;
+extern key_t  shmid_history;
+
 void set_data(char *line,char *type,struct nano *history,long *cnt)
 {
 	char *data=doit_data(line,type);
 	if(data!=NULL)
 	{
-		memset(history[*cnt].data,'\0',10);
+		memset(history->data,'\0',10);
 		if(strncmp(ID_CAP_CO2,type,strlen(ID_CAP_CO2))==0)
-			sprintf(history[*cnt].data,"%04d",atoi(data));
+			sprintf(history->data,"%04d",atoi(data));
 		else if(strncmp(ID_CAP_PM_25,type,strlen(ID_CAP_PM_25))==0)
-			sprintf(history[*cnt].data,"%03d",atoi(data));
+			sprintf(history->data,"%03d",atoi(data));
 		else
-			strcpy(history[*cnt].data,data);					
+			strcpy(history->data,data);					
 		free(data);
 		(*cnt)++;
 	}
@@ -36,13 +40,13 @@ void set_data(char *line,char *type,struct nano *history,long *cnt)
 void set_time(char *file_name,char *line,struct nano *history,long *cnt)
 {
 	char tmp[11]={0};
-	memset(history[*cnt].time,'\0',20);
+	memset(history->time,'\0',20);
 	memcpy(tmp,file_name,10);
-	strcpy(history[*cnt].time,tmp);
-	strcat(history[*cnt].time," ");
+	strcpy(history->time,tmp);
+	strcat(history->time," ");
 	memset(tmp,'\0',11);
 	memcpy(tmp,line,5);
-	strcat(history[*cnt].time,tmp);
+	strcat(history->time,tmp);
 }
 void load_history(const char *name)
 {
@@ -56,22 +60,11 @@ void load_history(const char *name)
 	char day_j[3]={0},day_m[3]={0};
 	
 	printfLog(HISTORY"begin to shmat\n");	
-	g_history.sensor_history[SENSOR_CO] 	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO],	 0, 0);
-	g_history.sensor_history[SENSOR_CO2]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_CO2],  0, 0);
-	g_history.sensor_history[SENSOR_HCHO]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_HCHO], 0, 0);
-	g_history.sensor_history[SENSOR_TEMP]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_TEMP], 0, 0);
-	g_history.sensor_history[SENSOR_SHIDU]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_SHIDU],0, 0);
-	g_history.sensor_history[SENSOR_PM25]	= (struct nano *)shmat(g_history.shmid_history[SENSOR_PM25], 0, 0);
-	g_history.cnt[SENSOR_CO]	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO],   0, 0);
-	g_history.cnt[SENSOR_CO2]	= (long *)shmat(g_history.shmid_cnt[SENSOR_CO2],  0, 0);
-	g_history.cnt[SENSOR_HCHO]	= (long *)shmat(g_history.shmid_cnt[SENSOR_HCHO], 0, 0);
-	g_history.cnt[SENSOR_TEMP]	= (long *)shmat(g_history.shmid_cnt[SENSOR_TEMP], 0, 0);
-	g_history.cnt[SENSOR_SHIDU] = (long *)shmat(g_history.shmid_cnt[SENSOR_SHIDU],0, 0);
-	g_history.cnt[SENSOR_PM25]	= (long *)shmat(g_history.shmid_cnt[SENSOR_PM25], 0, 0);
-	g_history.history_done 		= (int *) shmat(g_history.history_load_done_shmid,0, 0);
+	sensor_history 	= (struct history *)shmat(shmid_history,	 0, 0);
+	g_share_memory 	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 	printfLog(HISTORY"end to shmat\n");
-	*(g_history.history_done)=0;
-	printfLog(HISTORY"load=>history_done %d\n",*(g_history.history_done));
+	g_share_memory->history_done = 0;
+	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
 	d = opendir(name);
 	if(d == 0)
 	{
@@ -152,27 +145,39 @@ void load_history(const char *name)
 			if((cnt%2)!=0)
 			{
 				//get co,co2,hcho,pm25,shidu,temp
-				set_data(line,ID_CAP_CO,		g_history.sensor_history[SENSOR_CO],	g_history.cnt[SENSOR_CO]);
-				set_data(line,ID_CAP_CO2,		g_history.sensor_history[SENSOR_CO2],	g_history.cnt[SENSOR_CO2]);
-				set_data(line,ID_CAP_HCHO,		g_history.sensor_history[SENSOR_HCHO],	g_history.cnt[SENSOR_HCHO]);
-				set_data(line,ID_CAP_SHI_DU,	g_history.sensor_history[SENSOR_SHIDU],	g_history.cnt[SENSOR_SHIDU]);
-				set_data(line,ID_CAP_TEMPERATURE,g_history.sensor_history[SENSOR_TEMP],	g_history.cnt[SENSOR_TEMP]);
-				set_data(line,ID_CAP_PM_25,		g_history.sensor_history[SENSOR_PM25],	g_history.cnt[SENSOR_PM25]);
+				set_data(line,ID_CAP_CO,		&(sensor_history[g_share_memory->cnt[SENSOR_CO]].co),	
+												&(g_share_memory->cnt[SENSOR_CO]));
+				set_data(line,ID_CAP_CO2,		&(sensor_history[g_share_memory->cnt[SENSOR_CO2]].co2),	
+												&(g_share_memory->cnt[SENSOR_CO2]));
+				set_data(line,ID_CAP_HCHO,		&(sensor_history[g_share_memory->cnt[SENSOR_HCHO]].hcho),	
+												&(g_share_memory->cnt[SENSOR_HCHO]));
+				set_data(line,ID_CAP_SHI_DU,	&(sensor_history[g_share_memory->cnt[SENSOR_SHIDU]].shidu),	
+												&(g_share_memory->cnt[SENSOR_SHIDU]));
+				set_data(line,ID_CAP_TEMPERATURE,&(sensor_history[g_share_memory->cnt[SENSOR_TEMP]].temp),	
+												&(g_share_memory->cnt[SENSOR_TEMP]));
+				set_data(line,ID_CAP_PM_25,		&(sensor_history[g_share_memory->cnt[SENSOR_PM25]].pm25),	
+												&(g_share_memory->cnt[SENSOR_PM25]));
 			}
 			else
 			{
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_CO],	g_history.cnt[SENSOR_CO]);
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_CO2],g_history.cnt[SENSOR_CO2]);
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_HCHO],g_history.cnt[SENSOR_HCHO]);
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_SHIDU],g_history.cnt[SENSOR_SHIDU]);
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_TEMP],g_history.cnt[SENSOR_TEMP]);
-				set_time(file_list[j],line,g_history.sensor_history[SENSOR_PM25],g_history.cnt[SENSOR_PM25]);
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_CO]].co),	
+											&(g_share_memory->cnt[SENSOR_CO]));
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_CO2]].co2),	
+											&(g_share_memory->cnt[SENSOR_CO2]));
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_HCHO]].hcho),	
+											&(g_share_memory->cnt[SENSOR_HCHO]));
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_SHIDU]].shidu),	
+											&(g_share_memory->cnt[SENSOR_SHIDU]));
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_TEMP]].temp),	
+											&(g_share_memory->cnt[SENSOR_TEMP]));
+				set_time(file_list[j],line,&(sensor_history[g_share_memory->cnt[SENSOR_PM25]].pm25),	
+											&(g_share_memory->cnt[SENSOR_PM25]));
 			}
 			cnt++;
 		}
 		fclose(fp);
 	}
-	*history_done=1;
-	printfLog(HISTORY"load=>history_done %d\n",*history_done);
+	g_share_memory->history_done=1;
+	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
 }
 

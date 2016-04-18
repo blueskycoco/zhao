@@ -8,8 +8,8 @@
 #include "log.h"
 #define MAIN_PROCESS	"[MainCtlSystem]:"
 extern struct share_memory *g_share_memory;
-extern struct nano *sensor_history[SENSOR_NO];
-extern key_t  shmid_history[SENSOR_NO];
+extern struct history *sensor_history;
+extern key_t  shmid_history;
 extern key_t  shmid_share_memory;
 
 int main(int argc, char *argv[])
@@ -21,12 +21,12 @@ int main(int argc, char *argv[])
 	
 	if((shmid_history = shmget(IPC_PRIVATE, sizeof(struct history)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create Share Memory Error CO:%s/n/a", strerror(errno));  
+        printfLog(CAP_PROCESS"Create history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_share_memory = shmget(IPC_PRIVATE, sizeof(struct share_memory), PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));
         exit(1);
     }	
 	if((fpid=fork())==0)

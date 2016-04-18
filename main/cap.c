@@ -70,33 +70,33 @@ void send_server_save_local(char *date,char *message,char save)
 		save_to_file(date,message);
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO,g_history.sensor_history[SENSOR_CO],
-			g_history.cnt[SENSOR_CO],data,date);
+			set_upload_data(ID_CAP_CO,&(sensor_history[g_share_memory->cnt[SENSOR_CO]].co),
+			g_share_memory->cnt[SENSOR_CO],data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO2,g_history.sensor_history[SENSOR_CO2],
-			g_history.cnt[SENSOR_CO2],data,date);
+			set_upload_data(ID_CAP_CO2,&(sensor_history[g_share_memory->cnt[SENSOR_CO2]].co2),
+			g_share_memory->cnt[SENSOR_CO2],data,date);
 		
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_SHI_DU,g_history.sensor_history[SENSOR_SHIDU],
-			g_history.cnt[SENSOR_SHIDU],data,date);
+			set_upload_data(ID_CAP_SHI_DU,&(sensor_history[g_share_memory->cnt[SENSOR_SHIDU]].shidu),
+			g_share_memory->cnt[SENSOR_SHIDU],data,date);
 		
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_HCHO,g_history.sensor_history[SENSOR_HCHO],
-			g_history.cnt[SENSOR_HCHO],data,date);
+			set_upload_data(ID_CAP_HCHO,&(sensor_history[g_share_memory->cnt[SENSOR_HCHO]].hcho),
+			g_share_memory->cnt[SENSOR_HCHO],data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_TEMPERATURE,g_history.sensor_history[SENSOR_TEMP],
-			g_history.cnt[SENSOR_TEMP],data,date);
+			set_upload_data(ID_CAP_TEMPERATURE,&(sensor_history[g_share_memory->cnt[SENSOR_TEMP]].temp),
+			g_share_memory->cnt[SENSOR_TEMP],data,date);
 		
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_PM_25,g_history.sensor_history[SENSOR_PM25],
-			g_history.cnt[SENSOR_PM25],data,date);
+			set_upload_data(ID_CAP_PM_25,&(sensor_history[g_share_memory->cnt[SENSOR_PM25]].pm25),
+			g_share_memory->cnt[SENSOR_PM25],data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
@@ -148,56 +148,56 @@ char *count_sensor_value(char cmd,char *json,int value)
 	char id[256]={0};
 	if(cmd==atoi(ID_CAP_CO2))
 	{
-		times=&(sensor.times[SENSOR_CO2]);
-		sent=&(sensor.sent[SENSOR_CO2]);
+		times=&(g_share_memory->times[SENSOR_CO2]);
+		sent=&(g_share_memory->sent[SENSOR_CO2]);
 		min=MIN_CO2;
 		max=MAX_CO2;
-		alarm=&(sensor.alarm[SENSOR_CO2]);
+		alarm=&(g_share_memory->alarm[SENSOR_CO2]);
 		strcpy(id,ID_CAP_CO2);
 	}
 	else if(cmd==atoi(ID_CAP_CO))
 	{
-		times=&(sensor.times[SENSOR_CO]);
-		sent=&(sensor.sent[SENSOR_CO]);
+		times=&(g_share_memory->times[SENSOR_CO]);
+		sent=&(g_share_memory->sent[SENSOR_CO]);
 		min=MIN_CO;
 		max=MAX_CO;
-		alarm=&(sensor.alarm[SENSOR_CO]);
+		alarm=&(g_share_memory->alarm[SENSOR_CO]);
 		strcpy(id,ID_CAP_CO);
 	}
 	else if(cmd==atoi(ID_CAP_CO))
 	{
-		times=&(sensor.times[SENSOR_HCHO]);
-		sent=&(sensor.sent[SENSOR_HCHO]);
+		times=&(g_share_memory->times[SENSOR_HCHO]);
+		sent=&(g_share_memory->sent[SENSOR_HCHO]);
 		min=MIN_HCHO;
 		max=MAX_HCHO;
-		alarm=&(sensor.alarm[SENSOR_HCHO]);
+		alarm=&(g_share_memory->alarm[SENSOR_HCHO]);
 		strcpy(id,ID_CAP_HCHO);
 	}
 	else if(cmd==atoi(ID_CAP_TEMPERATURE))
 	{
-		times=&(sensor.times[SENSOR_TEMP]);
-		sent=&(sensor.sent[SENSOR_TEMP]);
+		times=&(g_share_memory->times[SENSOR_TEMP]);
+		sent=&(g_share_memory->sent[SENSOR_TEMP]);
 		min=MIN_TEMP;
 		max=MAX_TEMP;
-		alarm=&(sensor.alarm[SENSOR_TEMP]);
+		alarm=&(g_share_memory->alarm[SENSOR_TEMP]);
 		strcpy(id,ID_CAP_TEMPERATURE);
 	}
 	else if(cmd==atoi(ID_CAP_SHI_DU))
 	{
-		times=&(sensor.times[SENSOR_SHIDU]);
-		sent=&(sensor.sent[SENSOR_SHIDU]);
+		times=&(g_share_memory->times[SENSOR_SHIDU]);
+		sent=&(g_share_memory->sent[SENSOR_SHIDU]);
 		min=MIN_SHIDU;
 		max=MAX_SHIDU;
-		alarm=&(sensor.alarm[SENSOR_SHIDU]);
+		alarm=&(g_share_memory->alarm[SENSOR_SHIDU]);
 		strcpy(id,ID_CAP_SHI_DU);
 	}
 	else if(cmd==atoi(ID_CAP_PM_25))
 	{
-		times=&(sensor.times[SENSOR_PM25]);
-		sent=&(sensor.sent[SENSOR_PM25]);
+		times=&(g_share_memory->times[SENSOR_PM25]);
+		sent=&(g_share_memory->sent[SENSOR_PM25]);
 		min=MIN_PM25;
 		max=MAX_PM25;
-		alarm=&(sensor.alarm[SENSOR_PM25]);
+		alarm=&(g_share_memory->alarm[SENSOR_PM25]);
 		strcpy(id,ID_CAP_PM_25);
 	}
 	if(value<min)
@@ -293,17 +293,17 @@ char *build_message(int fd,char *cmd,int len,char *message)
 				if(warnning_msg!=NULL)
 				{	//have alarm msg upload
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO2,
-									&(sensor.alarm[SENSOR_CO2]),&(sensor.sent[SENSOR_CO2]));
+									&(g_share_memory->alarm[SENSOR_CO2]),&(g_share_memory->sent[SENSOR_CO2]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO,
-									&(sensor.alarm[SENSOR_CO]),&(sensor.sent[SENSOR_CO]));
+									&(g_share_memory->alarm[SENSOR_CO]),&(g_share_memory->sent[SENSOR_CO]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_HCHO,
-									&(sensor.alarm[SENSOR_HCHO]),&(sensor.sent[SENSOR_HCHO]));
+									&(g_share_memory->alarm[SENSOR_HCHO]),&(g_share_memory->sent[SENSOR_HCHO]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_SHI_DU,
-									&(sensor.alarm[SENSOR_SHIDU]),&(sensor.sent[SENSOR_SHIDU]));
+									&(g_share_memory->alarm[SENSOR_SHIDU]),&(g_share_memory->sent[SENSOR_SHIDU]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_TEMPERATURE,
-									&(sensor.alarm[SENSOR_TEMP]),&(sensor.sent[SENSOR_TEMP]));
+									&(g_share_memory->alarm[SENSOR_TEMP]),&(g_share_memory->sent[SENSOR_TEMP]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_PM_25,
-									&(sensor.alarm[SENSOR_PM25]),&(sensor.sent[SENSOR_PM25]));
+									&(g_share_memory->alarm[SENSOR_PM25]),&(g_share_memory->sent[SENSOR_PM25]));
 					if(warnning_msg!=NULL)
 						free(warnning_msg);
 					warnning_msg=NULL;
@@ -335,32 +335,32 @@ char *build_message(int fd,char *cmd,int len,char *message)
 				if(memcmp(cmd+5,sensor_error,5)==0)
 				{	
 					//error got from cap board,check uninsert msg
-					if(cmd[3]==atoi(ID_CAP_CO2) && !sensor.co2)
+					if(cmd[3]==atoi(ID_CAP_CO2) && !(g_share_memory->alarm[SENSOR_CO2]))
 					{
-						sensor.alarm[SENSOR_CO2]|=ALARM_UNINSERT;
-						sensor.sent[SENSOR_CO2]=0;
+						g_share_memory->alarm[SENSOR_CO2]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_CO2]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_CO) && !sensor.co)
+					else if(cmd[3]==atoi(ID_CAP_CO) && !(g_share_memory->alarm[SENSOR_CO]))
 					{
 						sensor.alarm[SENSOR_CO]|=ALARM_UNINSERT;
 						sensor.sent[SENSOR_CO]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_HCHO) && !sensor.hcho)
+					else if(cmd[3]==atoi(ID_CAP_HCHO) && !(g_share_memory->alarm[SENSOR_HCHO]))
 					{
 						sensor.alarm[SENSOR_HCHO]|=ALARM_UNINSERT;
 						sensor.sent[SENSOR_HCHO]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !sensor.shidu)
+					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !(g_share_memory->alarm[SENSOR_SHIDU]))
 					{
 						sensor.alarm[SENSOR_SHIDU]|=ALARM_UNINSERT;
 						sensor.sent[SENSOR_SHIDU]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !sensor.temp)
+					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !(g_share_memory->alarm[SENSOR_TEMP]))
 					{
 						sensor.alarm[SENSOR_TEMP]|=ALARM_UNINSERT;
 						sensor.sent[SENSOR_TEMP]=0;
 					}
-					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !sensor.pm25)
+					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !(g_share_memory->alarm[SENSOR_PM25]))
 					{
 						sensor.alarm[SENSOR_PM25]|=ALARM_UNINSERT;
 						sensor.sent[SENSOR_PM25]=0;
