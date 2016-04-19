@@ -12,12 +12,12 @@ struct nano{
 	char data[10];
 };
 struct history{
-	struct nano co;
-	struct nano co2;
-	struct nano hcho;
-	struct nano temp;
-	struct nano shidu;
-	struct nano pm25;
+	struct nano *co;
+	struct nano *co2;
+	struct nano *hcho;
+	struct nano *temp;
+	struct nano *shidu;
+	struct nano *pm25;
 };
 struct share_memory{
 	long 	cnt[SENSOR_NO];			//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count	
@@ -37,6 +37,9 @@ struct share_memory{
 	float 	p[8];
 	float 	x[8];
 	char 	y;
+	int 	fd_lcd;
+	int 	fd_com;
+	int 	fd_gprs;
 };
 int cap_init();
 #endif

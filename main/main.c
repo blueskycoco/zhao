@@ -8,9 +8,15 @@
 #include "log.h"
 #define MAIN_PROCESS	"[MainCtlSystem]:"
 extern struct share_memory *g_share_memory;
-extern struct history *sensor_history;
-extern key_t  shmid_history;
+extern struct history sensor_history;
 extern key_t  shmid_share_memory;
+extern key_t	shmid_history_co;
+extern key_t	shmid_history_co2;
+extern key_t	shmid_history_hcho;
+extern key_t	shmid_history_temp;
+extern key_t	shmid_history_shidu;
+extern key_t	shmid_history_pm25;
+extern key_t	shmid_share_memory;
 
 int main(int argc, char *argv[])
 {
@@ -19,11 +25,37 @@ int main(int argc, char *argv[])
 	key_t shmid;
 	signal(SIGCHLD, SIG_IGN);
 	
-	if((shmid_history = shmget(IPC_PRIVATE, sizeof(struct history)*100000, PERM)) == -1 )
+	if((shmid_history_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create history share Error %s/n/a", strerror(errno));  
+        printfLog(CAP_PROCESS"Create co history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
+	if((shmid_history_co2 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(CAP_PROCESS"Create co2 history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_hcho = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(CAP_PROCESS"Create hcho history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_temp = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(CAP_PROCESS"Create temp history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_shidu = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(CAP_PROCESS"Create shidu history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_pm25 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(CAP_PROCESS"Create pm25 history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	
 	if((shmid_share_memory = shmget(IPC_PRIVATE, sizeof(struct share_memory), PERM)) == -1 )
 	{
         printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));
@@ -37,6 +69,14 @@ int main(int argc, char *argv[])
 	}
 	else
 		printf("[PID]%d load history process\n",fpid);
+	
+	sensor_history.co	= (struct nano *)shmat(shmid_history_co,	 0, 0);
+	sensor_history.co2	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
+	sensor_history.hcho = (struct nano *)shmat(shmid_history_hcho,	 0, 0);
+	sensor_history.temp = (struct nano *)shmat(shmid_history_temp,	 0, 0);
+	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,  0, 0);
+	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
+	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 	get_ip(ip);
 	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
 	{

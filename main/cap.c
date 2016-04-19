@@ -4,8 +4,13 @@
 #define CAP_PROCESS "[CAP_PROCESS]"
 
 struct share_memory *g_share_memory;
-struct history *sensor_history;
-key_t	shmid_history;
+struct history sensor_history;
+key_t	shmid_history_co;
+key_t	shmid_history_co2;
+key_t	shmid_history_hcho;
+key_t	shmid_history_temp;
+key_t	shmid_history_shidu;
+key_t	shmid_history_pm25;
 key_t	shmid_share_memory;
 int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
@@ -45,32 +50,32 @@ void send_server_save_local(char *date,char *message,char save)
 		save_to_file(date,message);
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO,&(sensor_history[g_share_memory->cnt[SENSOR_CO]].co),
+			set_upload_data(ID_CAP_CO,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),
 			g_share_memory->cnt[SENSOR_CO],data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO2,&(sensor_history[g_share_memory->cnt[SENSOR_CO2]].co2),
+			set_upload_data(ID_CAP_CO2,&(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]]),
 			g_share_memory->cnt[SENSOR_CO2],data,date);
 		
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_SHI_DU,&(sensor_history[g_share_memory->cnt[SENSOR_SHIDU]].shidu),
+			set_upload_data(ID_CAP_SHI_DU,&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),
 			g_share_memory->cnt[SENSOR_SHIDU],data,date);
 		
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_HCHO,&(sensor_history[g_share_memory->cnt[SENSOR_HCHO]].hcho),
+			set_upload_data(ID_CAP_HCHO,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),
 			g_share_memory->cnt[SENSOR_HCHO],data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_TEMPERATURE,&(sensor_history[g_share_memory->cnt[SENSOR_TEMP]].temp),
+			set_upload_data(ID_CAP_TEMPERATURE,&(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]]),
 			g_share_memory->cnt[SENSOR_TEMP],data,date);
 		
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_PM_25,&(sensor_history[g_share_memory->cnt[SENSOR_PM25]].pm25),
+			set_upload_data(ID_CAP_PM_25,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),
 			g_share_memory->cnt[SENSOR_PM25],data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
@@ -726,7 +731,12 @@ int cap_init()
 	fpid=fork();
 	if(fpid==0)
 	{
-		sensor_history = (struct history *)shmat(shmid_history,0, 0);
+		sensor_history.co= (struct nano *)shmat(shmid_history_co,0, 0);
+		sensor_history.co2 = (struct nano *)shmat(shmid_history_co2,0, 0);
+		sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
+		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
+		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
+		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);
 		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
