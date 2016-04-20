@@ -11,8 +11,9 @@
 #include <netdb.h>  
 #include <string.h>  
 #include "cJSON.h"
+#include "netlib.h"
+#include "log.h"
 #include <errno.h>
-#include "weblib.h"
 #define PORT 9517
 
 #define BUFFER_SIZE 1024  
@@ -24,15 +25,15 @@
 static int http_tcpclient_create(const char *host, int port,int timeout){  
 	struct hostent *he;  
 	struct sockaddr_in server_addr;
-	struct sockaddr_in addr; 
-	int socket_fd,nOptval=1; 
-	socklen_t lon; 
+	//struct sockaddr_in addr; 
+	int socket_fd; 
+	//socklen_t lon; 
 	int error;
 	fd_set rset, wset;
 	unsigned int len;
 	struct timeval tv; 
-	int valopt,ret; 
-	int imode=1,i=0;
+	int ret; 
+	//int imode=1,i=0;
 	if((he = gethostbyname(host))==NULL){  
 		printfLog(NET_LIB_TAG"gethostbyname failed\n");
 		return -1;  
@@ -232,15 +233,15 @@ static char *http_parse_result(const char*lpbuf)
 
 char * http_post(const char *url,const char *post_str,int timeout){  
 
-	char post[BUFFER_SIZE] = {'\0'};  
+	//char post[BUFFER_SIZE] = {'\0'};  
 	int socket_fd = -1;  
 	char lpbuf[BUFFER_SIZE*4] = {'\0'};  
-	char *ptmp;  
+	//char *ptmp;  
 	char host_addr[BUFFER_SIZE] = {'\0'};  
 	char file[BUFFER_SIZE] = {'\0'};  
 	int port = 0;  
 	int len=0;  
-	char *response = NULL;  
+	//char *response = NULL;  
 
 	if(!url || !post_str){  
 		printfLog(NET_LIB_TAG"      failed!\n");  
@@ -283,10 +284,10 @@ char * http_post(const char *url,const char *post_str,int timeout){
 char * http_get(const char *url,int timeout)  
 {  
 
-	char post[BUFFER_SIZE] = {'\0'};  
+	//char post[BUFFER_SIZE] = {'\0'};  
 	int socket_fd = -1;  
 	char lpbuf[BUFFER_SIZE*4] = {'\0'};  
-	char *ptmp;  
+	//char *ptmp;  
 	char host_addr[BUFFER_SIZE] = {'\0'};  
 	char file[BUFFER_SIZE] = {'\0'};  
 	int port = 0;  

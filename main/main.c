@@ -1,12 +1,8 @@
-#include <unistd.h>  
-#include <stdlib.h>  
-#include <stdio.h>  
-#include <string.h>  
-#include <errno.h>  
-#include <sys/msg.h>  
-#include <signal.h>
-#include "log.h"
 #include "cap.h"
+#include "history.h"
+#include "misc.h"
+#include "xfer.h"
+#include "dwin.h"
 #define MAIN_PROCESS	"[MainCtlSystem]:"
 struct share_memory *g_share_memory;
 struct history sensor_history;
@@ -22,10 +18,10 @@ key_t	shmid_share_memory;
 int main(int argc, char *argv[])
 {
 	int fpid;	
-	long i;
-	key_t shmid;
+	//long i;
+	//key_t shmid;
 	signal(SIGCHLD, SIG_IGN);
-	
+	init_log();
 	if((shmid_history_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
         printfLog(MAIN_PROCESS"Create co history share Error %s/n/a", strerror(errno));  

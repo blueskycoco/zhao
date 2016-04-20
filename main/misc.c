@@ -1,14 +1,11 @@
-#include <fnmatch.h> 
-#include <signal.h>
-#include <sys/ipc.h>  
-#include <sys/shm.h>  
-#include <linux/rtc.h>
-#include <sys/time.h>
-#include "misc.h"
 #include "cap.h"
+#include "netlib.h"
+#include "xfer.h"
+#include "misc.h"
+#include "dwin.h"
 #define MISC_PROCESS	"MISC"
 #define RTCDEV 			"/dev/rtc0"
-
+#define ETH_NAME "ra0"
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
@@ -110,7 +107,7 @@ void set_time(int year,int mon,int day,int hour,int minute,int second)
 {	
 	int fd, retval;
 	struct rtc_time rtc_tm;
-	unsigned long data;
+	//unsigned long data;
 
 	fd = open(RTCDEV, O_RDWR);
 
@@ -230,7 +227,7 @@ int set_alarm(int hour,int mintue,int sec)
 int open_com_port(char *dev)
 {
 	int fd;
-	long  vdisable;
+	//long  vdisable;
 	fd = open(dev, O_RDWR|O_NOCTTY|O_NDELAY);
 	if (-1 == fd){
 		printfLog(MISC_PROCESS"Can't Open Serial ttySAC3");
@@ -279,7 +276,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	//char *interface = "ra0";
 	struct sockaddr_in *addr4;
 	struct sockaddr_in6 *addr6;
-	int ret;
+	//int ret;
 	if(NULL == address)
 	{
 		printfLog(MISC_PROCESS"in address");  
@@ -372,6 +369,39 @@ void get_uuid()
 	g_share_memory->uuid[strlen(g_share_memory->uuid)-1]='\0';
 	printfLog(MISC_PROCESS"uuid is %s\n",g_share_memory->uuid);
 }
+void save_to_file(char *date,char *message)
+{
+	FILE *fp;
+	char file_path[256]={0};
+	char data[512]={0};
+	strcpy(file_path,FILE_PATH);
+	memcpy(file_path+strlen(FILE_PATH),date,10);
+	strcat(file_path,".dat");
+	fp = fopen(file_path, "r");
+	if (fp == NULL)
+	{
+		fp=fopen(file_path,"w");
+		if(fp==NULL)
+		{
+			printfLog(MISC_PROCESS"can not create %s\r\n",file_path);
+			return;
+		}	
+	}
+	else
+	{
+		fclose(fp);
+		fp=fopen(file_path, "a");
+	}
+	strcpy(data,date+11);
+	//strcpy(data,date+13);
+	strcat(data,"\n");
+	fwrite(data,strlen(data),1,fp);
+	memset(data,'\0',512);
+	strcpy(data,message);
+	strcat(data,"\n");
+	fwrite(data,strlen(data),1,fp);
+	fclose(fp);
+}
 
 void get_net_interface()
 {
@@ -432,12 +462,12 @@ void get_sensor_alarm_info()
 void save_sensor_alarm_info()
 {
 	FILE *fp=fopen(CONFIG_FILE,"w");
-	g_share_memory->sensor_state[SENSOR_CO]		=g_share_memory.alarm[SENSOR_CO];
-	g_share_memory->sensor_state[SENSOR_CO2]	=g_share_memory.alarm[SENSOR_CO2];
-	g_share_memory->sensor_state[SENSOR_HCHO]	=g_share_memory.alarm[SENSOR_HCHO];
-	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory.alarm[SENSOR_SHIDU];
-	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory.alarm[SENSOR_TEMP];
-	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory.alarm[SENSOR_PM25];
+	g_share_memory->sensor_state[SENSOR_CO]		=g_share_memory->alarm[SENSOR_CO];
+	g_share_memory->sensor_state[SENSOR_CO2]	=g_share_memory->alarm[SENSOR_CO2];
+	g_share_memory->sensor_state[SENSOR_HCHO]	=g_share_memory->alarm[SENSOR_HCHO];
+	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory->alarm[SENSOR_SHIDU];
+	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory->alarm[SENSOR_TEMP];
+	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory->alarm[SENSOR_PM25];
 	fwrite(g_share_memory->sensor_state,sizeof(char)*SENSOR_NO,1,fp);
 	fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
 	fclose(fp);
@@ -448,7 +478,7 @@ void save_sensor_alarm_info()
 void set_net_interface()
 {
 	FILE *fp=fopen("/home/user/interface.txt","w");
-	fwrite(g_share_memory->send_by_wifi,1,1,fp);
+	fwrite(&(g_share_memory->send_by_wifi),1,1,fp);
 	fclose(fp);
 	printfLog(MISC_PROCESS"set interface is %d\n",g_share_memory->send_by_wifi);
 }
@@ -495,25 +525,226 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
+void resend_history_done(char *begin,char *end)
+{
+	char *resend_done=NULL;						
+	resend_done=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_RE_DATA);
+	resend_done=add_item(resend_done,ID_DEVICE_UID,g_share_memory->uuid);
+	resend_done=add_item(resend_done,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+	resend_done=add_item(resend_done,ID_DEVICE_PORT,(char *)"9517");
+	resend_done=add_item(resend_done,ID_RE_START_TIME,begin);
+	resend_done=add_item(resend_done,ID_RE_STOP_TIME,end);
+	char *rcv=NULL;
+	send_web_post(URL,resend_done,9,&rcv);
+	free(resend_done);
+	resend_done=NULL;
+	if(rcv!=NULL)
+	{	
+		//int len=strlen(rcv);
+		free(rcv);
+		rcv=NULL;
+	}	
+}
+
+void resend_history(char *date_begin,char *date_end)
+{
+	FILE *fp;
+	int month_b,year_b,day_b,month_e,year_e,day_e,hour_e,minute_e,max_day;
+	char year_begin[5]={0};
+	char year_end[5]={0};
+	char month_begin[3]={0};
+	char month_end[3]={0};
+	char day_begin[3]={0};
+	char day_end[3]={0};
+	char hour_end[3]={0};
+	char minute_end[3]={0};
+	char file_path[256]={0};
+	//char data[512]={0};
+	char date[32]={0};
+	memcpy(year_begin,date_begin,4);
+	memcpy(year_end,date_end,4);
+	memcpy(month_begin,date_begin+5,2);
+	memcpy(month_end,date_end+5,2);
+	memcpy(day_begin,date_begin+8,2);
+	memcpy(day_end,date_end+8,2);
+	memcpy(hour_end,date_end+11,2);
+	memcpy(minute_end,date_end+14,2);
+	month_b=atoi(month_begin);
+	year_b=atoi(year_begin);
+	day_b=atoi(day_begin);
+	month_e=atoi(month_end);
+	year_e=atoi(year_end);
+	day_e=atoi(day_end);
+	hour_e=atoi(hour_end);
+	minute_e=atoi(minute_end);
+	printfLog(MISC_PROCESS"year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+	while(1)
+	{
+		if(year_b<year_e || month_b<month_e || day_b<=day_e)
+		{
+			memset(file_path,'\0',256);
+			memset(date,'\0',32);
+			sprintf(date,"%04d-%02d-%02d",year_b,month_b,day_b);
+			strcpy(file_path,FILE_PATH);
+			memcpy(file_path+strlen(FILE_PATH),date,10);
+			strcat(file_path,".dat");
+			printfLog(MISC_PROCESS"to open %s\r\n",file_path);
+			fp = fopen(file_path, "r");
+			if (fp != NULL)
+			{
+				int read=0,tmp_i=0;
+				char * line = NULL;
+				size_t len = 0;
+				printfLog(MISC_PROCESS"open file %s ok\r\n",file_path);
+				while ((read = getline(&line, &len, fp)) != -1) 
+				{	
+					line[6]='3';//change resend history type from 2 to 3
+					if(year_b==year_e && month_b==month_e && day_b==day_e)
+					{//check time in file
+						if((tmp_i%2)==0)
+						{							
+							char local_hour[3]={0},local_minute[3]={0};
+							memcpy(local_hour,line,2);
+							memcpy(local_minute,line+3,2);
+							if((atoi(local_hour)*60+atoi(local_minute))>(hour_e*60+minute_e))
+							{
+								printfLog(MISC_PROCESS"file_time %02d:%02d,end time %02d:%02d",atoi(local_hour),atoi(local_minute),hour_e,minute_e);
+								free(line);
+								fclose(fp);
+								resend_history_done(date_begin,date_end);
+								return;
+							}
+						}
+						else
+						{
+							line[strlen(line)-1]='\0';							
+							printfLog(MISC_PROCESS"[rsend web]\n");
+							while(1){
+								char *rcv=NULL;
+								send_web_post(URL,line,39,&rcv);
+								if(rcv!=NULL)
+								{	
+									//int len1=strlen(rcv);
+									//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+									//printf(MAIN_PROCESS"send ok\n");
+									if(strncmp(rcv,"ok",2)==0)
+									{
+										free(rcv);
+										break;
+									}
+									free(rcv);
+									rcv=NULL;
+								}
+							}
+						}
+					}
+					else
+					{
+						if((tmp_i%2)!=0)
+						{						
+							line[strlen(line)-1]='\0';
+							printfLog(MISC_PROCESS"[rsend web]\n");
+							while(1){
+								char *rcv=NULL;
+								send_web_post(URL,line,9,&rcv);
+								if(rcv!=NULL)
+								{	
+									//int len1=strlen(rcv);
+									//printf(MAIN_PROCESS"<=== %s %d\n",rcv,len1);
+									//printf(MAIN_PROCESS"send ok\n");
+									if(strncmp(rcv,"ok",2)==0)
+									{
+										free(rcv);
+										break;
+									}
+									free(rcv);
+									rcv=NULL;
+								}
+							}
+						}
+					}
+					tmp_i++;
+				}
+				free(line);
+
+			}
+			else
+			{
+				printfLog(MISC_PROCESS"can not open %s\r\n",file_path);
+				//break;
+			}
+			if(month_b==2)
+				max_day=28;
+			else if(month_b==1||month_b==3||month_b==5||month_b==7||month_b==8||month_b==10||month_b==12)
+				max_day=31;
+			else
+				max_day=30;
+			if(day_b==max_day)
+			{
+				if(month_b==12)
+				{
+					year_b++;
+					month_b=0;
+				}
+				else
+					month_b++;
+				day_b=0;
+			}
+			else
+				day_b++;			
+		}
+		else
+		{
+			printfLog(MISC_PROCESS"end year_b %04d,month_b %02d,day_b %02d,year_e %04d,month_e %02d,day_e %02d\r\n",year_b,month_b,day_b,year_e,month_e,day_e);
+			break;
+		}
+	}
+	if(fp!=NULL)
+		fclose(fp);
+	resend_history_done(date_begin,date_end);
+}
+int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char *outbuf,int outlen)
+{
+	iconv_t cd;
+//	int rc;
+	char **pin = &inbuf;
+	char **pout = &outbuf;
+
+	cd = iconv_open(to_charset,from_charset);
+	if (cd==0) 
+	{
+		printfLog(MISC_PROCESS"iconv_open failed\n");
+		return -1;
+	}
+	memset(outbuf,0,outlen);
+	if (iconv(cd,pin,(size_t *)&inlen,pout,(size_t *)&outlen)==-1)
+	{
+		printfLog(MISC_PROCESS"iconv failed\n");
+		return -1;
+	}
+	iconv_close(cd);
+	return 0;
+}
+
 void sync_server(int resend,int set_local)
 {
-	int i,j;
-	char text_out[512]={0};
+	//int i,j;
+	//char text_out[512]={0};
 	char *sync_message=NULL,*rcv=NULL;
 	if(resend)
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_ASK_RE_DATA);
 	else
 		sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
-	sync_message=add_item(sync_message,ID_DEVICE_UID,g_uuid);
-	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
-	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
+	sync_message=add_item(sync_message,ID_DEVICE_UID,g_share_memory->uuid);
+	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+	sync_message=add_item(sync_message,ID_DEVICE_PORT,(char *)"9517");
 	printfLog(MISC_PROCESS"<sync GET>%s\n",sync_message);
 	send_web_post(URL,sync_message,9,&rcv);
 	free(sync_message);
 	//free(out1);
 	if(rcv!=NULL&&strlen(rcv)!=0)
 	{	
-		int len=strlen(rcv);
+		//int len=strlen(rcv);
 		printfLog(MISC_PROCESS"<=== %s\n",rcv);
 		printfLog(MISC_PROCESS"send ok\n");
 		char *starttime=NULL;
@@ -552,7 +783,7 @@ void sync_server(int resend,int set_local)
 				g_share_memory->server_time[5]=atoi(year);g_share_memory->server_time[6]=atoi(month);
 				g_share_memory->server_time[7]=atoi(day);g_share_memory->server_time[8]=atoi(hour);
 				g_share_memory->server_time[9]=atoi(minute);g_share_memory->server_time[10]=atoi(second);
-				crc=CRC_check(g_share_memory->server_time,11);
+				crc=CRC_check((unsigned char *)g_share_memory->server_time,11);
 				g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
 				write(g_share_memory->fd_com,g_share_memory->server_time,13);
 				printfLog(MISC_PROCESS"SERVER TIME %s\r\n",starttime);
@@ -634,7 +865,7 @@ void ask_interface()
 {
 	int i = 0;
 	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
-	int crc=CRC_check(cmd,5);
+	int crc=CRC_check((unsigned char *)cmd,5);
 	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
 	printfLog(MISC_PROCESS"going to ask_interface begin\n");
 	for(i=0;i<7;i++)

@@ -1,17 +1,10 @@
-#include "uart.h"
+#include "cap.h"
+#include "misc.h"
+#include "dwin.h"
 #include "netlib.h"
-#include "log.h"
+#include "xfer.h"
 #define CAP_PROCESS "[CAP_PROCESS]"
 
-struct share_memory *g_share_memory;
-struct history sensor_history;
-key_t	shmid_history_co;
-key_t	shmid_history_co2;
-key_t	shmid_history_hcho;
-key_t	shmid_history_temp;
-key_t	shmid_history_shidu;
-key_t	shmid_history_pm25;
-key_t	shmid_share_memory;
 int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
 extern char g_uuid[256];
@@ -51,37 +44,37 @@ void send_server_save_local(char *date,char *message,char save)
 		char *data=doit_data(message,ID_CAP_CO);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_CO,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),
-			g_share_memory->cnt[SENSOR_CO],data,date);
+			&(g_share_memory->cnt[SENSOR_CO]),data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_CO2,&(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]]),
-			g_share_memory->cnt[SENSOR_CO2],data,date);
+			&(g_share_memory->cnt[SENSOR_CO2]),data,date);
 		
 		data=doit_data(message,ID_CAP_SHI_DU);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_SHI_DU,&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),
-			g_share_memory->cnt[SENSOR_SHIDU],data,date);
+			&(g_share_memory->cnt[SENSOR_SHIDU]),data,date);
 		
 		data=doit_data(message,ID_CAP_HCHO);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_HCHO,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),
-			g_share_memory->cnt[SENSOR_HCHO],data,date);
+			&(g_share_memory->cnt[SENSOR_HCHO]),data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_TEMPERATURE,&(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]]),
-			g_share_memory->cnt[SENSOR_TEMP],data,date);
+			&(g_share_memory->cnt[SENSOR_TEMP]),data,date);
 		
 		data=doit_data(message,ID_CAP_PM_25);
 		if(data!=NULL)
 			set_upload_data(ID_CAP_PM_25,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),
-			g_share_memory->cnt[SENSOR_PM25],data,date);
+			&(g_share_memory->cnt[SENSOR_PM25]),data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
 	{	
-		int len = strlen(rcv);
+		//int len = strlen(rcv);
 		free(rcv);
 		rcv=NULL;
 	}			
@@ -90,9 +83,9 @@ void clear_alarm(char *id,char *alarm_type)
 {
 	char *clear_msg=NULL;
 	clear_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_CLEAR_WARNING);
-	clear_msg=add_item(clear_msg,ID_DEVICE_UID,g_uuid);
-	clear_msg=add_item(clear_msg,ID_DEVICE_IP_ADDR,ip);
-	clear_msg=add_item(clear_msg,ID_DEVICE_PORT,"9517");						
+	clear_msg=add_item(clear_msg,ID_DEVICE_UID,g_share_memory->uuid);
+	clear_msg=add_item(clear_msg,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+	clear_msg=add_item(clear_msg,ID_DEVICE_PORT,(char *)"9517");						
 	clear_msg=add_item(clear_msg,ID_ALARM_SENSOR,id);
 	clear_msg=add_item(clear_msg,ID_ALARM_TYPE,alarm_type);
 	send_server_save_local(NULL,clear_msg,0);
@@ -201,9 +194,9 @@ char *count_sensor_value(char cmd,char *json,int value)
 	{	
 		//need send server alarm
 		json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-		json=add_item(json,ID_DEVICE_UID,g_uuid);
-		json=add_item(json,ID_DEVICE_IP_ADDR,ip);
-		json=add_item(json,ID_DEVICE_PORT,"9517");
+		json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
+		json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+		json=add_item(json,ID_DEVICE_PORT,(char *)"9517");
 		if(value<min)
 		{
 			*alarm|=ALARM_BELOW;
@@ -260,14 +253,14 @@ char *build_message(char *cmd,int len,char *message)
 	int message_type=(cmd[2]<<8)|cmd[3];
 	sprintf(id,"%d",message_type);
 	//printfLog(CAP_PROCESS"crc 0x%04X,message_type %d,len %d \n",crc,message_type,len);
-	if(crc==CRC_check(cmd,len-2))
+	if(crc==CRC_check((unsigned char *)cmd,len-2))
 	{
 		i=0;
 		switch(message_type)
 		{
 			case TIME_BYTE:
 			{	//TIME_BYTE got ,we can send to server now
-				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9],cmd[10]);
+				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9]);
 				printfLog(CAP_PROCESS"date is %s\r\n",date);
 				message=add_item(message,ID_DEVICE_CAP_TIME,date);
 				if(warnning_msg!=NULL)
@@ -306,7 +299,7 @@ char *build_message(char *cmd,int len,char *message)
 			break;
 			case RESEND_BYTE:
 			{
-				write(g_share_memroy->fd_com,server_time,13);
+				write(g_share_memory->fd_com,g_share_memory->server_time,13);
 			}
 			break;
 			default:
@@ -349,9 +342,9 @@ char *build_message(char *cmd,int len,char *message)
 						return message;
 					//inform server
 					warnning_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-					warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_uuid);
-					warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,ip);
-					warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,"9517");
+					warnning_msg=add_item(warnning_msg,ID_DEVICE_UID,g_share_memory->uuid);
+					warnning_msg=add_item(warnning_msg,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+					warnning_msg=add_item(warnning_msg,ID_DEVICE_PORT,(char *)"9517");
 					warnning_msg=add_item(warnning_msg,ID_ALARM_TYPE,ID_ALERT_UNINSERT);
 					memset(error,'\0',32);
 					save_sensor_alarm_info();					
@@ -400,9 +393,9 @@ char *build_message(char *cmd,int len,char *message)
 					if(message==NULL)
 					{
 						message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
-						message=add_item(message,ID_DEVICE_UID,g_uuid);
-						message=add_item(message,ID_DEVICE_IP_ADDR,ip);
-						message=add_item(message,ID_DEVICE_PORT,"9517");	
+						message=add_item(message,ID_DEVICE_UID,g_share_memory->uuid);
+						message=add_item(message,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+						message=add_item(message,ID_DEVICE_PORT,(char *)"9517");	
 					}
 					//sprintf(id,"%d",message_type);
 					sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
@@ -452,7 +445,7 @@ char *build_message(char *cmd,int len,char *message)
 	}
 	else
 	{
-		printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check(cmd,len-2));
+		printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)cmd,len-2));
 		for(i=0;i<len;i++)
 			printfLog(CAP_PROCESS"0x%02x ",cmd[i]);
 	}
@@ -469,8 +462,8 @@ void return_zero_point(int co)
 			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
 			g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CO_DD)
 			break;
-		printf("CO interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
-		printf("CO zero value\n",g_share_memory->cur_co);
+		printfLog(CAP_PROCESS"CO interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
+		printfLog(CAP_PROCESS"CO zero value %d\n",g_share_memory->cur_co);
 		cmd_return_point[7]=(g_share_memory->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_share_memory->cur_co & 0xff);
 	}
@@ -480,27 +473,146 @@ void return_zero_point(int co)
 			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
 				g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CH2O_AERSHEN)
 				break;
-		printf("CH2O interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
-		printf("CH2O zero value\n",g_share_memory->cur_ch2o);
+		printfLog(CAP_PROCESS"CH2O interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
+		printfLog(CAP_PROCESS"CH2O zero value %d\n",g_share_memory->cur_ch2o);
 		cmd_return_point[7]=(g_share_memory->cur_ch2o>>8) & 0xff;
 		cmd_return_point[8]=(g_share_memory->cur_ch2o & 0xff);
 	}
 	cmd_return_point[5]=i+1;
-	crc=CRC_check(cmd_return_point,9);
+	crc=CRC_check((unsigned char *)cmd_return_point,9);
 	cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 	for(i=0;i<sizeof(cmd_return_point);i++)
-		printf("%02X ",cmd_return_point[i]);
-	printf("\n");
+		printfLog(CAP_PROCESS"%02X ",cmd_return_point[i]);
+	printfLog(CAP_PROCESS"\n");
 	write(g_share_memory->fd_com,cmd_return_point,sizeof(cmd_return_point));
+}
+void show_cap_value(char *buf,int len)
+{
+	int i=0;	
+	switch(buf[0]<<8|buf[1])
+	{
+		case 60:
+			printfLog(CAP_PROCESS"[CAP][CO] ");
+			break;
+		case 61:
+			printfLog(CAP_PROCESS"[CAP][CO2] ");
+			break;
+		case 62:
+			printfLog(CAP_PROCESS"[CAP][HCHO] ");
+			break;
+		case 63:
+			printfLog(CAP_PROCESS"[CAP][TEMP] ");
+			break;
+		case 64:
+			printfLog(CAP_PROCESS"[CAP][SHIDU] ");
+			break;
+		case 65:
+			printfLog(CAP_PROCESS"[CAP][PM2.5] ");
+			break;
+		case 66:
+			printfLog(CAP_PROCESS"[CAP][PM10] ");
+			break;
+		case 67:
+			printfLog(CAP_PROCESS"[CAP][NOISY] ");
+			break;
+		case 68:
+			printfLog(CAP_PROCESS"[CAP][FENGSU] ");
+			break;
+		case 69:
+			printfLog(CAP_PROCESS"[CAP][QIYA] ");
+			break;
+		case 70:
+			printfLog(CAP_PROCESS"[CAP][CHOUYANG] ");
+			break;
+		case 71:
+			printfLog(CAP_PROCESS"[CAP][SO2] ");
+			break;
+		case 72:
+			printfLog(CAP_PROCESS"[CAP][DONGQI] ");
+			break;
+		case 73:
+			printfLog(CAP_PROCESS"[CAP][ZIWAI] ");
+			break;
+		case 74:
+			printfLog(CAP_PROCESS"[CAP][TVOC] ");
+			break;
+		case 75:
+			printfLog(CAP_PROCESS"[CAP][BEN] ");
+			break;
+		case 76:
+			printfLog(CAP_PROCESS"[CAP][JIABEN] ");
+			break;
+		case 77:
+			printfLog(CAP_PROCESS"[CAP][ERJIABEN] ");
+			break;
+		case 78:
+			printfLog(CAP_PROCESS"[CAP][ANQI] ");
+			break;
+		case 79:
+			printfLog(CAP_PROCESS"[CAP][HS] ");
+			break;
+		case 160:
+			printfLog(CAP_PROCESS"[CAP][NO] ");
+			break;
+		case 161:
+			printfLog(CAP_PROCESS"[CAP][NO2] ");
+			break;
+		case 162:
+			printfLog(CAP_PROCESS"[CAP][ANQI2] ");
+			break;
+		case 163:
+			printfLog(CAP_PROCESS"[CAP][LIGHT] ");
+			break;
+		case 164:
+			printfLog(CAP_PROCESS"[CAP][WIESHENGWU] ");
+			break;
+		case 260:
+			printfLog(CAP_PROCESS"[CAP][CO_2] ");
+			break;
+		case 262:
+			printfLog(CAP_PROCESS"[CAP][CH2O] ");
+			break;
+		case 270:
+			printfLog(CAP_PROCESS"[CAP][CHOYANG2] ");
+			break;
+		case 271:
+			printfLog(CAP_PROCESS"[CAP][SO2_2] ");
+			break;
+		case 274:
+			printfLog(CAP_PROCESS"[CAP][TVOC2] ");
+			break;
+		case 275:
+			printfLog(CAP_PROCESS"[CAP][BENG_2] ");
+			break;
+		case 276:
+			printfLog(CAP_PROCESS"[CAP][JIABEN_2] ");
+			break;
+		case 277:
+			printfLog(CAP_PROCESS"[CAP][ERJIABENG_2] ");
+			break;
+		case 278:
+			printfLog(CAP_PROCESS"[CAP][ANQI_3] ");
+			break;
+		case 360:
+			printfLog(CAP_PROCESS"[CAP][NO_2] ");
+			break;
+		case 361:
+			printfLog(CAP_PROCESS"[CAP][NO2_2] ");
+			break;
+	}
+	for(i=3;i<len+3;i++)
+		printfLog(CAP_PROCESS"%02x ",buf[i]);
+	printfLog(CAP_PROCESS"\n");
+
 }
 
 void show_factory(int zero,char *cmd,int len)
 {	
-	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
+	char data[32]={0};
 	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
 	if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
 		return ;
-	if(crc==CRC_check(cmd,len-2))
+	if(crc==CRC_check((unsigned char *)cmd,len-2))
 	{
 		sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
 		if(cmd[7]!=0)
@@ -532,7 +644,7 @@ void show_factory(int zero,char *cmd,int len)
 		{
 			if(cmd[3]==atoi(ID_CAP_CO))
 			{
-				printf("In tun zero mode CO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				printfLog(CAP_PROCESS"In tun zero mode CO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
 				clear_buf(ADDR_TUN_ZERO_CO,4);
 				write_string(ADDR_TUN_ZERO_CO,data,strlen(data));
 				g_share_memory->cur_co=(cmd[5]<<8)|cmd[6];
@@ -540,7 +652,7 @@ void show_factory(int zero,char *cmd,int len)
 			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
 			{	
-				printf("In tun zero mode HCHO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				printfLog(CAP_PROCESS"In tun zero mode HCHO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
 				clear_buf(ADDR_TUN_ZERO_HCHO,4);
 				write_string(ADDR_TUN_ZERO_HCHO,data,strlen(data));
 				g_share_memory->cur_ch2o=(cmd[5]<<8)|cmd[6];
@@ -557,7 +669,35 @@ void show_factory(int zero,char *cmd,int len)
 		}
 	}
 	else
-		printf("CRC failed in zero mode\n");
+		printfLog(CAP_PROCESS"CRC failed in zero mode\n");
+}
+void show_verify_point()
+{
+	char cmd[64]={0};
+	sprintf(cmd,"%f",g_share_memory->p[0]);
+	write_string(ADDR_VERIFY_P_0,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[1]);
+	write_string(ADDR_VERIFY_P_1,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[2]);
+	write_string(ADDR_VERIFY_P_2,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[3]);
+	write_string(ADDR_VERIFY_P_3,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[4]);
+	write_string(ADDR_VERIFY_P_4,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[5]);
+	write_string(ADDR_VERIFY_P_5,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[6]);
+	write_string(ADDR_VERIFY_P_6,cmd,strlen(cmd));
+	memset(cmd,'\0',64);
+	sprintf(cmd,"%f",g_share_memory->p[7]);
+	write_string(ADDR_VERIFY_P_7,cmd,strlen(cmd));
+	clear_point();
 }
 
 /*
@@ -648,20 +788,20 @@ int cap_board_mon()
 							for(i=0;i<message_len;i=i+2)
 							{
 								g_share_memory->sensor_interface_mem[i/2]=(message[i]<<8)|message[i+1];
-								printf("sensor_interface[%d] = %4x\n",i/2,g_share_memory->sensor_interface_mem[i/2]);
+								printfLog(CAP_PROCESS"sensor_interface[%d] = %4x\n",i/2,g_share_memory->sensor_interface_mem[i/2]);
 							}
 						}
 						else
 							post_message=build_message(cmd,message_len+7,post_message);
 					}
 					else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
-						show_factory(fd_lcd,1,cmd,message_len+7);
+						show_factory(1,cmd,message_len+7);
 					else
 					{
 						if(message_type == 0x0003)
 						{							
 							g_share_memory->y=message[message_len-1];
-							printf(". = %d\n",message[message_len-1]);
+							printfLog(CAP_PROCESS". = %d\n",message[message_len-1]);
 							for(i=0;i<16;i=i+2)
 							{
 								g_share_memory->p[i/2]=(message[i]<<8)|message[i+1];
@@ -672,7 +812,7 @@ int cap_board_mon()
 										m=m*10;
 									g_share_memory->p[i/2]=g_share_memory->p[i/2]/m;	
 								}
-								printf("verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
+								printfLog(CAP_PROCESS"verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
 							}
 							for(i=16;i<32;i=i+2)
 							{
@@ -684,12 +824,12 @@ int cap_board_mon()
 										m=m*10;
 									g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/m;	
 								}
-								printf("xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
+								printfLog(CAP_PROCESS"xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
 							}
 							show_verify_point();
 						}
 						else
-						show_factory(fd_lcd,0,cmd,message_len+7);
+						show_factory(0,cmd,message_len+7);
 					}
 					free(cmd);
 					return 0;											

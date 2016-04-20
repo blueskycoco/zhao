@@ -1,5 +1,8 @@
+#include "cap.h"
 #include "xfer.h"
 #include "log.h"
+#include "misc.h"
+#include "netlib.h"
 pthread_mutex_t mutex;
 extern struct share_memory *g_share_memory;
 #define UPLOAD_PROCESS "[UPLOAD_PROCESS]"
@@ -20,14 +23,14 @@ int xfer_init()
 	pthread_mutex_init(&mutex, NULL);
 	return 0;
 }
-void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
+void send_web_post(char *url,char *buf,int timeout,char **out)
 {
 	char request[1024]={0};
 	char length_string[30]={0};
-	int result=0,i,ltimeout=0;
+	int i,ltimeout=0;
 	char rcv[512]={0},ch;
 	pthread_mutex_lock(&mutex);
-	if(wifi)
+	if(g_share_memory->send_by_wifi)
 	{
 		sprintf(request,"JSONStr=%s",buf);
 		printfLog(UPLOAD_PROCESS"send web %s\n",request);

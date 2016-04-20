@@ -1,21 +1,5 @@
-#include <unistd.h>  
-#include <stdlib.h>  
-#include <stdio.h>
-#include <time.h>
-#include <string.h>  
-#include <errno.h>  
-#include <sys/msg.h>  
-#include <signal.h>
-#include <fnmatch.h> 
-#include <termios.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <dirent.h>
-#include <sys/types.h>
-#include "history.h"
-#include "netlib.h"
-#include "log.h"
 #include "cap.h"
+#include "netlib.h"
 #define HISTORY "[History Process]"
 
 void set_data(char *line,char *type,struct nano *history,long *cnt)
@@ -34,7 +18,7 @@ void set_data(char *line,char *type,struct nano *history,long *cnt)
 		(*cnt)++;
 	}
 }
-void set_time(char *file_name,char *line,struct nano *history,long *cnt)
+void set_history_time(char *file_name,char *line,struct nano *history,long *cnt)
 {
 	char tmp[11]={0};
 	memset(history->time,'\0',20);
@@ -141,7 +125,7 @@ void load_history(const char *name)
 		strcat(file_path,"/");
 		strcat(file_path,file_list[j]);
 		FILE *fp = fopen(file_path, "r");
-		while (getline(&line, &len, fp) != -1) 
+		while (getline(&line, (size_t *)&len, fp) != -1) 
 		{
 			if((cnt%2)!=0)
 			{
@@ -161,17 +145,17 @@ void load_history(const char *name)
 			}
 			else
 			{
-				set_time(file_list[j],line,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),	
+				set_history_time(file_list[j],line,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),	
 											&(g_share_memory->cnt[SENSOR_CO]));
-				set_time(file_list[j],line,&(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]]),	
+				set_history_time(file_list[j],line,&(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]]),	
 											&(g_share_memory->cnt[SENSOR_CO2]));
-				set_time(file_list[j],line,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),	
+				set_history_time(file_list[j],line,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),	
 											&(g_share_memory->cnt[SENSOR_HCHO]));
-				set_time(file_list[j],line,&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),	
+				set_history_time(file_list[j],line,&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),	
 											&(g_share_memory->cnt[SENSOR_SHIDU]));
-				set_time(file_list[j],line,&(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]]),	
+				set_history_time(file_list[j],line,&(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]]),	
 											&(g_share_memory->cnt[SENSOR_TEMP]));
-				set_time(file_list[j],line,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),	
+				set_history_time(file_list[j],line,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),	
 											&(g_share_memory->cnt[SENSOR_PM25]));
 			}
 			cnt++;

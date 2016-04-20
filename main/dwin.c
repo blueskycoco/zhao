@@ -1,6 +1,8 @@
-#include "dwin.h"
-#include "log.h"
 #include "cap.h"
+#include "dwin.h"
+#include "misc.h"
+#include "netlib.h"
+#include "xfer.h"
 int lcd_state=1;
 char logged=0,g_index=0;
 extern char g_uuid[256];
@@ -9,7 +11,7 @@ extern char ip[20];
 #define LCD_PROCESS	"LCD_PROCESS"
 void write_data(unsigned int Index,int data)
 {
-	int i = 0;
+	//int i = 0;
 	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
 	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
@@ -29,13 +31,13 @@ void lcd_off(int a)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
 	write(g_share_memory->fd_lcd,cmd,6);
-	switch_pic(g_share_memory->fd_lcd,OFF_PAGE);
+	switch_pic(OFF_PAGE);
 	lcd_state=0;
 	printfLog(LCD_PROCESS"lcd off\n");
 }
 void lcd_on(int page)
 {
-	switch_pic(g_share_memory->fd_lcd,page);
+	switch_pic(page);
 	usleep(100000);
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
 	write(g_share_memory->fd_lcd,cmd,6);
@@ -56,11 +58,48 @@ void write_string(unsigned int addr,char *data,int len)
 	write(g_share_memory->fd_lcd,cmd,len+6);
 	free(cmd);
 }
+void clear_point()
+{
+	char off0[]={0x5a,0xa5,0x15,0x82,0x08,0x31,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x00,0xb7,0x00,0xea,0x00,0xc2,0x00,0xe7,0x00,0xb7};
+
+	char off1[]={0x5a,0xa5,0x15,0x82,0x08,0x3a,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x00,0xeb,0x00,0xea,0x00,0xf6,0x00,0xe7,0x00,0xeb};
+
+	char off2[]={0x5a,0xa5,0x15,0x82,0x08,0x43,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x1e,0x00,0xea,0x01,0x2a,0x00,0xe7,0x01,0x1e};
+
+	char off3[]={0x5a,0xa5,0x15,0x82,0x08,0x4c,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x51,0x00,0xea,0x01,0x5e,0x00,0xe7,0x01,0x51};
+
+	char off4[]={0x5a,0xa5,0x15,0x82,0x08,0x55,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x86,0x00,0xea,0x01,0x92,0x00,0xe7,0x01,0x86};
+
+	char off5[]={0x5a,0xa5,0x15,0x82,0x08,0x5e,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0xba,0x00,0xea,0x01,0xc6,0x00,0xe7,0x01,0xba};
+
+	char off6[]={0x5a,0xa5,0x15,0x82,0x08,0x67,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0xed,0x00,0xea,0x01,0xf9,0x00,0xe7,0x01,0xed};
+
+	char off7[]={0x5a,0xa5,0x15,0x82,0x08,0x70,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe7,0x02,0x21};
+	write(g_share_memory->fd_lcd,off0,sizeof(off0));
+	write(g_share_memory->fd_lcd,off1,sizeof(off1));
+	write(g_share_memory->fd_lcd,off2,sizeof(off2));
+	write(g_share_memory->fd_lcd,off3,sizeof(off3));
+	write(g_share_memory->fd_lcd,off4,sizeof(off4));
+	write(g_share_memory->fd_lcd,off5,sizeof(off5));
+	write(g_share_memory->fd_lcd,off6,sizeof(off6));
+	write(g_share_memory->fd_lcd,off7,sizeof(off7));
+	clear_buf(ADDR_VERIFY_VALUE,5);
+	clear_buf(ADDR_REAL_VALUE,5);
+}
+
 void clear_buf(int addr,int len)
 {
 	char *tmp=(char *)malloc(len);
 	memset(tmp,0,len);
-	write_string(g_share_memory->fd_lcd,addr,tmp,len);
+	write_string(addr,tmp,len);
 	free(tmp);
 }
 void draw_curve(int *data,int len)
@@ -99,15 +138,15 @@ void show_sensor_network()
 		pic=STATE_E_E_PAGE;
 	else if((g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
-		&&(g_state->network_state))
+		&&(g_share_memory->network_state))
 		pic=STATE_E_O_PAGE;
 	else if(!(g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
-		&&(g_state->network_state))
+		&&(g_share_memory->network_state))
 		pic=STATE_O_O_PAGE;
 	else if(!(g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
-		&&(!g_state->network_state))
+		&&(!g_share_memory->network_state))
 		pic=STATE_O_E_PAGE;
 	switch_pic(pic);
 }
@@ -283,7 +322,7 @@ void show_history(char *id,int offset)
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_TEMP_PAGE_NUM,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
-			sprintf(tmp,"%4ld",*g_temp_cnt/7);			
+			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_TEMP]/7);			
 			write_string(ADDR_TEMP_PAGE_TOTAL,tmp,strlen(tmp));
 			write_string(ADDR_TEMP_LIST_TIME_0,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time));
@@ -438,8 +477,8 @@ void show_curve(char *id,int* offset)
 	char info[20]={0};
 	char temp[10]={0},temp2[10]={0};
 	char hour1[3]={0},hour2[3]={0};
-	char index[5][17]={0};
-	char index_time[5][3]={0};
+	char index[5][17]={{0},{0}};
+	char index_time[5][3]={{0},{0}};
 	int i=0,j=0,m=0;
 	clear_curve();
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
@@ -855,18 +894,6 @@ int read_dgus(int addr,char len,char *out)
 	}
 	return 0;
 }
-void set_lcd_time(char *buf)
-{
-	int i;
-	char cmd[]={0x5a,0xa5,0x0a,0x80,0x1f,0x5a,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-	for(i=0;i<7;i++)
-		cmd[i+6]=buf[i];
-	//for(i=0;i<sizeof(cmd);i++)
-	//	printfLog(LCD_PROCESS"%02x ",cmd[i]);
-	//printfLog(LCD_PROCESS"\n");
-	write(g_share_memory->fd_lcd,cmd,sizeof(cmd));
-
-}
 void display_time(int year,int mon,int day,int hour,int min,int seconds)
 {
 	char buf[5]={0};
@@ -897,9 +924,9 @@ int verify_pwd(char *username,char *passwd)
 		return 1;
 	}
 	char *verify_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_VERIFY_USER);
-	verify_msg=add_item(verify_msg,ID_DEVICE_UID,g_uuid);
-	verify_msg=add_item(verify_msg,ID_DEVICE_IP_ADDR,ip);
-	verify_msg=add_item(verify_msg,ID_DEVICE_PORT,"9517");
+	verify_msg=add_item(verify_msg,ID_DEVICE_UID,g_share_memory->uuid);
+	verify_msg=add_item(verify_msg,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+	verify_msg=add_item(verify_msg,ID_DEVICE_PORT,(char *)"9517");
 	verify_msg=add_item(verify_msg,ID_USER_NAME_TYPE,username);
 	verify_msg=add_item(verify_msg,ID_USER_PWD_TYPE,passwd);
 	char *rcv=NULL;
@@ -1111,9 +1138,9 @@ void manul_set_time()
 			g_share_memory->server_time[5]=atoi(year)-2000;g_share_memory->server_time[6]=atoi(mon);
 			g_share_memory->server_time[7]=atoi(day);g_share_memory->server_time[8]=atoi(hour);
 			g_share_memory->server_time[9]=atoi(min);g_share_memory->server_time[10]=atoi(second);
-			int crc=CRC_check(g_share_memory->server_time,11);
+			int crc=CRC_check((unsigned char *)g_share_memory->server_time,11);
 			g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
-			write(g_share_memory->fd_com,server_time,13);
+			write(g_share_memory->fd_com,g_share_memory->server_time,13);
 			int week=CaculateWeekDay(g_share_memory->server_time[5],g_share_memory->server_time[6],g_share_memory->server_time[7]);
 			char rtc_time[7];
 			rtc_time[0]=(g_share_memory->server_time[5]/10)*16+(g_share_memory->server_time[5]%10);
@@ -1140,7 +1167,7 @@ void jiaozhun(int on,char sensor,char jp)
 			printfLog(LCD_PROCESS"Begin to JiaoZhun %d\n",sensor);
 			g_share_memory->factory_mode=SENSOR_VERIFY_MODE;
 			cmd_verify[5]=sensor+1;
-			int crc=CRC_check(cmd_verify,6);
+			int crc=CRC_check((unsigned char *)cmd_verify,6);
 			cmd_verify[6]=(crc&0xff00)>>8;cmd_verify[7]=crc&0x00ff;		
 			for(i=0;i<sizeof(cmd_verify);i++)
 				printfLog(LCD_PROCESS"%02X ",cmd_verify[i]);
@@ -1160,6 +1187,37 @@ void jiaozhun(int on,char sensor,char jp)
 		}
 	}
 }
+int getxiuzhen()
+{
+	char data[10]={0};
+	int d=0,p_get=0,y=0;
+	if(read_dgus(ADDR_VERIFY_VALUE,5,data))
+	{
+		printfLog(LCD_PROCESS"===>%s\n",data);
+		if(strchr(data,'.')!=NULL)
+		{
+			char data2[64]={0};
+			int i,j=0;
+			for(i=0;i<10;i++)
+			{
+				if(data[i]!='.')
+					data2[j++]=data[i];
+				else
+					p_get=1;
+				if(p_get)
+					y++;
+				if(g_share_memory->y==y-1)
+					break;
+			}
+					
+			d=atoi(data2);
+		}
+		else
+			d=atoi(data);
+	}
+	return d;
+}
+
 void send_return(char sensor,char jp)
 {	
 	int i;
@@ -1169,12 +1227,218 @@ void send_return(char sensor,char jp)
 	cmd_return[6]=jp+1;
 	cmd_return[7]=(xz>>8)&0xff;
 	cmd_return[8]=xz&0xff;
-	int crc=CRC_check(cmd_return,9);
+	int crc=CRC_check((unsigned char *)cmd_return,9);
 	cmd_return[9]=(crc&0xff00)>>8;cmd_return[10]=crc&0x00ff;		
 	for(i=0;i<sizeof(cmd_return);i++)
 		printfLog(LCD_PROCESS"%02X ",cmd_return[i]);
 	printfLog(LCD_PROCESS"\n");
 	write(g_share_memory->fd_com,cmd_return,sizeof(cmd_return));
+}
+char *Get_Type(int index)
+{
+	if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CO_WEISHEN ||
+		g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CO_DD)
+		return ID_CAP_CO;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CO2_WEISHEN ||
+		g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CO2_RUDIAN)
+		return ID_CAP_CO2;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CH2O_WEISHEN ||
+		g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_CH2O_AERSHEN)
+		return ID_CAP_HCHO;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_PM25_WEISHEN ||
+		g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_PM25_WEISHEN2)
+		return ID_CAP_PM_25;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_WENSHI_RUSHI)
+		return ID_CAP_TEMPERATURE;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_QIYA_RUSHI)
+		return ID_CAP_QI_YA;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_ZHAOSHEN)
+		return ID_CAP_BUZZY;
+	return NULL;
+}
+void show_point(int index,char sensor)
+{
+	char cmd0[]={0x5a,0xa5,0x15,0x82,0x08,0x31,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x00,0xb7};
+	
+	char cmd1[]={0x5a,0xa5,0x15,0x82,0x08,0x3a,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x00,0xeb};
+	
+	char cmd2[]={0x5a,0xa5,0x15,0x82,0x08,0x43,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x01,0x1e};
+	
+	char cmd3[]={0x5a,0xa5,0x15,0x82,0x08,0x4c,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x01,0x51};
+	
+	char cmd4[]={0x5a,0xa5,0x15,0x82,0x08,0x55,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x01,0x86};
+	
+	char cmd5[]={0x5a,0xa5,0x15,0x82,0x08,0x5e,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x01,0xba};
+	
+	char cmd6[]={0x5a,0xa5,0x15,0x82,0x08,0x67,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x01,0xed};
+	
+	char cmd7[]={0x5a,0xa5,0x15,0x82,0x08,0x70,0x00,0x06,0x00,0x01,0x00,0x16,
+				0x02,0x8e,0x01,0x5a,0x02,0xa1,0x01,0x6c,0x00,0xe7,0x02,0x21};
+	
+	char off0[]={0x5a,0xa5,0x15,0x82,0x08,0x31,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x00,0xb7,0x00,0xea,0x00,0xc2,0x00,0xe7,0x00,0xb7};
+
+	char off1[]={0x5a,0xa5,0x15,0x82,0x08,0x3a,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x00,0xeb,0x00,0xea,0x00,0xf6,0x00,0xe7,0x00,0xeb};
+
+	char off2[]={0x5a,0xa5,0x15,0x82,0x08,0x43,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x1e,0x00,0xea,0x01,0x2a,0x00,0xe7,0x01,0x1e};
+
+	char off3[]={0x5a,0xa5,0x15,0x82,0x08,0x4c,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x51,0x00,0xea,0x01,0x5e,0x00,0xe7,0x01,0x51};
+
+	char off4[]={0x5a,0xa5,0x15,0x82,0x08,0x55,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0x86,0x00,0xea,0x01,0x92,0x00,0xe7,0x01,0x86};
+
+	char off5[]={0x5a,0xa5,0x15,0x82,0x08,0x5e,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0xba,0x00,0xea,0x01,0xc6,0x00,0xe7,0x01,0xba};
+
+	char off6[]={0x5a,0xa5,0x15,0x82,0x08,0x67,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x01,0xed,0x00,0xea,0x01,0xf9,0x00,0xe7,0x01,0xed};
+
+	char off7[]={0x5a,0xa5,0x15,0x82,0x08,0x70,0x00,0x06,0x00,0x01,0x00,0x13,
+				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe7,0x02,0x21};
+	char cmd[64]={0};
+	sprintf(cmd,"%f",g_share_memory->x[index]);
+	write_string(ADDR_VERIFY_VALUE,cmd,strlen(cmd));
+	//send_return(fd,sensor,index);
+	switch(index)
+	{
+		case 0:
+			{
+				write(g_share_memory->fd_lcd,cmd0,sizeof(cmd0));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 1:
+			{
+				write(g_share_memory->fd_lcd,cmd1,sizeof(cmd1));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 2:
+			{
+				write(g_share_memory->fd_lcd,cmd2,sizeof(cmd2));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 3:
+			{
+				write(g_share_memory->fd_lcd,cmd3,sizeof(cmd3));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 4:
+			{
+				write(g_share_memory->fd_lcd,cmd4,sizeof(cmd4));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 5:
+			{
+				write(g_share_memory->fd_lcd,cmd5,sizeof(cmd5));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 6:
+			{
+				write(g_share_memory->fd_lcd,cmd6,sizeof(cmd6));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+		case 7:
+			{
+				write(g_share_memory->fd_lcd,cmd7,sizeof(cmd7));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+			}
+			break;
+		default:
+			{
+				write(g_share_memory->fd_lcd,off0,sizeof(off0));
+				write(g_share_memory->fd_lcd,off1,sizeof(off1));
+				write(g_share_memory->fd_lcd,off2,sizeof(off2));
+				write(g_share_memory->fd_lcd,off3,sizeof(off3));
+				write(g_share_memory->fd_lcd,off4,sizeof(off4));
+				write(g_share_memory->fd_lcd,off5,sizeof(off5));
+				write(g_share_memory->fd_lcd,off6,sizeof(off6));
+				write(g_share_memory->fd_lcd,off7,sizeof(off7));
+			}
+			break;
+	}
+}
+void set_interface()
+{
+	int i = 0;
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x03,0x16,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	
+	for(i=0;i<22;i=i+2)
+	{
+		cmd[5+i]=(g_share_memory->sensor_interface_mem[i/2]>>8) & 0xff;
+		cmd[5+i+1]=g_share_memory->sensor_interface_mem[i/2]&0xff;
+		printfLog(LCD_PROCESS"%02x \n",(cmd[5+i]<<8)|cmd[6+i]);
+	}
+	int crc=CRC_check((unsigned char *)cmd,sizeof(cmd)-2);
+	cmd[sizeof(cmd)-2]=(crc&0xff00)>>8;cmd[sizeof(cmd)-1]=crc&0x00ff; 	
+	printfLog(LCD_PROCESS"going to set_interface begin\n");
+	for(i=0;i<sizeof(cmd);i++)
+		printfLog(LCD_PROCESS"%02x ",cmd[i]);
+	printfLog(LCD_PROCESS"\ngoing to set_interface end\n");
+	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 }
 
 void tun_zero(int on)
@@ -1232,7 +1496,7 @@ void tun_zero(int on)
 		#endif
 	}	
 	//cmd_request_verify[5]=i+1;
-	crc=CRC_check(cmd_request_verify,6);
+	crc=CRC_check((unsigned char *)cmd_request_verify,6);
 	cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
 	for(i=0;i<sizeof(cmd_request_verify);i++)
 		printfLog(LCD_PROCESS"%02X ",cmd_request_verify[i]);
@@ -1273,15 +1537,15 @@ unsigned short input_handle(char *input)
 	static int curve_pm25=0;
 	static int interface_config_no = 0;
 	static int cur_select_interface = TYPE_SENSOR_CO_WEISHEN;
-	char * line = NULL;
-	char date1[32]={0};
-	char date2[32]={0};
-	char date3[32]={0};
-	char data1[32]={0};
-	char data2[32]={0};
-	char data3[32]={0};
-	char time[]={0x32,0x30,0x31 ,0x35 ,0x2d,0x31 ,0x31 ,0x2d ,0x32 ,0x30 ,0x20,0x32 ,0x37 ,0x3A ,0x32 ,0x30 ,0x3A ,0x30 ,0x30};
-	char co[]={0x30,0x2e,0x31,0x32};
+	//char * line = NULL;
+	//char date1[32]={0};
+	//char date2[32]={0};
+	//char date3[32]={0};
+	//char data1[32]={0};
+	//char data2[32]={0};
+	//char data3[32]={0};
+	//char time[]={0x32,0x30,0x31 ,0x35 ,0x2d,0x31 ,0x31 ,0x2d ,0x32 ,0x30 ,0x20,0x32 ,0x37 ,0x3A ,0x32 ,0x30 ,0x3A ,0x30 ,0x30};
+	//char co[]={0x30,0x2e,0x31,0x32};
 	input[0]=2;
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
@@ -1599,7 +1863,7 @@ unsigned short input_handle(char *input)
 			switch_pic(GPRS_PAGE);
 		set_net_interface();		
 	}
-	else if(addr==TOUCH_SELECT_WIFI&& (TOUCH_SELECT_WIFI+0x100)==data)
+	else if((addr==TOUCH_SELECT_WIFI)&& (TOUCH_SELECT_WIFI+0x100)==data)
 	{//WiFi Passwd changed
 		//wifi_handle(fd_lcd);
 		wifi_select=1;
@@ -1620,7 +1884,7 @@ unsigned short input_handle(char *input)
 	{//enter wifi passwd setting
 		clear_buf(ADDR_AP_NAME,20);
 		clear_buf(ADDR_AP_PASSWD,20);
-		if(*send_by_wifi)
+		if(g_share_memory->send_by_wifi)
 		{
 			write_string(ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
 		}
@@ -1629,8 +1893,8 @@ unsigned short input_handle(char *input)
 			write_string(ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
 		}
 	}
-	else if(addr==TOUCH_TIME_CHANGE_OK && (TOUCH_TIME_CHANGE_OK+0x100)==data
-		|| addr==TOUCH_TIME_CHANGE_MANUL && (TOUCH_TIME_CHANGE_MANUL+0x100)==data)
+	else if((addr==TOUCH_TIME_CHANGE_OK && (TOUCH_TIME_CHANGE_OK+0x100)==data)
+		|| ((addr==TOUCH_TIME_CHANGE_MANUL) && (TOUCH_TIME_CHANGE_MANUL+0x100)==data))
 	{//manul set time
 		manul_set_time();
 		if(addr==TOUCH_TIME_CHANGE_OK)
@@ -1760,7 +2024,7 @@ unsigned short input_handle(char *input)
 	else if((addr==TOUCH_TUN_ZERO_RETURN && (TOUCH_TUN_ZERO_RETURN+0x100)==data) || 
 		(addr==TOUCH_TUN_ZERO_END && (TOUCH_TUN_ZERO_END+0x100)==data))
 	{//tun zero point stop
-		if(*factory_mode == TUN_ZERO_MODE)
+		if(g_share_memory->factory_mode == TUN_ZERO_MODE)
 		{
 			tun_zero(0);
 			g_share_memory->factory_mode=NORMAL_MODE;
@@ -2047,7 +2311,7 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_PRODUCT_NAME,40);
 		clear_buf(ADDR_PRODUCT_MODE,40);
 		clear_buf(ADDR_PRODUCT_ID,40);
-		write_string(ADDR_PRODUCT_ID,g_uuid,strlen(g_uuid));
+		write_string(ADDR_PRODUCT_ID,g_share_memory->uuid,strlen(g_share_memory->uuid));
 	}		
 	else if(addr==TOUCH_CURVE_LIST&& (TOUCH_CURVE_LIST+0x100)==data)
 	{//show detail in list

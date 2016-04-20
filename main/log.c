@@ -8,19 +8,19 @@
 #include <sys/types.h>
 #include <time.h>
 #include <pthread.h>
-#include "log.h"
+#include "cap.h"
 
 #define PATH_BUF_SIZE 	256
 #define LOG_LENGTH		1024
 #define LOG_PATH		"/mnt/sdcard/log"
-pthread_mutex_t mutex;
-void printfLog(char *date,const char *fmt, ...)
+pthread_mutex_t mutex_log;
+void printfLog(const char *fmt, ...)
 {
 	FILE *fp;
 	char file_path[PATH_BUF_SIZE]={0};
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex_log);
 	strcpy(file_path,LOG_PATH);
-	memcpy(file_path+strlen(LOG_PATH),date,10);
+	memcpy(file_path+strlen(LOG_PATH),(char *)(g_share_memory->server_time),10);
 	strcat(file_path,".log");
 	fp = fopen(file_path, "r");
 	if (fp == NULL)
@@ -29,7 +29,7 @@ void printfLog(char *date,const char *fmt, ...)
 		if(fp==NULL)
 		{
 			printf("can not create %s\r\n",file_path);
-			pthread_mutex_unlock(&mutex);
+			pthread_mutex_unlock(&mutex_log);
 			return;
 		}	
 	}
@@ -46,11 +46,11 @@ void printfLog(char *date,const char *fmt, ...)
 
 	fwrite(buf,strlen(buf),1,fp);
 	fclose(fp);
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex_log);
 }
 void init_log()
 {
-	pthread_mutex_init(&mutex, NULL);  
+	pthread_mutex_init(&mutex_log, NULL);  
 }
 #if 0
 #define PROCESS1 "[PROCESS1]"
