@@ -1,20 +1,20 @@
 #include "xfer.h"
 pthread_mutex_t mutex;
 int fd_gprs=0;
-extern struct state *g_state;
+extern struct share_memory *g_share_memory;
 #define UPLOAD_PROCESS "[UPLOAD_PROCESS]"
 
 int xfer_init()
 {
-	if((fd_gprs=open_com_port("/dev/ttySP2"))<0)
+	if((g_share_memory->fd_gprs=open_com_port("/dev/ttySP2"))<0)
 	{
 		perror("open_port lcd error");
 		return -1;
 	}
-	if(set_opt(fd_gprs,115200,8,'N',1)<0)
+	if(set_opt(g_share_memory->fd_gprs,115200,8,'N',1)<0)
 	{
 		perror(" set_opt cap error");
-		close(fd_gprs);
+		close(g_share_memory->fd_gprs);
 		return -1;
 	}
 	pthread_mutex_init(&mutex, NULL);
@@ -35,12 +35,12 @@ void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
 		if(*out!=NULL)
 		{
 			printf(UPLOAD_PROCESS"<==%s\n",*out);
-			g_state->network_state=1;
+			g_share_memory->network_state=1;
 		}
 		else
 		{
 			printf(UPLOAD_PROCESS"<==NULL\n");
-			g_state->network_state=0;
+			g_share_memory->network_state=0;
 		}
 	}
 	else
@@ -53,11 +53,11 @@ void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
 		strcat(gprs_string,buf);
 		for(j=0;j<3;j++){
 			printf(UPLOAD_PROCESS"send gprs %s\n",gprs_string);
-			write(fd_gprs, gprs_string, strlen(gprs_string));	
+			write(g_share_memory->fd_gprs, gprs_string, strlen(gprs_string));	
 			i=0;
 			while(1)
 			{
-				if(read(fd_gprs, &ch, 1)==1)
+				if(read(g_share_memory->fd_gprs, &ch, 1)==1)
 				{
 					printf("%c",ch);
 					if(ch=='}')
@@ -67,14 +67,14 @@ void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
 						memset(*out,'\0',i+1);
 						memcpy(*out,rcv,i);
 						pthread_mutex_unlock(&mutex);
-						g_state->network_state=1;
+						g_share_memory->network_state=1;
 						return;
 					}
 					else if(ch=='{')
 						i=0;
 					else if(ch=='o')
 					{
-						if(read(fd_gprs,&ch,1)==1)
+						if(read(g_share_memory->fd_gprs,&ch,1)==1)
 							if(ch=='k')
 							{
 								*out=(char *)malloc(3);
@@ -83,7 +83,7 @@ void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
 								memset(rcv,'\0',512);
 								strcpy(rcv,"ok");
 								pthread_mutex_unlock(&mutex);
-								g_state->network_state=1;
+								g_share_memory->network_state=1;
 								return;
 							}
 					}
@@ -107,7 +107,7 @@ void send_web_post(char wifi,char *url,char *buf,int timeout,char **out)
 								pthread_mutex_unlock(&mutex);
 								return;
 							}
-							g_state->network_state=0;
+							g_share_memory->network_state=0;
 							break;
 						}
 					}

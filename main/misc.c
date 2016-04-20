@@ -264,11 +264,11 @@ int ping_server()
 		printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
 		if(strstr(ret,"from")!=NULL)
 		{
-			g_state->network_state=1;
+			g_share_memory->network_state=1;
 			return 1;				
 		}
 	}
-	g_state->network_state=0;
+	g_share_memory->network_state=0;
 	return 0;
 }
 int GetIP_v4_and_v6_linux(int family,char *address,int size)
@@ -359,58 +359,61 @@ void get_ip(char *ip)
 
 void get_sensor_alarm_info()
 {
-	sensor.times[SENSOR_CO]		=0;
-	sensor.times[SENSOR_CO2]	=0;
-	sensor.times[SENSOR_HCHO]	=0;
-	sensor.times[SENSOR_SHIDU]	=0;
-	sensor.times[SENSOR_TEMP]	=0;
-	sensor.times[SENSOR_PM25]	=0;
+	g_share_memory->times[SENSOR_CO]		=0;
+	g_share_memory->times[SENSOR_CO2]	=0;
+	g_share_memory->times[SENSOR_HCHO]	=0;
+	g_share_memory->times[SENSOR_SHIDU]	=0;
+	g_share_memory->times[SENSOR_TEMP]	=0;
+	g_share_memory->times[SENSOR_PM25]	=0;
 	FILE *fp=fopen(CONFIG_FILE,"r");
 	if(fp==NULL)
 	{
-		sensor.alarm[SENSOR_CO]		=0;
-		sensor.alarm[SENSOR_CO2]	=0;
-		sensor.alarm[SENSOR_HCHO]	=0;
-		sensor.alarm[SENSOR_SHIDU]	=0;
-		sensor.alarm[SENSOR_TEMP]	=0;
-		sensor.alarm[SENSOR_PM25]	=0;
-		sensor.sent[SENSOR_CO]		=0;
-		sensor.sent[SENSOR_CO2]		=0;
-		sensor.sent[SENSOR_HCHO]	=0;
-		sensor.sent[SENSOR_SHIDU]	=0;
-		sensor.sent[SENSOR_TEMP]	=0;
-		sensor.sent[SENSOR_PM25]	=0;
+		g_share_memory->alarm[SENSOR_CO]		=0;
+		g_share_memory->alarm[SENSOR_CO2]	=0;
+		g_share_memory->alarm[SENSOR_HCHO]	=0;
+		g_share_memory->alarm[SENSOR_SHIDU]	=0;
+		g_share_memory->alarm[SENSOR_TEMP]	=0;
+		g_share_memory->alarm[SENSOR_PM25]	=0;
+		g_share_memory->sent[SENSOR_CO]		=0;
+		g_share_memory->sent[SENSOR_CO2]		=0;
+		g_share_memory->sent[SENSOR_HCHO]	=0;
+		g_share_memory->sent[SENSOR_SHIDU]	=0;
+		g_share_memory->sent[SENSOR_TEMP]	=0;
+		g_share_memory->sent[SENSOR_PM25]	=0;
 		fp=fopen(CONFIG_FILE,"w");
-		fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);	
+		fwrite(g_share_memory->alarm,sizeof(char)*SENSOR_NO,1,fp);
+		fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
 		fclose(fp);
 		return;
 	}
-	fread(&sensor,sizeof(struct _sensor_alarm),1,fp);
-	g_state->sensor_state[SENSOR_CO]	=sensor.alarm[SENSOR_CO];
-	g_state->sensor_state[SENSOR_CO2]	=sensor.alarm[SENSOR_CO2];
-	g_state->sensor_state[SENSOR_HCHO]	=sensor.alarm[SENSOR_HCHO];
-	g_state->sensor_state[SENSOR_SHIDU]	=sensor.alarm[SENSOR_SHIDU];
-	g_state->sensor_state[SENSOR_TEMP]	=sensor.alarm[SENSOR_TEMP];
-	g_state->sensor_state[SENSOR_PM25]	=sensor.alarm[SENSOR_PM25];
+	fread(g_share_memory->alarm,sizeof(char)*SENSOR_NO,1,fp);
+	fread(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
+	g_share_memory->sensor_state[SENSOR_CO]		=g_share_memory->alarm[SENSOR_CO];
+	g_share_memory->sensor_state[SENSOR_CO2]	=g_share_memory->alarm[SENSOR_CO2];
+	g_share_memory->sensor_state[SENSOR_HCHO]	=g_share_memory->alarm[SENSOR_HCHO];
+	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory->alarm[SENSOR_SHIDU];
+	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory->alarm[SENSOR_TEMP];
+	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory->alarm[SENSOR_PM25];
 	fclose(fp);
 	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
-		sensor.alarm[SENSOR_CO],sensor.alarm[SENSOR_CO2],sensor.alarm[SENSOR_HCHO],
-		sensor.alarm[SENSOR_SHIDU],sensor.alarm[SENSOR_TEMP],sensor.alarm[SENSOR_PM25]);
+		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
+		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25]);
 }
 void save_sensor_alarm_info()
 {
 	FILE *fp=fopen(CONFIG_FILE,"w");
-	g_state->sensor_state[SENSOR_CO]	=sensor.alarm[SENSOR_CO];
-	g_state->sensor_state[SENSOR_CO2]	=sensor.alarm[SENSOR_CO2];
-	g_state->sensor_state[SENSOR_HCHO]	=sensor.alarm[SENSOR_HCHO];
-	g_state->sensor_state[SENSOR_SHIDU]	=sensor.alarm[SENSOR_SHIDU];
-	g_state->sensor_state[SENSOR_TEMP]	=sensor.alarm[SENSOR_TEMP];
-	g_state->sensor_state[SENSOR_PM25]	=sensor.alarm[SENSOR_PM25];
-	fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);
+	g_share_memory->sensor_state[SENSOR_CO]		=g_share_memory.alarm[SENSOR_CO];
+	g_share_memory->sensor_state[SENSOR_CO2]	=g_share_memory.alarm[SENSOR_CO2];
+	g_share_memory->sensor_state[SENSOR_HCHO]	=g_share_memory.alarm[SENSOR_HCHO];
+	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory.alarm[SENSOR_SHIDU];
+	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory.alarm[SENSOR_TEMP];
+	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory.alarm[SENSOR_PM25];
+	fwrite(g_share_memory->sensor_state,sizeof(char)*SENSOR_NO,1,fp);
+	fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
 	fclose(fp);
 	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
-		sensor.alarm[SENSOR_CO],sensor.alarm[SENSOR_CO2],sensor.alarm[SENSOR_HCHO],
-		sensor.alarm[SENSOR_SHIDU],sensor.alarm[SENSOR_TEMP],sensor.alarm[SENSOR_PM25]);
+		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
+		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25]);
 }
 void set_net_interface()
 {
@@ -462,7 +465,7 @@ unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)
 	}
 	return CRC;
 }
-void sync_server(int fd,int resend,int set_local)
+void sync_server(int resend,int set_local)
 {
 	int i,j;
 	char text_out[512]={0};
@@ -508,36 +511,36 @@ void sync_server(int fd,int resend,int set_local)
 			unsigned int crc=0;
 			starttime=doit_data(rcv,(char *)"104");
 			if(starttime!=NULL){
-				server_time[0]=0x6c;server_time[1]=ARM_TO_CAP;
-				server_time[2]=0x00;server_time[3]=0x01;server_time[4]=0x06;
+				g_share_memory->server_time[0]=0x6c;g_share_memory->server_time[1]=ARM_TO_CAP;
+				g_share_memory->server_time[2]=0x00;g_share_memory->server_time[3]=0x01;g_share_memory->server_time[4]=0x06;
 				memcpy(year,starttime+2,2);
 				memcpy(month,starttime+5,2);
 				memcpy(day,starttime+8,2);
 				memcpy(hour,starttime+11,2);
 				memcpy(minute,starttime+14,2);
 				memcpy(second,starttime+17,2);
-				server_time[5]=atoi(year);server_time[6]=atoi(month);
-				server_time[7]=atoi(day);server_time[8]=atoi(hour);
-				server_time[9]=atoi(minute);server_time[10]=atoi(second);
-				crc=CRC_check(server_time,11);
-				server_time[11]=(crc&0xff00)>>8;server_time[12]=crc&0x00ff;
-				write(fd,server_time,13);
+				g_share_memory->server_time[5]=atoi(year);g_share_memory->server_time[6]=atoi(month);
+				g_share_memory->server_time[7]=atoi(day);g_share_memory->server_time[8]=atoi(hour);
+				g_share_memory->server_time[9]=atoi(minute);g_share_memory->server_time[10]=atoi(second);
+				crc=CRC_check(g_share_memory->server_time,11);
+				g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
+				write(g_share_memory->fd_com,g_share_memory->server_time,13);
 				printf(SYNC_PREFX"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
 				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
 				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
 				if(set_local)
-				set_time(server_time[5]+2000,server_time[6],server_time[7],server_time[8],server_time[9],server_time[10]);
-				int week=CaculateWeekDay(server_time[5],server_time[6],server_time[7]);
+				set_time(g_share_memory->server_time[5]+2000,g_share_memory->server_time[6],g_share_memory->server_time[7],g_share_memory->server_time[8],g_share_memory->server_time[9],g_share_memory->server_time[10]);
+				int week=CaculateWeekDay(g_share_memory->server_time[5],g_share_memory->server_time[6],g_share_memory->server_time[7]);
 				char rtc_time[7];
-				rtc_time[0]=(server_time[5]/10)*16+(server_time[5]%10);
-				rtc_time[1]=(server_time[6]/10)*16+(server_time[6]%10);
-				rtc_time[2]=(server_time[7]/10)*16+(server_time[7]%10);
+				rtc_time[0]=(g_share_memory->server_time[5]/10)*16+(g_share_memory->server_time[5]%10);
+				rtc_time[1]=(g_share_memory->server_time[6]/10)*16+(g_share_memory->server_time[6]%10);
+				rtc_time[2]=(g_share_memory->server_time[7]/10)*16+(g_share_memory->server_time[7]%10);
 				rtc_time[3]=week+1;
-				rtc_time[4]=(server_time[8]/10)*16+(server_time[8]%10);
-				rtc_time[5]=(server_time[9]/10)*16+(server_time[9]%10);
-				rtc_time[6]=(server_time[10]/10)*16+(server_time[10]%10);
-				set_lcd_time(fd_lcd,rtc_time);
+				rtc_time[4]=(g_share_memory->server_time[8]/10)*16+(g_share_memory->server_time[8]%10);
+				rtc_time[5]=(g_share_memory->server_time[9]/10)*16+(g_share_memory->server_time[9]%10);
+				rtc_time[6]=(g_share_memory->server_time[10]/10)*16+(g_share_memory->server_time[10]%10);
+				set_lcd_time(rtc_time);
 				free(starttime);
 				char *user_name=doit_data(rcv,"203");
 				char *user_place=doit_data(rcv,"211");
@@ -545,22 +548,22 @@ void sync_server(int fd,int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
-				clear_buf(fd_lcd,ADDR_USER_NAME,40);
-				clear_buf(fd_lcd,ADDR_INSTALL_PLACE,60);
-				clear_buf(fd_lcd,ADDR_USER_ADDR,40);
-				clear_buf(fd_lcd,ADDR_USER_PHONE,40);
-				clear_buf(fd_lcd,ADDR_USER_CONTACTER,40);
+				clear_buf(ADDR_USER_NAME,40);
+				clear_buf(ADDR_INSTALL_PLACE,60);
+				clear_buf(ADDR_USER_ADDR,40);
+				clear_buf(ADDR_USER_PHONE,40);
+				clear_buf(ADDR_USER_CONTACTER,40);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
-					write_string(fd_lcd,ADDR_USER_NAME,cmd,strlen(cmd));
+					write_string(ADDR_USER_NAME,cmd,strlen(cmd));
 					printf("user_name:%s\n",user_name);
 					free(user_name);
 				}
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
-					write_string(fd_lcd,ADDR_INSTALL_PLACE,cmd,strlen(cmd));
+					write_string(ADDR_INSTALL_PLACE,cmd,strlen(cmd));
 					printf("user_place:%s\n",user_place);
 					free(user_place);
 				}
@@ -568,21 +571,21 @@ void sync_server(int fd,int resend,int set_local)
 				{
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
-					write_string(fd_lcd,ADDR_USER_ADDR,cmd,strlen(cmd));					
+					write_string(ADDR_USER_ADDR,cmd,strlen(cmd));					
 					printf("user_addr:%s\n",user_addr);
 					free(user_addr);
 				}
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
-					write_string(fd_lcd,ADDR_USER_PHONE,cmd,strlen(cmd));					
+					write_string(ADDR_USER_PHONE,cmd,strlen(cmd));					
 					printf("user_phone:%s\n",user_phone);
 					free(user_phone);
 				}
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
-					write_string(fd_lcd,ADDR_USER_CONTACTER,cmd,strlen(cmd));
+					write_string(ADDR_USER_CONTACTER,cmd,strlen(cmd));
 					printf("user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
 				}
@@ -607,17 +610,17 @@ void ask_interface()
 	for(i=0;i<7;i++)
 		printf("%02x ",cmd[i]);
 	printf("\ngoing to ask_interface end\n");
-	write(fd_com,cmd,sizeof(cmd));
+	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 	i=0;
 	while(1)
 	{
 		if(i>20)
 			break;
 		sleep(1);
-		if(sensor_interface_mem[0]==0x0000)
+		if(g_share_memory->sensor_interface_mem[0]==0x0000)
 			break;
 		else
-			write(fd_com,cmd,sizeof(cmd));
+			write(g_share_memory->fd_com,cmd,sizeof(cmd));
 		i++;
 			
 	}

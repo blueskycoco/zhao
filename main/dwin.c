@@ -15,6 +15,18 @@ extern key_t  shmid_history_shidu;
 extern key_t  shmid_history_pm25;
 
 #define LCD_PROCESS	"LCD_PROCESS"
+void write_data(unsigned int Index,int data)
+{
+	int i = 0;
+	char cmd[]={0x5a,0xa5,0x05,0x82,0x00,0x00,0x00,0x00};
+	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
+	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
+	//for(i = 0;i<sizeof(cmd);i++)
+	//	printf("%02x ",cmd[i]);
+	//printf("\n");
+	write(g_share_memory->fd_lcd,cmd,8);
+}
+
 void switch_pic(unsigned char Index)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x04,0x00};

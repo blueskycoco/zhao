@@ -223,27 +223,27 @@ void update_dwin_real_value(char *id,int value)
 {
 	if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
 	{
-		write_dwin_real(VAR_DATE_TIME_1,value);
+		write_data(VAR_DATE_TIME_1,value);
 	}
 	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
 	{						
-		write_dwin_real(VAR_DATE_TIME_2,value);
+		write_data(VAR_DATE_TIME_2,value);
 	}
 	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
 	{
-		write_dwin_real(VAR_DATE_TIME_3,value);
+		write_data(VAR_DATE_TIME_3,value);
 	}
 	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
 	{
-		write_dwin_real(VAR_DATE_TIME_4,value);
+		write_data(VAR_DATE_TIME_4,value);
 	}
 	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
 	{
-		write_dwin_real(VAR_ALARM_TYPE_1,value);
+		write_data(VAR_ALARM_TYPE_1,value);
 	}
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
 	{
-		write_dwin_real(VAR_ALARM_TYPE_2,value);
+		write_data(VAR_ALARM_TYPE_2,value);
 	}
 }
 /*
@@ -251,7 +251,7 @@ void update_dwin_real_value(char *id,int value)
   *update cap data to lcd
   *create alarm and normal message to server
 */
-char *build_message(int fd,char *cmd,int len,char *message)
+char *build_message(char *cmd,int len,char *message)
 {	
 	int i=0;
 	char sensor_error[]={0x65,0x72,0x72,0x6f,0x72};
@@ -306,7 +306,7 @@ char *build_message(int fd,char *cmd,int len,char *message)
 			break;
 			case RESEND_BYTE:
 			{
-				write(fd,server_time,13);
+				write(g_share_memroy->fd_com,server_time,13);
 			}
 			break;
 			default:
@@ -458,7 +458,7 @@ char *build_message(int fd,char *cmd,int len,char *message)
 	}
 	return message;
 }
-void return_zero_point(int fd,int co)
+void return_zero_point(int co)
 {
 	int crc = 0;
 	int i =0;
@@ -491,10 +491,10 @@ void return_zero_point(int fd,int co)
 	for(i=0;i<sizeof(cmd_return_point);i++)
 		printf("%02X ",cmd_return_point[i]);
 	printf("\n");
-	write(fd,cmd_return_point,sizeof(cmd_return_point));
+	write(g_share_memory->fd_com,cmd_return_point,sizeof(cmd_return_point));
 }
 
-void show_factory(int fd,int zero,char *cmd,int len)
+void show_factory(int zero,char *cmd,int len)
 {	
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
 	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
@@ -533,26 +533,26 @@ void show_factory(int fd,int zero,char *cmd,int len)
 			if(cmd[3]==atoi(ID_CAP_CO))
 			{
 				printf("In tun zero mode CO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
-				clear_buf(fd_lcd,ADDR_TUN_ZERO_CO,4);
-				write_string(fd_lcd,ADDR_TUN_ZERO_CO,data,strlen(data));
+				clear_buf(ADDR_TUN_ZERO_CO,4);
+				write_string(ADDR_TUN_ZERO_CO,data,strlen(data));
 				g_share_memory->cur_co=(cmd[5]<<8)|cmd[6];
-				return_zero_point(fd,1);
+				return_zero_point(1);
 			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
 			{	
 				printf("In tun zero mode HCHO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
-				clear_buf(fd_lcd,ADDR_TUN_ZERO_HCHO,4);
-				write_string(fd_lcd,ADDR_TUN_ZERO_HCHO,data,strlen(data));
+				clear_buf(ADDR_TUN_ZERO_HCHO,4);
+				write_string(ADDR_TUN_ZERO_HCHO,data,strlen(data));
 				g_share_memory->cur_ch2o=(cmd[5]<<8)|cmd[6];
-				return_zero_point(fd,0);
+				return_zero_point(0);
 			}
 		}
 		else
 		{
 			if(cmd[3]==g_share_memory->jiaozhun_sensor)				
 			{
-				clear_buf(fd_lcd,ADDR_REAL_VALUE,4);
-				write_string(fd_lcd,ADDR_REAL_VALUE,data,strlen(data));
+				clear_buf(ADDR_REAL_VALUE,4);
+				write_string(ADDR_REAL_VALUE,data,strlen(data));
 			}
 		}
 	}
@@ -563,7 +563,7 @@ void show_factory(int fd,int zero,char *cmd,int len)
 /*
   *get cmd from lv's cap board
 */
-int cap_board_mon(int fd)
+int cap_board_mon()
 {
 	char 	ch = 0;
 	char 	state=STATE_IDLE;
@@ -575,7 +575,7 @@ int cap_board_mon(int fd)
 	int 	message_type=0;
 	while(1)
 	{
-		if(read(fd,&ch,1)==1)
+		if(read(g_share_memory->fd_com,&ch,1)==1)
 		{
 			switch (state)
 			{
@@ -652,7 +652,7 @@ int cap_board_mon(int fd)
 							}
 						}
 						else
-							post_message=build_message(fd,fd_lcd,cmd,message_len+7,post_message);
+							post_message=build_message(cmd,message_len+7,post_message);
 					}
 					else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
 						show_factory(fd_lcd,1,cmd,message_len+7);
@@ -711,18 +711,17 @@ int cap_board_mon(int fd)
 int cap_init()
 {
 	int fpid = 0;
-	int fd = 0;
 	/*if((shmid_history = shmget(IPC_PRIVATE, sizeof(struct history)*100000, PERM)) == -1 )
 	{
         printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);
     }*/
-	if((fd=open_com_port("/dev/ttySP0"))<0)
+	if((g_share_memory->fd_com=open_com_port("/dev/ttySP0"))<0)
 	{
 		printfLog(CAP_PROCESS"open_port cap error");
 		return -1;
 	}
-	if(set_opt(fd,9600,8,'N',1)<0)
+	if(set_opt(g_share_memory->fd_com,9600,8,'N',1)<0)
 	{
 		printfLog(CAP_PROCESS"set_opt cap error");
 		return -1;
@@ -741,7 +740,7 @@ int cap_init()
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)
-			cap_board_mon(fd);
+			cap_board_mon();
 	}
 	return 0;
 }
