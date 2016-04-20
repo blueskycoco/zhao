@@ -5,10 +5,10 @@
 #include <linux/rtc.h>
 #include <sys/time.h>
 #include "misc.h"
+#include "cap.h"
 #define MISC_PROCESS	"MISC"
 #define RTCDEV 			"/dev/rtc0"
-extern sensor_alarm sensor;
-extern struct state *g_state;
+
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
@@ -139,6 +139,7 @@ int set_alarm(int hour,int mintue,int sec)
 	int fd, retval;
 	struct rtc_time rtc_tm;
 	unsigned long data;
+	char cur_date[15]={0};
 
 	fd = open(RTCDEV, O_RDONLY);
 
@@ -350,11 +351,40 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 	freeifaddrs(ifap0);
 	return -1;
 }
-void get_ip(char *ip)
+void get_ip()
 {
-	GetIP_v4_and_v6_linux(AF_INET,ip,16);
-	printfLog(MISC_PROCESS"ip addrss %s\n", ip);
+	GetIP_v4_and_v6_linux(AF_INET,g_share_memory->ip,16);
+	printfLog(MISC_PROCESS"ip addrss %s\n", g_share_memory->ip);
 	return ;
+}
+void get_uuid()
+{
+	memset(g_share_memory->uuid,0,256);
+	FILE *fp=fopen("/home/user/uuid.txt","r");
+	if(fp!=NULL)
+	{
+		if(fread(g_share_memory->uuid,256,1,fp)<0)
+			strcpy(g_share_memory->uuid,"1234abcd");
+		fclose(fp);
+	}
+	else
+		strcpy(g_share_memory->uuid,"1234abcd");
+	g_share_memory->uuid[strlen(g_share_memory->uuid)-1]='\0';
+	printfLog(MISC_PROCESS"uuid is %s\n",g_share_memory->uuid);
+}
+
+void get_net_interface()
+{
+	FILE *fp=fopen("/home/user/interface.txt","r");
+	if(fp!=NULL)
+	{
+		if(fread(&(g_share_memory->send_by_wifi),1,1,fp)<0)
+			g_share_memory->send_by_wifi=1;
+		fclose(fp);
+	}
+	else
+		g_share_memory->send_by_wifi=1;
+	printfLog(MISC_PROCESS"get interface is %d\n",g_share_memory->send_by_wifi);
 }
 
 void get_sensor_alarm_info()
@@ -420,7 +450,7 @@ void set_net_interface()
 	FILE *fp=fopen("/home/user/interface.txt","w");
 	fwrite(g_share_memory->send_by_wifi,1,1,fp);
 	fclose(fp);
-	printf("set interface is %d\n",g_share_memory->send_by_wifi);
+	printfLog(MISC_PROCESS"set interface is %d\n",g_share_memory->send_by_wifi);
 }
 int CaculateWeekDay(int y,int m, int d)
 {
@@ -432,13 +462,13 @@ int CaculateWeekDay(int y,int m, int d)
 	int iWeek=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)%7;
 	switch(iWeek)
 	{
-		case 0: printf("m1\n"); break;
-		case 1: printf("m2\n"); break;
-		case 2: printf("m3\n"); break;
-		case 3: printf("m4\n"); break;
-		case 4: printf("m5\n"); break;
-		case 5: printf("m6\n"); break;
-		case 6: printf("m7\n"); break;
+		case 0: printfLog(MISC_PROCESS"m1\n"); break;
+		case 1: printfLog(MISC_PROCESS"m2\n"); break;
+		case 2: printfLog(MISC_PROCESS"m3\n"); break;
+		case 3: printfLog(MISC_PROCESS"m4\n"); break;
+		case 4: printfLog(MISC_PROCESS"m5\n"); break;
+		case 5: printfLog(MISC_PROCESS"m6\n"); break;
+		case 6: printfLog(MISC_PROCESS"m7\n"); break;
 	}
 	return iWeek;
 } 
@@ -477,15 +507,15 @@ void sync_server(int resend,int set_local)
 	sync_message=add_item(sync_message,ID_DEVICE_UID,g_uuid);
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,"9517");
-	printf(SYNC_PREFX"<sync GET>%s\n",sync_message);
+	printfLog(MISC_PROCESS"<sync GET>%s\n",sync_message);
 	send_web_post(URL,sync_message,9,&rcv);
 	free(sync_message);
 	//free(out1);
 	if(rcv!=NULL&&strlen(rcv)!=0)
 	{	
 		int len=strlen(rcv);
-		printf(SYNC_PREFX"<=== %s\n",rcv);
-		printf(SYNC_PREFX"send ok\n");
+		printfLog(MISC_PROCESS"<=== %s\n",rcv);
+		printfLog(MISC_PROCESS"send ok\n");
 		char *starttime=NULL;
 		char *tmp=NULL;
 		if(resend)
@@ -495,8 +525,8 @@ void sync_server(int resend,int set_local)
 			tmp=doit_data(rcv,(char *)"102");
 			if(starttime!=NULL && tmp!=NULL)
 			{
-				printf(SYNC_PREFX"%s\r\n",tmp);
-				printf(SYNC_PREFX"%s\r\n",starttime);
+				printfLog(MISC_PROCESS"%s\r\n",tmp);
+				printfLog(MISC_PROCESS"%s\r\n",starttime);
 				resend_history(starttime,tmp);
 				free(starttime);
 				free(tmp);
@@ -525,7 +555,7 @@ void sync_server(int resend,int set_local)
 				crc=CRC_check(g_share_memory->server_time,11);
 				g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
 				write(g_share_memory->fd_com,g_share_memory->server_time,13);
-				printf(SYNC_PREFX"SERVER TIME %s\r\n",starttime);
+				printfLog(MISC_PROCESS"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
 				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));
 				//printf(SYNC_PREFX"212 %s\r\n",doit_data(rcv,"212"));
@@ -557,14 +587,14 @@ void sync_server(int resend,int set_local)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
 					write_string(ADDR_USER_NAME,cmd,strlen(cmd));
-					printf("user_name:%s\n",user_name);
+					printfLog(MISC_PROCESS"user_name:%s\n",user_name);
 					free(user_name);
 				}
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
 					write_string(ADDR_INSTALL_PLACE,cmd,strlen(cmd));
-					printf("user_place:%s\n",user_place);
+					printfLog(MISC_PROCESS"user_place:%s\n",user_place);
 					free(user_place);
 				}
 				if(user_addr && strlen(user_addr)>0)
@@ -572,21 +602,21 @@ void sync_server(int resend,int set_local)
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
 					write_string(ADDR_USER_ADDR,cmd,strlen(cmd));					
-					printf("user_addr:%s\n",user_addr);
+					printfLog(MISC_PROCESS"user_addr:%s\n",user_addr);
 					free(user_addr);
 				}
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
 					write_string(ADDR_USER_PHONE,cmd,strlen(cmd));					
-					printf("user_phone:%s\n",user_phone);
+					printfLog(MISC_PROCESS"user_phone:%s\n",user_phone);
 					free(user_phone);
 				}
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
 					write_string(ADDR_USER_CONTACTER,cmd,strlen(cmd));
-					printf("user_contraceer:%s\n",user_contraceer);
+					printfLog(MISC_PROCESS"user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
 				}
 			}
@@ -606,10 +636,10 @@ void ask_interface()
 	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x06,0x00,0x00,0x00};	
 	int crc=CRC_check(cmd,5);
 	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
-	printf("going to ask_interface begin\n");
+	printfLog(MISC_PROCESS"going to ask_interface begin\n");
 	for(i=0;i<7;i++)
-		printf("%02x ",cmd[i]);
-	printf("\ngoing to ask_interface end\n");
+		printfLog(MISC_PROCESS"%02x ",cmd[i]);
+	printfLog(MISC_PROCESS"\ngoing to ask_interface end\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 	i=0;
 	while(1)

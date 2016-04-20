@@ -742,5 +742,7 @@ int cap_init()
 		while(1)
 			cap_board_mon();
 	}
+	else
+		printfLog(CAP_PROCESS"[PID]%d cap process\n",fpid);
 	return 0;
 }

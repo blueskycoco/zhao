@@ -1,18 +1,10 @@
 #include "dwin.h"
 #include "log.h"
+#include "cap.h"
 int lcd_state=1;
 char logged=0,g_index=0;
 extern char g_uuid[256];
 extern char ip[20];
-extern struct history sensor_history;
-extern struct share_memory *g_share_memory;
-extern key_t  shmid_share_memory;
-extern key_t  shmid_history_co;
-extern key_t  shmid_history_co2;
-extern key_t  shmid_history_hcho;
-extern key_t  shmid_history_temp;
-extern key_t  shmid_history_shidu;
-extern key_t  shmid_history_pm25;
 
 #define LCD_PROCESS	"LCD_PROCESS"
 void write_data(unsigned int Index,int data)
@@ -2306,6 +2298,8 @@ int lcd_init()
 		while(1)
 			lcd_loop();
 	}
+	else
+		printfLog(LCD_PROCESS"[PID]%d lcd process\n",fpid);
 	return 0;
 
 }

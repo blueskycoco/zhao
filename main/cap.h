@@ -7,6 +7,7 @@
 #define SENSOR_TEMP		3
 #define SENSOR_SHIDU	4
 #define SENSOR_PM25		5
+#define HISTORY_PATH 	"/home/user/history"
 struct nano{
 	char time[20];
 	char data[10];
@@ -39,7 +40,20 @@ struct share_memory{
 	char 	y;
 	int 	fd_lcd;
 	int 	fd_com;
-	int 	fd_gprs;
+	int 	fd_gprs;	
+	char 	ip[20];	
+	char 	uuid[256];
 };
+extern struct history sensor_history;
+extern struct share_memory *g_share_memory;
+
+extern key_t  shmid_share_memory;
+extern key_t  shmid_history_co;
+extern key_t  shmid_history_co2;
+extern key_t  shmid_history_hcho;
+extern key_t  shmid_history_temp;
+extern key_t  shmid_history_shidu;
+extern key_t  shmid_history_pm25;
+
 int cap_init();
 #endif

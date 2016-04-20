@@ -15,16 +15,8 @@
 #include "history.h"
 #include "netlib.h"
 #include "log.h"
+#include "cap.h"
 #define HISTORY "[History Process]"
-extern struct history sensor_history;
-extern struct share_memory *g_share_memory;
-extern key_t  shmid_share_memory;
-extern key_t  shmid_history_co;
-extern key_t  shmid_history_co2;
-extern key_t  shmid_history_hcho;
-extern key_t  shmid_history_temp;
-extern key_t  shmid_history_shidu;
-extern key_t  shmid_history_pm25;
 
 void set_data(char *line,char *type,struct nano *history,long *cnt)
 {
@@ -64,7 +56,6 @@ void load_history(const char *name)
 	char mon_j[3]={0},mon_m[3]={0};
 	char day_j[3]={0},day_m[3]={0};
 	
-	printfLog(HISTORY"begin to shmat\n");	
 	sensor_history.co 	= (struct nano *)shmat(shmid_history_co,	 0, 0);
 	sensor_history.co2 	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
 	sensor_history.hcho = (struct nano *)shmat(shmid_history_hcho,	 0, 0);
@@ -72,7 +63,6 @@ void load_history(const char *name)
 	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,	 0, 0);
 	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
 	g_share_memory 	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
-	printfLog(HISTORY"end to shmat\n");
 	g_share_memory->history_done = 0;
 	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
 	d = opendir(name);
@@ -147,7 +137,8 @@ void load_history(const char *name)
 		char file_path[32]={0};
 		int len;
 		printfLog(HISTORY"==> %s\n",file_list[j]);
-		strcpy(file_path,"/home/user/history/");
+		strcpy(file_path,name);
+		strcat(file_path,"/");
 		strcat(file_path,file_list[j]);
 		FILE *fp = fopen(file_path, "r");
 		while (getline(&line, &len, fp) != -1) 

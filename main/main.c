@@ -6,17 +6,18 @@
 #include <sys/msg.h>  
 #include <signal.h>
 #include "log.h"
+#include "cap.h"
 #define MAIN_PROCESS	"[MainCtlSystem]:"
-extern struct share_memory *g_share_memory;
-extern struct history sensor_history;
-extern key_t  shmid_share_memory;
-extern key_t	shmid_history_co;
-extern key_t	shmid_history_co2;
-extern key_t	shmid_history_hcho;
-extern key_t	shmid_history_temp;
-extern key_t	shmid_history_shidu;
-extern key_t	shmid_history_pm25;
-extern key_t	shmid_share_memory;
+struct share_memory *g_share_memory;
+struct history sensor_history;
+key_t  	shmid_share_memory;
+key_t	shmid_history_co;
+key_t	shmid_history_co2;
+key_t	shmid_history_hcho;
+key_t	shmid_history_temp;
+key_t	shmid_history_shidu;
+key_t	shmid_history_pm25;
+key_t	shmid_share_memory;
 
 int main(int argc, char *argv[])
 {
@@ -27,48 +28,40 @@ int main(int argc, char *argv[])
 	
 	if((shmid_history_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create co history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create co history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_history_co2 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create co2 history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create co2 history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_history_hcho = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create hcho history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create hcho history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_history_temp = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create temp history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create temp history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_history_shidu = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create shidu history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create shidu history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	if((shmid_history_pm25 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create pm25 history share Error %s/n/a", strerror(errno));  
+        printfLog(MAIN_PROCESS"Create pm25 history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
 	
 	if((shmid_share_memory = shmget(IPC_PRIVATE, sizeof(struct share_memory), PERM)) == -1 )
 	{
-        printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));
+        printfLog(MAIN_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));
         exit(1);
     }	
-	if((fpid=fork())==0)
-	{
-		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0,0);
-		load_history("/home/user/history");
-		return 0;
-	}
-	else
-		printf("[PID]%d load history process\n",fpid);
 	
 	sensor_history.co	= (struct nano *)shmat(shmid_history_co,	 0, 0);
 	sensor_history.co2	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
@@ -77,62 +70,32 @@ int main(int argc, char *argv[])
 	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,  0, 0);
 	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
 	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
-	get_ip(ip);
-	if((shmid = shmget(IPC_PRIVATE, 256, PERM)) == -1 )
-	{
-		fprintf(stderr, "Create Share Memory Error:%s/n/a", strerror(errno));  
-		exit(1);  
-	}
+	get_ip();
 	get_sensor_alarm_info();
-	server_time = (char *)shmat(shmid, 0, 0);
-#ifdef S3C2440
-	if((fd_com=open_com_port("/dev/s3c2410_serial1"))<0)
-#else
-	if((fd_com=open_com_port("/dev/ttySP0"))<0)
-#endif
-	{
-		perror("open_port cap error");
-		return -1;
-	}
-	if(set_opt(fd_com,9600,8,'N',1)<0)
-	{
-		perror(" set_opt cap error");
-		return -1;
-	}
-	if((fd_lcd=open_com_port("/dev/ttySP1"))<0)
-	{
-		perror("open_port lcd error");
-		close(fd_com);
-		return -1;
-	}
-	if(set_opt(fd_lcd,115200,8,'N',1)<0)
-	{
-		perror(" set_opt lcd error");
-		close(fd_com);
-		close(fd_lcd);
-		return -1;
-	}
-	if((fd_gprs=open_com_port("/dev/ttySP2"))<0)
-	{
-		perror("open_port gprs error");
-		close(fd_com);
-		close(fd_lcd);
-		return -1;
-	}
-	if(set_opt(fd_gprs,115200,8,'N',1)<0)
-	{
-		perror(" set_opt gprs error");
-		close(fd_com);
-		close(fd_lcd);
-		close(fd_gprs);
-		return -1;
-	}
-	//config_gprs();
-	pthread_mutex_init(&mutex, NULL);
-	memset(server_time,0,13);
 	get_uuid();
-	send_by_wifi = (char *)shmat(send_by_wifi_shmid, 0, 0);
 	get_net_interface();
+	xfer_init();
+	if((fpid=fork())==0)
+	{
+		load_history(HISTORY_PATH);
+		return 0;
+	}
+	else
+		printfLog(MAIN_PROCESS"[PID]%d load history process\n",fpid);
+	cap_init();//process cap
+	lcd_init();//process lcd
+	while(1)
+	{
+		//sync server with resend data 00:01 every night
+		sync_server(0,1);
+		if(g_share_memory->server_time[0]!=0 &&g_share_memory->server_time[5]!=0)
+		{
+			set_alarm(00,00,01);
+			sync_server(1,1);
+		}
+		else
+			sleep(10);
+	}
 	#if 0
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,1);
@@ -146,7 +109,7 @@ int main(int argc, char *argv[])
 	buzzer(fd_lcd,0x30);
 	cut_pic(fd_lcd,0);
 	#endif
-	cap_init();
+	#if 0
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -236,6 +199,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	#endif
 	return 0;
 }
 
