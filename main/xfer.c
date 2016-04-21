@@ -5,7 +5,7 @@
 #include "netlib.h"
 pthread_mutex_t mutex;
 extern struct share_memory *g_share_memory;
-#define UPLOAD_PROCESS "[UPLOAD_PROCESS]"
+#define UPLOAD_PROCESS "[XFER] "
 
 int xfer_init()
 {

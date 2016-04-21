@@ -706,6 +706,7 @@ extern key_t  shmid_history_pm25;
 #define TYPE_SENSOR_FENGSU	0x0701
 #define TYPE_SENSOR_ZHAOSHEN	0x0601
 #define URL "http://123.57.26.24:8080/saveData/airmessage/messMgr.do"
+//#define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 #define START_BYTE 0x6C
 #define CAP_TO_ARM 0xAA
 #define ARM_TO_CAP 0xBB

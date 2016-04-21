@@ -8,7 +8,7 @@ char logged=0,g_index=0;
 extern char g_uuid[256];
 extern char ip[20];
 
-#define LCD_PROCESS	"LCD_PROCESS"
+#define LCD_PROCESS	"[LCD_PROCESS] "
 void write_data(unsigned int Index,int data)
 {
 	//int i = 0;
@@ -16,8 +16,8 @@ void write_data(unsigned int Index,int data)
 	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
 	//for(i = 0;i<sizeof(cmd);i++)
-	//	printf("%02x ",cmd[i]);
-	//printf("\n");
+	//	printfLog(LCD_PROCESS"%02x ",cmd[i]);
+	//printf(LCD_PROCESS"\n");
 	write(g_share_memory->fd_lcd,cmd,8);
 }
 

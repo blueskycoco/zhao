@@ -3,7 +3,7 @@
 #include "dwin.h"
 #include "netlib.h"
 #include "xfer.h"
-#define CAP_PROCESS "[CAP_PROCESS]"
+#define CAP_PROCESS "[CAP_PROCESS] "
 
 int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
@@ -431,7 +431,7 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(cmd[5]<<8|cmd[6]);
 					}
-					//printfLog(CAP_PROCESS"Value %d\n",value);
+					printfLog(CAP_PROCESS"Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
@@ -447,7 +447,7 @@ char *build_message(char *cmd,int len,char *message)
 	{
 		printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)cmd,len-2));
 		for(i=0;i<len;i++)
-			printfLog(CAP_PROCESS"0x%02x ",cmd[i]);
+			printfLog("0x%02x ",cmd[i]);
 	}
 	return message;
 }
@@ -601,8 +601,8 @@ void show_cap_value(char *buf,int len)
 			break;
 	}
 	for(i=3;i<len+3;i++)
-		printfLog(CAP_PROCESS"%02x ",buf[i]);
-	printfLog(CAP_PROCESS"\n");
+		printfLog("%02x ",buf[i]);
+	printfLog("\n");
 
 }
 
@@ -717,6 +717,7 @@ int cap_board_mon()
 	{
 		if(read(g_share_memory->fd_com,&ch,1)==1)
 		{
+			printfLog(CAP_PROCESS"==> %02X\n",ch);
 			switch (state)
 			{
 				case STATE_IDLE:
@@ -866,7 +867,7 @@ int cap_init()
 		printfLog(CAP_PROCESS"set_opt cap error");
 		return -1;
 	}
-
+	g_share_memory->factory_mode=NORMAL_MODE;
 	fpid=fork();
 	if(fpid==0)
 	{

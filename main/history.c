@@ -1,6 +1,6 @@
 #include "cap.h"
 #include "netlib.h"
-#define HISTORY "[History Process]"
+#define HISTORY "[History Process] "
 
 void set_data(char *line,char *type,struct nano *history,long *cnt)
 {

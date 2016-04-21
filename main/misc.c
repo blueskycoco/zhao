@@ -3,7 +3,7 @@
 #include "xfer.h"
 #include "misc.h"
 #include "dwin.h"
-#define MISC_PROCESS	"MISC"
+#define MISC_PROCESS	"[MISC] "
 #define RTCDEV 			"/dev/rtc0"
 #define ETH_NAME "ra0"
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)

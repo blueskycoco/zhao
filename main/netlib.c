@@ -12,6 +12,7 @@
 #include <string.h>  
 #include "cJSON.h"
 #include "netlib.h"
+#include "cap.h"
 #include "log.h"
 #include <errno.h>
 #define PORT 9517
@@ -21,7 +22,7 @@
 	"Content-Type:application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s"  
 #define HTTP_GET "GET /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n\r\n"  
 #define MY_HTTP_DEFAULT_PORT 8080  
-#define NET_LIB_TAG "[Net_Lib]"
+#define NET_LIB_TAG "[Net_Lib] "
 static int http_tcpclient_create(const char *host, int port,int timeout){  
 	struct hostent *he;  
 	struct sockaddr_in server_addr;

@@ -3,7 +3,7 @@
 #include "misc.h"
 #include "xfer.h"
 #include "dwin.h"
-#define MAIN_PROCESS	"[MainCtlSystem]:"
+#define MAIN_PROCESS	"[MainCtlSystem] "
 struct share_memory *g_share_memory;
 struct history sensor_history;
 key_t  	shmid_share_memory;
