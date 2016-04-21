@@ -718,9 +718,9 @@ int cap_board_mon()
 	char 	ch = 0;
 	char 	state=STATE_IDLE;
 	int 	message_len=0;
-	char 	message[10]={0};
+	char 	message[256]={0};
 	int 	i=0;
-	char 	to_check[20]={0};
+	char 	to_check[256]={0};
 	int 	crc=0;
 	int 	message_type=0;
 	while(1)
