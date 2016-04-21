@@ -175,8 +175,8 @@ char *count_sensor_value(char cmd,char *json,int value)
 	}
 	if(times!=NULL)
 	{
-		printfLog(CAP_PROCESS"count_sensor_value cmd %d,value %d,min %d,max %d,times %d,sent %d,alarm %d,json %s\n",
-			cmd,value,min,max,*times,*sent,*alarm,json);
+		//printfLog(CAP_PROCESS"count_sensor_value cmd %d,value %d,min %d,max %d,times %d,sent %d,alarm %d,json %s\n",
+		//	cmd,value,min,max,*times,*sent,*alarm,json);
 		if(value<min)
 			(*times)++;
 		else if(value>max)
@@ -217,7 +217,7 @@ char *count_sensor_value(char cmd,char *json,int value)
 			*sent=0;
 		}
 	}
-	printfLog(CAP_PROCESS"count_sensor_value <== %s\n",json);
+	//printfLog(CAP_PROCESS"count_sensor_value <== %s\n",json);
 	return json;
 }
 void update_dwin_real_value(char *id,int value)
@@ -492,8 +492,8 @@ void return_zero_point(int co)
 	crc=CRC_check((unsigned char *)cmd_return_point,9);
 	cmd_return_point[9]=(crc&0xff00)>>8;cmd_return_point[10]=crc&0x00ff;
 	for(i=0;i<sizeof(cmd_return_point);i++)
-		printfLog(CAP_PROCESS"%02X ",cmd_return_point[i]);
-	printfLog(CAP_PROCESS"\n");
+		printfLog("%02X ",cmd_return_point[i]);
+	printfLog("\n");
 	write(g_share_memory->fd_com,cmd_return_point,sizeof(cmd_return_point));
 }
 void show_cap_value(char *buf,int len)
@@ -658,7 +658,7 @@ void show_factory(int zero,char *cmd,int len)
 				clear_buf(ADDR_TUN_ZERO_CO,4);
 				write_string(ADDR_TUN_ZERO_CO,data,strlen(data));
 				g_share_memory->cur_co=(cmd[5]<<8)|cmd[6];
-				return_zero_point(1);
+				//return_zero_point(1);
 			}
 			if(cmd[3]==atoi(ID_CAP_HCHO))
 			{	
@@ -666,7 +666,7 @@ void show_factory(int zero,char *cmd,int len)
 				clear_buf(ADDR_TUN_ZERO_HCHO,4);
 				write_string(ADDR_TUN_ZERO_HCHO,data,strlen(data));
 				g_share_memory->cur_ch2o=(cmd[5]<<8)|cmd[6];
-				return_zero_point(0);
+				//return_zero_point(0);
 			}
 		}
 		else
@@ -808,7 +808,10 @@ int cap_board_mon()
 							post_message=build_message(cmd,message_len+7,post_message);
 					}
 					else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
+					{
+						if(message_type!=0x0001)
 						show_factory(1,cmd,message_len+7);
+					}
 					else
 					{
 						if(message_type == 0x0003)

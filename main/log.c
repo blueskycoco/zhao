@@ -20,7 +20,7 @@ void printfLog(const char *fmt, ...)
 	char file_path[PATH_BUF_SIZE]={0};
 	pthread_mutex_lock(&mutex_log);
 	strcpy(file_path,LOG_PATH);
-	memcpy(file_path+strlen(LOG_PATH),(char *)(g_share_memory->server_time),10);
+	//memcpy(file_path+strlen(LOG_PATH),(char *)(g_share_memory->server_time),10);
 	strcat(file_path,".log");
 	fp = fopen(file_path, "r");
 	if (fp == NULL)
@@ -51,6 +51,7 @@ void printfLog(const char *fmt, ...)
 void init_log()
 {
 	pthread_mutex_init(&mutex_log, NULL);  
+	system("rm /mnt/cdrom/log.log");
 }
 #if 0
 #define PROCESS1 "[PROCESS1]"

@@ -1461,6 +1461,8 @@ void tun_zero(int on)
 	}
 	else
 	{
+		return_zero_point(1);
+		return_zero_point(0);
 		printfLog(LCD_PROCESS"Stop Co,ch2o tun zero\n");
 		#if 0
 		for(i=0;i<11;i++)
@@ -1499,8 +1501,8 @@ void tun_zero(int on)
 	crc=CRC_check((unsigned char *)cmd_request_verify,6);
 	cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
 	for(i=0;i<sizeof(cmd_request_verify);i++)
-		printfLog(LCD_PROCESS"%02X ",cmd_request_verify[i]);
-	printfLog(LCD_PROCESS"\n");
+		printfLog("%02X ",cmd_request_verify[i]);
+	printfLog("\n");
 	write(g_share_memory->fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 	//sleep(1);
 	//for(i=0;i<11;i++)

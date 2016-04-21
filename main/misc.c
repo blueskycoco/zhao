@@ -869,8 +869,8 @@ void ask_interface()
 	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
 	printfLog(MISC_PROCESS"going to ask_interface begin\n");
 	for(i=0;i<7;i++)
-		printfLog(MISC_PROCESS"%02x ",cmd[i]);
-	printfLog(MISC_PROCESS"\ngoing to ask_interface end\n");
+		printfLog("%02x ",cmd[i]);
+	printfLog("\ngoing to ask_interface end\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 	i=0;
 	while(1)
