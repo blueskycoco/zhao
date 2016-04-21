@@ -65,7 +65,9 @@ int main(int argc, char *argv[])
 	sensor_history.temp = (struct nano *)shmat(shmid_history_temp,	 0, 0);
 	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,  0, 0);
 	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
-	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
+	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
+	g_share_memory->factory_mode=NORMAL_MODE;
+	g_share_memory->history_done=0;
 	get_ip();
 	get_sensor_alarm_info();
 	get_uuid();
@@ -78,8 +80,8 @@ int main(int argc, char *argv[])
 	}
 	else
 		printfLog(MAIN_PROCESS"[PID]%d load history process\n",fpid);
-	cap_init();//process cap
 	lcd_init();//process lcd
+	cap_init();//process cap
 	while(1)
 	{
 		//sync server with resend data 00:01 every night

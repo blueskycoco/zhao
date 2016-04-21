@@ -17,5 +17,5 @@ void get_ip();
 void get_uuid();
 void get_net_interface();
 void save_to_file(char *date,char *message);
-
+void co_flash_alarm();
 #endif

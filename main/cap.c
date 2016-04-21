@@ -114,7 +114,7 @@ char *update_alarm(char *json,char *data,char *alarm,char *sent)
 }
 char *count_sensor_value(char cmd,char *json,int value)
 {
-	char *times;
+	char *times=NULL;
 	char *sent;
 	int min,max;
 	char *alarm;
@@ -173,43 +173,51 @@ char *count_sensor_value(char cmd,char *json,int value)
 		alarm=&(g_share_memory->alarm[SENSOR_PM25]);
 		strcpy(id,ID_CAP_PM_25);
 	}
-	if(value<min)
-		(*times)++;
-	else if(value>max)
-		(*times)++;
-	else
+	if(times!=NULL)
 	{
-		*times=0;
-		if(*alarm&ALARM_BELOW)
-			clear_alarm(id,ID_ALERT_BELOW);
-		if(*alarm&ALARM_UP)
-			clear_alarm(id,ID_ALERT_UP);
-		if(*alarm&ALARM_BELOW||*alarm&ALARM_UP)
-		{
-			*alarm=ALARM_NONE;
-			save_sensor_alarm_info();	
-		}	
-	}
-	if(*times==MAX_COUNT_TIMES && !(*alarm))
-	{	
-		//need send server alarm
-		json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
-		json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
-		json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);
-		json=add_item(json,ID_DEVICE_PORT,(char *)"9517");
+		printfLog(CAP_PROCESS"count_sensor_value cmd %d,value %d,min %d,max %d,times %d,sent %d,alarm %d,json %s\n",
+			cmd,value,min,max,*times,*sent,*alarm,json);
 		if(value<min)
-		{
-			*alarm|=ALARM_BELOW;
-			json=add_item(json,ID_ALARM_TYPE,ID_ALERT_BELOW);
-		}
+			(*times)++;
+		else if(value>max)
+			(*times)++;
 		else
 		{
-			*alarm|=ALARM_UP;
-			json=add_item(json,ID_ALARM_TYPE,ID_ALERT_UP);
+			*times=0;
+			if(*alarm&ALARM_BELOW)
+				clear_alarm(id,ID_ALERT_BELOW);
+			if(*alarm&ALARM_UP)
+				clear_alarm(id,ID_ALERT_UP);
+			if(*alarm&ALARM_BELOW||*alarm&ALARM_UP)
+			{
+				*alarm=ALARM_NONE;
+				save_sensor_alarm_info();	
+			}	
 		}
-		save_sensor_alarm_info();	
-		*sent=0;
+		if(*times==MAX_COUNT_TIMES && !(*alarm))
+		{	
+			//need send server alarm
+			if(cmd==atoi(ID_CAP_CO))
+				co_flash_alarm();
+			json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
+			json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
+			json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+			json=add_item(json,ID_DEVICE_PORT,(char *)"9517");
+			if(value<min)
+			{
+				*alarm|=ALARM_BELOW;
+				json=add_item(json,ID_ALARM_TYPE,ID_ALERT_BELOW);
+			}
+			else
+			{
+				*alarm|=ALARM_UP;
+				json=add_item(json,ID_ALARM_TYPE,ID_ALERT_UP);
+			}
+			save_sensor_alarm_info();	
+			*sent=0;
+		}
 	}
+	printfLog(CAP_PROCESS"count_sensor_value <== %s\n",json);
 	return json;
 }
 void update_dwin_real_value(char *id,int value)
@@ -431,12 +439,14 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(cmd[5]<<8|cmd[6]);
 					}
-					printfLog(CAP_PROCESS"Value %d\n",value);
+					//printfLog(CAP_PROCESS"1 Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
+					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
+					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					message=add_item(message,id,data);
-					//printfLog(CAP_PROCESS"id %s data %s\r\n==>\n%s\n",id,data,post_message);
+					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
 				}
 			}
@@ -717,7 +727,7 @@ int cap_board_mon()
 	{
 		if(read(g_share_memory->fd_com,&ch,1)==1)
 		{
-			printfLog(CAP_PROCESS"==> %02X\n",ch);
+			//printfLog(CAP_PROCESS"==> %02X\n",ch);
 			switch (state)
 			{
 				case STATE_IDLE:
@@ -782,6 +792,8 @@ int cap_board_mon()
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
 					show_cap_value(to_check+2,message_len);
+					printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
+						message_type);
 					if(g_share_memory->factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)
@@ -867,7 +879,6 @@ int cap_init()
 		printfLog(CAP_PROCESS"set_opt cap error");
 		return -1;
 	}
-	g_share_memory->factory_mode=NORMAL_MODE;
 	fpid=fork();
 	if(fpid==0)
 	{
