@@ -14,7 +14,6 @@ key_t	shmid_history_temp;
 key_t	shmid_history_shidu;
 key_t	shmid_history_pm25;
 key_t	shmid_share_memory;
-
 int main(int argc, char *argv[])
 {
 	int fpid;	
@@ -72,6 +71,39 @@ int main(int argc, char *argv[])
 	get_sensor_alarm_info();
 	get_uuid();
 	get_net_interface();
+	if((g_share_memory->fd_com=open_com_port("/dev/ttySP0"))<0)
+	{
+		printfLog(MAIN_PROCESS"open_port cap error");
+		return -1;
+	}
+	if(set_opt(g_share_memory->fd_com,9600,8,'N',1)<0)
+	{
+		printfLog(MAIN_PROCESS"set_opt cap error");
+		return -1;
+	}
+	if((g_share_memory->fd_gprs=open_com_port("/dev/ttySP2"))<0)
+	{
+		printfLog(MAIN_PROCESS"open_port gprs error");
+		return -1;
+	}
+	if(set_opt(g_share_memory->fd_gprs,115200,8,'N',1)<0)
+	{
+		printfLog(MAIN_PROCESS"set_opt gprs error");
+		close(g_share_memory->fd_gprs);
+		return -1;
+	}
+	if((g_share_memory->fd_lcd=open_com_port("/dev/ttySP1"))<0)
+	{
+		printfLog(MAIN_PROCESS"open_port lcd error");
+		return -1;
+	}
+	if(set_opt(g_share_memory->fd_lcd,115200,8,'N',1)<0)
+	{
+		printfLog(MAIN_PROCESS" set_opt lcd error");
+		close(g_share_memory->fd_lcd);
+		return -1;
+	}
+
 	xfer_init();
 	if((fpid=fork())==0)
 	{

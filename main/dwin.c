@@ -2011,6 +2011,7 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_TUN_ZERO && (TOUCH_TUN_ZERO+0x100)==data)
 	{//verify sensor display
 		g_index=TUN_ZERO_PAGE;
+		g_share_memory->sensor_interface_mem[0]=0x1234;
 		ask_interface();
 		clear_buf(ADDR_TUN_ZERO_HCHO,4);
 		clear_buf(ADDR_TUN_ZERO_CO,4);
@@ -2537,17 +2538,6 @@ void lcd_loop()
 int lcd_init()
 {
 	int fpid = 0;
-	if((g_share_memory->fd_lcd=open_com_port("/dev/ttySP1"))<0)
-	{
-		printfLog(LCD_PROCESS"open_port lcd error");
-		return -1;
-	}
-	if(set_opt(g_share_memory->fd_lcd,115200,8,'N',1)<0)
-	{
-		printfLog(LCD_PROCESS" set_opt lcd error");
-		close(g_share_memory->fd_lcd);
-		return -1;
-	}
 	fpid=fork();
 	if(fpid==0)
 	{

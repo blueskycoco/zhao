@@ -6,6 +6,7 @@
 #define MISC_PROCESS	"[MISC] "
 #define RTCDEV 			"/dev/rtc0"
 #define ETH_NAME "ra0"
+extern int fd_com;
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;

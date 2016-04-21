@@ -4,7 +4,7 @@
 #include "netlib.h"
 #include "xfer.h"
 #define CAP_PROCESS "[CAP_PROCESS] "
-
+extern int fd_lcd,fd_com;
 int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
 extern char g_uuid[256];
@@ -872,16 +872,6 @@ int cap_init()
         printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);
     }*/
-	if((g_share_memory->fd_com=open_com_port("/dev/ttySP0"))<0)
-	{
-		printfLog(CAP_PROCESS"open_port cap error");
-		return -1;
-	}
-	if(set_opt(g_share_memory->fd_com,9600,8,'N',1)<0)
-	{
-		printfLog(CAP_PROCESS"set_opt cap error");
-		return -1;
-	}
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -891,7 +881,8 @@ int cap_init()
 		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
 		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
 		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);
-		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);
+		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
+
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)

@@ -9,17 +9,6 @@ extern struct share_memory *g_share_memory;
 
 int xfer_init()
 {
-	if((g_share_memory->fd_gprs=open_com_port("/dev/ttySP2"))<0)
-	{
-		printfLog(UPLOAD_PROCESS"open_port gprs error");
-		return -1;
-	}
-	if(set_opt(g_share_memory->fd_gprs,115200,8,'N',1)<0)
-	{
-		printfLog(UPLOAD_PROCESS"set_opt gprs error");
-		close(g_share_memory->fd_gprs);
-		return -1;
-	}
 	pthread_mutex_init(&mutex, NULL);
 	return 0;
 }
