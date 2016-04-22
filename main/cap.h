@@ -733,4 +733,6 @@ extern key_t  shmid_history_pm25;
 #define STATE_CRC 6
 
 int cap_init();
+void return_zero_point(int co);
+
 #endif
