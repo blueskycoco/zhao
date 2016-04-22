@@ -871,7 +871,6 @@ void ask_interface()
 	printfLog(MISC_PROCESS"going to ask_interface begin\n");
 	for(i=0;i<7;i++)
 		printfLog("%02x ",cmd[i]);
-	printfLog("\ngoing to ask_interface end\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 	i=0;
 	while(1)
@@ -879,6 +878,7 @@ void ask_interface()
 		if(i>20)
 			break;
 		sleep(1);
+		printfLog(MISC_PROCESS"sensor_interface_mem[0] %x\n",g_share_memory->sensor_interface_mem[0]);
 		if(g_share_memory->sensor_interface_mem[0]==0x0000)
 			break;
 		else
@@ -886,6 +886,7 @@ void ask_interface()
 		i++;
 			
 	}
+	printfLog(MISC_PROCESS"\ngoing to ask_interface end\n");
 }
 void buzzer(int data)
 {

@@ -1170,8 +1170,8 @@ void jiaozhun(int on,char sensor,char jp)
 			int crc=CRC_check((unsigned char *)cmd_verify,6);
 			cmd_verify[6]=(crc&0xff00)>>8;cmd_verify[7]=crc&0x00ff;		
 			for(i=0;i<sizeof(cmd_verify);i++)
-				printfLog(LCD_PROCESS"%02X ",cmd_verify[i]);
-			printfLog(LCD_PROCESS"\n");
+				printfLog("%02X ",cmd_verify[i]);
+			printfLog("\n");
 			write(g_share_memory->fd_com,cmd_verify,sizeof(cmd_verify));
 		}
 	}
@@ -1461,8 +1461,13 @@ void tun_zero(int on)
 	}
 	else
 	{
-		return_zero_point(1);
-		return_zero_point(0);
+		if(g_share_memory->factory_mode==TUN_ZERO_MODE)
+		{
+			return_zero_point(1);
+			sleep(1);
+			return_zero_point(0);
+			sleep(1);
+		}
 		printfLog(LCD_PROCESS"Stop Co,ch2o tun zero\n");
 		#if 0
 		for(i=0;i<11;i++)

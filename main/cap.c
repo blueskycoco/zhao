@@ -791,7 +791,7 @@ int cap_board_mon()
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					show_cap_value(to_check+2,message_len);
+					//show_cap_value(to_check+2,message_len);
 					printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
 						message_type);
 					if(g_share_memory->factory_mode==NORMAL_MODE)
@@ -845,7 +845,10 @@ int cap_board_mon()
 							show_verify_point();
 						}
 						else
-						show_factory(0,cmd,message_len+7);
+						{
+							if(message_type!=0x0001)
+								show_factory(0,cmd,message_len+7);
+						}
 					}
 					free(cmd);
 					return 0;											
