@@ -91,8 +91,8 @@ void clear_point()
 	write(g_share_memory->fd_lcd,off5,sizeof(off5));
 	write(g_share_memory->fd_lcd,off6,sizeof(off6));
 	write(g_share_memory->fd_lcd,off7,sizeof(off7));
-	clear_buf(ADDR_VERIFY_VALUE,5);
-	clear_buf(ADDR_REAL_VALUE,5);
+	clear_buf(ADDR_XIUZHENG,10);
+	clear_buf(ADDR_JIAOZHUN_REAL,10);
 }
 
 void clear_buf(int addr,int len)
@@ -135,19 +135,19 @@ void show_sensor_network()
 	if((g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
 		&&(!g_share_memory->network_state))
-		pic=STATE_E_E_PAGE;
+		pic=STATE_PAGE_I_I;
 	else if((g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
 		&&(g_share_memory->network_state))
-		pic=STATE_E_O_PAGE;
+		pic=STATE_PAGE_I_O;
 	else if(!(g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
 		&&(g_share_memory->network_state))
-		pic=STATE_O_O_PAGE;
+		pic=STATE_PAGE_O_O;
 	else if(!(g_share_memory->sensor_state[SENSOR_CO] || g_share_memory->sensor_state[SENSOR_CO2] || g_share_memory->sensor_state[SENSOR_HCHO] 
 		|| g_share_memory->sensor_state[SENSOR_SHIDU] || g_share_memory->sensor_state[SENSOR_TEMP] || g_share_memory->sensor_state[SENSOR_PM25])
 		&&(!g_share_memory->network_state))
-		pic=STATE_O_E_PAGE;
+		pic=STATE_PAGE_O_I;
 	switch_pic(pic);
 }
 
@@ -160,37 +160,37 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_CO]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_CO_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_CO_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_CO]/7);
-			write_string(ADDR_CO_PAGE_TOTAL,tmp,strlen(tmp));
-			write_string(ADDR_CO_LIST_TIME_0,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].time,
+			write_string(ADDR_CO_PAGE_ALL,tmp,strlen(tmp));
+			write_string(ADDR_CO_TIME_0,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].time));
-			write_string(ADDR_CO_LIST_DATA_0,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].data,
+			write_string(ADDR_CO_DATA_0,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].data));
-			write_string(ADDR_CO_LIST_TIME_1,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].time,
+			write_string(ADDR_CO_TIME_1,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].time));
-			write_string(ADDR_CO_LIST_DATA_1,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].data,
+			write_string(ADDR_CO_DATA_1,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-2].data));
-			write_string(ADDR_CO_LIST_TIME_2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].time,
+			write_string(ADDR_CO_TIME_2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].time));
-			write_string(ADDR_CO_LIST_DATA_2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].data,
+			write_string(ADDR_CO_DATA_2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-3].data));
-			write_string(ADDR_CO_LIST_TIME_3,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].time,
+			write_string(ADDR_CO_TIME_3,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].time));
-			write_string(ADDR_CO_LIST_DATA_3,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].data,
+			write_string(ADDR_CO_DATA_3,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-4].data));
-			write_string(ADDR_CO_LIST_TIME_4,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].time,
+			write_string(ADDR_CO_TIME_4,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].time));
-			write_string(ADDR_CO_LIST_DATA_4,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].data,
+			write_string(ADDR_CO_DATA_4,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-5].data));
-			write_string(ADDR_CO_LIST_TIME_5,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].time,
+			write_string(ADDR_CO_TIME_5,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].time));
-			write_string(ADDR_CO_LIST_DATA_5,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].data,
+			write_string(ADDR_CO_DATA_5,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-6].data));
-			write_string(ADDR_CO_LIST_TIME_6,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].time,
+			write_string(ADDR_CO_TIME_6,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].time,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].time));
-			write_string(ADDR_CO_LIST_DATA_6,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].data,
+			write_string(ADDR_CO_DATA_6,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].data,
 				strlen(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-7].data));
 		}
 	}
@@ -200,37 +200,37 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_CO2]-offset-7)>0)
 		{			
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_CO2_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_CO2_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_CO2]/7);			
-			write_string(ADDR_CO2_PAGE_TOTAL,tmp,strlen(tmp));
-			write_string(ADDR_CO2_LIST_TIME_0,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].time,
+			write_string(ADDR_CO2_PAGE_ALL,tmp,strlen(tmp));
+			write_string(ADDR_CO2_TIME_0,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].time));
-			write_string(ADDR_CO2_LIST_DATA_0,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].data,
+			write_string(ADDR_CO2_DATA_0,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].data));
-			write_string(ADDR_CO2_LIST_TIME_1,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].time,
+			write_string(ADDR_CO2_TIME_1,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].time));
-			write_string(ADDR_CO2_LIST_DATA_1,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].data,
+			write_string(ADDR_CO2_DATA_1,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-2].data));
-			write_string(ADDR_CO2_LIST_TIME_2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].time,
+			write_string(ADDR_CO2_TIME_2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].time));
-			write_string(ADDR_CO2_LIST_DATA_2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].data,
+			write_string(ADDR_CO2_DATA_2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-3].data));
-			write_string(ADDR_CO2_LIST_TIME_3,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].time,
+			write_string(ADDR_CO2_TIME_3,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].time));
-			write_string(ADDR_CO2_LIST_DATA_3,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].data,
+			write_string(ADDR_CO2_DATA_3,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-4].data));
-			write_string(ADDR_CO2_LIST_TIME_4,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].time,
+			write_string(ADDR_CO2_TIME_4,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].time));
-			write_string(ADDR_CO2_LIST_DATA_4,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].data,
+			write_string(ADDR_CO2_DATA_4,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-5].data));
-			write_string(ADDR_CO2_LIST_TIME_5,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].time,
+			write_string(ADDR_CO2_TIME_5,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].time));
-			write_string(ADDR_CO2_LIST_DATA_5,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].data,
+			write_string(ADDR_CO2_DATA_5,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-6].data));
-			write_string(ADDR_CO2_LIST_TIME_6,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].time,
+			write_string(ADDR_CO2_TIME_6,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].time,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].time));
-			write_string(ADDR_CO2_LIST_DATA_6,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].data,
+			write_string(ADDR_CO2_DATA_6,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].data,
 				strlen(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-7].data));
 		}
 	}
@@ -240,37 +240,37 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_HCHO]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_HCHO_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_HCHO_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_HCHO]/7);			
-			write_string(ADDR_HCHO_PAGE_TOTAL,tmp,strlen(tmp));		
-			write_string(ADDR_HCHO_LIST_TIME_0,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].time,
+			write_string(ADDR_HCHO_PAGE_ALL,tmp,strlen(tmp));		
+			write_string(ADDR_HCHO_TIME_0,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].time));
-			write_string(ADDR_HCHO_LIST_DATA_0,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].data,
+			write_string(ADDR_HCHO_DATA_0,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].data));
-			write_string(ADDR_HCHO_LIST_TIME_1,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].time,
+			write_string(ADDR_HCHO_TIME_1,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].time));
-			write_string(ADDR_HCHO_LIST_DATA_1,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].data,
+			write_string(ADDR_HCHO_DATA_1,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-2].data));
-			write_string(ADDR_HCHO_LIST_TIME_2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].time,
+			write_string(ADDR_HCHO_TIME_2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].time));
-			write_string(ADDR_HCHO_LIST_DATA_2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].data,
+			write_string(ADDR_HCHO_DATA_2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-3].data));
-			write_string(ADDR_HCHO_LIST_TIME_3,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].time,
+			write_string(ADDR_HCHO_TIME_3,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].time));
-			write_string(ADDR_HCHO_LIST_DATA_3,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].data,
+			write_string(ADDR_HCHO_DATA_3,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-4].data));
-			write_string(ADDR_HCHO_LIST_TIME_4,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].time,
+			write_string(ADDR_HCHO_TIME_4,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].time));
-			write_string(ADDR_HCHO_LIST_DATA_4,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].data,
+			write_string(ADDR_HCHO_DATA_4,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-5].data));
-			write_string(ADDR_HCHO_LIST_TIME_5,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].time,
+			write_string(ADDR_HCHO_TIME_5,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].time));
-			write_string(ADDR_HCHO_LIST_DATA_5,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].data,
+			write_string(ADDR_HCHO_DATA_5,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-6].data));
-			write_string(ADDR_HCHO_LIST_TIME_6,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].time,
+			write_string(ADDR_HCHO_TIME_6,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].time,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].time));
-			write_string(ADDR_HCHO_LIST_DATA_6,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].data,
+			write_string(ADDR_HCHO_DATA_6,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].data,
 				strlen(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].data));
 		}
 	}
@@ -280,37 +280,37 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_SHIDU]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_SHIDU_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_SHIDU_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_SHIDU]/7);			
-			write_string(ADDR_SHIDU_PAGE_TOTAL,tmp,strlen(tmp));		
-			write_string(ADDR_SHIDU_LIST_TIME_0,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].time,
+			write_string(ADDR_SHIDU_PAGE_ALL,tmp,strlen(tmp));		
+			write_string(ADDR_SHIDU_TIME_0,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].time));
-			write_string(ADDR_SHIDU_LIST_DATA_0,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].data,
+			write_string(ADDR_SHIDU_DATA_0,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].data));
-			write_string(ADDR_SHIDU_LIST_TIME_1,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].time,
+			write_string(ADDR_SHIDU_TIME_1,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].time));
-			write_string(ADDR_SHIDU_LIST_DATA_1,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].data,
+			write_string(ADDR_SHIDU_DATA_1,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-2].data));
-			write_string(ADDR_SHIDU_LIST_TIME_2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].time,
+			write_string(ADDR_SHIDU_TIME_2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].time));
-			write_string(ADDR_SHIDU_LIST_DATA_2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].data,
+			write_string(ADDR_SHIDU_DATA_2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-3].data));
-			write_string(ADDR_SHIDU_LIST_TIME_3,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].time,
+			write_string(ADDR_SHIDU_TIME_3,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].time));
-			write_string(ADDR_SHIDU_LIST_DATA_3,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].data,
+			write_string(ADDR_SHIDU_DATA_3,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-4].data));
-			write_string(ADDR_SHIDU_LIST_TIME_4,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].time,
+			write_string(ADDR_SHIDU_TIME_4,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].time));
-			write_string(ADDR_SHIDU_LIST_DATA_4,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].data,
+			write_string(ADDR_SHIDU_DATA_4,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-5].data));
-			write_string(ADDR_SHIDU_LIST_TIME_5,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].time,
+			write_string(ADDR_SHIDU_TIME_5,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].time));
-			write_string(ADDR_SHIDU_LIST_DATA_5,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].data,
+			write_string(ADDR_SHIDU_DATA_5,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-6].data));
-			write_string(ADDR_SHIDU_LIST_TIME_6,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].time,
+			write_string(ADDR_SHIDU_TIME_6,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].time,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].time));
-			write_string(ADDR_SHIDU_LIST_DATA_6,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].data,
+			write_string(ADDR_SHIDU_DATA_6,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].data,
 				strlen(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-7].data));
 		}
 	}
@@ -320,37 +320,37 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_TEMP]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_TEMP_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_TEMP_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_TEMP]/7);			
-			write_string(ADDR_TEMP_PAGE_TOTAL,tmp,strlen(tmp));
-			write_string(ADDR_TEMP_LIST_TIME_0,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time,
+			write_string(ADDR_TEMP_PAGE_ALL,tmp,strlen(tmp));
+			write_string(ADDR_TEMP_TIME_0,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time));
-			write_string(ADDR_TEMP_LIST_DATA_0,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].data,
+			write_string(ADDR_TEMP_DATA_0,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].data));
-			write_string(ADDR_TEMP_LIST_TIME_1,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time,
+			write_string(ADDR_TEMP_TIME_1,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time));
-			write_string(ADDR_TEMP_LIST_DATA_1,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].data,
+			write_string(ADDR_TEMP_DATA_1,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].data));
-			write_string(ADDR_TEMP_LIST_TIME_2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time,
+			write_string(ADDR_TEMP_TIME_2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time));
-			write_string(ADDR_TEMP_LIST_DATA_2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].data,
+			write_string(ADDR_TEMP_DATA_2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].data));
-			write_string(ADDR_TEMP_LIST_TIME_3,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time,
+			write_string(ADDR_TEMP_TIME_3,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time));
-			write_string(ADDR_TEMP_LIST_DATA_3,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].data,
+			write_string(ADDR_TEMP_DATA_3,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].data));
-			write_string(ADDR_TEMP_LIST_TIME_4,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time,
+			write_string(ADDR_TEMP_TIME_4,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time));
-			write_string(ADDR_TEMP_LIST_DATA_4,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].data,
+			write_string(ADDR_TEMP_DATA_4,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].data));
-			write_string(ADDR_TEMP_LIST_TIME_5,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time,
+			write_string(ADDR_TEMP_TIME_5,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time));
-			write_string(ADDR_TEMP_LIST_DATA_5,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].data,
+			write_string(ADDR_TEMP_DATA_5,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].data));
-			write_string(ADDR_TEMP_LIST_TIME_6,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time,
+			write_string(ADDR_TEMP_TIME_6,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time));
-			write_string(ADDR_TEMP_LIST_DATA_6,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].data,
+			write_string(ADDR_TEMP_DATA_6,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].data,
 				strlen(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].data));
 		}
 	}
@@ -360,44 +360,44 @@ void show_history(char *id,int offset)
 		if((g_share_memory->cnt[SENSOR_PM25]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
-			write_string(ADDR_PM25_PAGE_NUM,tmp,strlen(tmp));
+			write_string(ADDR_PM25_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_PM25]/7);			
-			clear_buf(ADDR_PM25_LIST_DATA_0,4);
-			clear_buf(ADDR_PM25_LIST_DATA_1,4);
-			clear_buf(ADDR_PM25_LIST_DATA_2,4);
-			clear_buf(ADDR_PM25_LIST_DATA_3,4);
-			clear_buf(ADDR_PM25_LIST_DATA_4,4);
-			clear_buf(ADDR_PM25_LIST_DATA_5,4);
-			clear_buf(ADDR_PM25_LIST_DATA_6,4);
-			write_string(ADDR_PM25_PAGE_TOTAL,tmp,strlen(tmp));
-			write_string(ADDR_PM25_LIST_TIME_0,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time,
+			clear_buf(ADDR_PM25_DATA_0,4);
+			clear_buf(ADDR_PM25_DATA_1,4);
+			clear_buf(ADDR_PM25_DATA_2,4);
+			clear_buf(ADDR_PM25_DATA_3,4);
+			clear_buf(ADDR_PM25_DATA_4,4);
+			clear_buf(ADDR_PM25_DATA_5,4);
+			clear_buf(ADDR_PM25_DATA_6,4);
+			write_string(ADDR_PM25_PAGE_ALL,tmp,strlen(tmp));
+			write_string(ADDR_PM25_TIME_0,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time));
-			write_string(ADDR_PM25_LIST_DATA_0,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].data,
+			write_string(ADDR_PM25_DATA_0,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].data));
-			write_string(ADDR_PM25_LIST_TIME_1,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].time,
+			write_string(ADDR_PM25_TIME_1,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].time));
-			write_string(ADDR_PM25_LIST_DATA_1,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].data,
+			write_string(ADDR_PM25_DATA_1,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-2].data));
-			write_string(ADDR_PM25_LIST_TIME_2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].time,
+			write_string(ADDR_PM25_TIME_2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].time));
-			write_string(ADDR_PM25_LIST_DATA_2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].data,
+			write_string(ADDR_PM25_DATA_2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-3].data));
-			write_string(ADDR_PM25_LIST_TIME_3,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].time,
+			write_string(ADDR_PM25_TIME_3,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].time));
-			write_string(ADDR_PM25_LIST_DATA_3,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].data,
+			write_string(ADDR_PM25_DATA_3,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-4].data));
-			write_string(ADDR_PM25_LIST_TIME_4,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].time,
+			write_string(ADDR_PM25_TIME_4,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].time));
-			write_string(ADDR_PM25_LIST_DATA_4,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].data,
+			write_string(ADDR_PM25_DATA_4,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-5].data));
-			write_string(ADDR_PM25_LIST_TIME_5,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].time,
+			write_string(ADDR_PM25_TIME_5,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].time));
-			write_string(ADDR_PM25_LIST_DATA_5,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].data,
+			write_string(ADDR_PM25_DATA_5,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-6].data));
-			write_string(ADDR_PM25_LIST_TIME_6,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].time,
+			write_string(ADDR_PM25_TIME_6,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].time));
-			write_string(ADDR_PM25_LIST_DATA_6,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].data,
+			write_string(ADDR_PM25_DATA_6,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].data,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-7].data));
 		}
 	}
@@ -412,7 +412,7 @@ void wifi_handle()
 	FILE *fp;
 	//clear_buf(fd,WIFI_AP_NAME_ADDR,20);
 	//clear_buf(fd,WIFI_AP_PWD_ADDR,20);
-	if(read_dgus(ADDR_AP_NAME,10,ap_name) && read_dgus(ADDR_AP_PASSWD,10,ap_passwd))
+	if(read_dgus(ADDR_AP_NAME,10,ap_name) && read_dgus(ADDR_AP_KEY,10,ap_passwd))
 	{
 		printfLog(LCD_PROCESS"AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
 		if(strlen(ap_passwd)<8||strlen(ap_name)==0)
@@ -497,7 +497,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"CO");
-			write_string(ADDR_CURVE_DATE, sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time,10);
 			memcpy(temp,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time+11,2);
@@ -556,7 +556,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"CO2");
-			write_string(ADDR_CURVE_DATE, sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time,10);
 			memcpy(temp,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time+11,2);
@@ -615,7 +615,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"HCHO");
-			write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
 			memcpy(temp,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time+11,2);
@@ -677,7 +677,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[4],"00");	
 			//strcpy(info,"Humidity");
 			sprintf(info,"%s",info_l);
-			write_string(ADDR_CURVE_DATE, sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time,10);
 			memcpy(temp,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time+11,2);
@@ -739,7 +739,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[4],"00");	
 			//strcpy(info,"Temperature");
 			sprintf(info,"%s",info_l);
-			write_string(ADDR_CURVE_DATE, sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time,10);
 			memcpy(temp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time+11,2);
@@ -799,7 +799,7 @@ void show_curve(char *id,int* offset)
 			strcpy(index_time[3],"06");
 			strcpy(index_time[4],"00");	
 			strcpy(info,"PM25");
-			write_string(ADDR_CURVE_DATE, sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
+			//write_string(ADDR_CURVE_DATE, sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
 			memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
 			strcpy(hour1,"24");
 			memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time+11,2);
@@ -844,7 +844,7 @@ void show_curve(char *id,int* offset)
 			*offset=0;
 	}
 	//write index
-	clear_buf(ADDR_CURVE_TYPE,10);
+	/*clear_buf(ADDR_CURVE_TYPE,10);
 	clear_buf(ADDR_CURVE_DATA_5,16);
 	clear_buf(ADDR_CURVE_DATA_4,16);
 	clear_buf(ADDR_CURVE_DATA_3,16);
@@ -860,7 +860,7 @@ void show_curve(char *id,int* offset)
 	write_string(ADDR_CURVE_DATA_4, index[1], strlen(index[1]));
 	write_string(ADDR_CURVE_DATA_3, index[2], strlen(index[2]));
 	write_string(ADDR_CURVE_DATA_2, index[3], strlen(index[3]));
-	write_string(ADDR_CURVE_DATA_1, index[4], strlen(index[4]));
+	write_string(ADDR_CURVE_DATA_1, index[4], strlen(index[4]));*/
 	draw_curve(buf,j);
 }
 int read_dgus(int addr,char len,char *out)
@@ -898,22 +898,22 @@ void display_time(int year,int mon,int day,int hour,int min,int seconds)
 {
 	char buf[5]={0};
 	sprintf(buf,"%d",year);
-	write_string(ADDR_TIME_YEAR,buf,4);
+	write_string(ADDR_YEAR,buf,4);
 	memset(buf,0,5);
 	sprintf(buf,"%d",day);
-	write_string(ADDR_TIME_DAY,buf,2);
+	write_string(ADDR_MON,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",mon);
-	write_string(ADDR_TIME_MONTH,buf,2);
+	write_string(ADDR_DAY,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",hour);
-	write_string(ADDR_TIME_HOUR,buf,2);
+	write_string(ADDR_HOUR,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",min);
-	write_string(ADDR_TIME_MIN,buf,2);
+	write_string(ADDR_MIN,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",seconds);
-	write_string(ADDR_TIME_SECOND,buf,2);
+	write_string(ADDR_SEC,buf,2);
 }
 int verify_pwd(char *username,char *passwd)
 {
@@ -998,40 +998,40 @@ void log_in()
 {
 	char user_name[256]={0};
 	char passwd[256]={0};
-	if(read_dgus(ADDR_USER_NAME_VERIFY,5,user_name) && read_dgus(ADDR_USER_PWD_VERIFY,5,passwd))
+	if(read_dgus(ADDR_LOGIN_USER_NAME,16,user_name) && read_dgus(ADDR_LOGIN_USER_KEY,16,passwd))
 	{
 		printfLog(LCD_PROCESS"User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
-			if(g_index!=SYSTEM_SET_PAGE)
+			if(g_index!=SYSTEM_SETTING_PAGE)
 			{
 				if(g_share_memory->history_done)
-					switch_pic(CURVE_PAGE);
+					;//switch_pic(CURVE_PAGE); ?
 				else
 					switch_pic(MAIN_PAGE);	
 			}
 			else
-				switch_pic(SENSOR_TEST_PAGE);
+				switch_pic(SENSOR_SETTING_PAGE);
 			return;
 		}
 	}
-	if(g_index!=SYSTEM_SET_PAGE)
+	if(g_index!=SYSTEM_SETTING_PAGE)
 		switch_pic(MAIN_PAGE);
 	else
-		switch_pic(SYSTEM_SET_PAGE);
+		switch_pic(SENSOR_SETTING_PAGE);
 }
 void show_cur_select_intr(int sel)
 {
 	char name[256]={0};
-	clear_buf(ADDR_CUR_SELECT,10);	
+	clear_buf(ADDR_CURRENT_SELECT,10);	
 	interface_to_string(sel,name);
-	write_string(ADDR_CUR_SELECT,name,strlen(name));
+	write_string(ADDR_CURRENT_SELECT,name,strlen(name));
 }
 void show_cur_interface(int page)
 {
 	char name[256]={0};
-	if(page==INTERFACE_SELECT_PAGE)
-	{
+	//if(page==INTERFACE_PAGE)
+	//{
 		clear_buf(ADDR_INTERFACE_1,10);
 		clear_buf(ADDR_INTERFACE_2,10);
 		clear_buf(ADDR_INTERFACE_3,10);
@@ -1065,7 +1065,7 @@ void show_cur_interface(int page)
 		write_string(ADDR_INTERFACE_10,name,strlen(name));
 		interface_to_string(g_share_memory->sensor_interface_mem[10],name);
 		write_string(ADDR_INTERFACE_11,name,strlen(name));
-	}
+	/*}
 	else
 	{
 		clear_buf(ADDR_VERIFY_HCHO,10);
@@ -1101,7 +1101,7 @@ void show_cur_interface(int page)
 		write_string(ADDR_VERIFY_FENGSU,name,strlen(name));
 		interface_to_string(g_share_memory->sensor_interface_mem[10],name);
 		write_string(ADDR_VERIFY_QIYA,name,strlen(name));
-	}
+	}*/
 	
 }
 void set_lcd_time(char *buf)
@@ -1124,9 +1124,9 @@ void manul_set_time()
 	char hour[3]={0};
 	char min[3]={0};
 	char second[3]={0};
-	if(read_dgus(ADDR_TIME_YEAR,2,year) && read_dgus(ADDR_TIME_DAY,1,day)
-		&& read_dgus(ADDR_TIME_MONTH,1,mon) && read_dgus(ADDR_TIME_HOUR,1,hour)
-		&& read_dgus(ADDR_TIME_MIN,1,min) && read_dgus(ADDR_TIME_SECOND,1,second))
+	if(read_dgus(ADDR_YEAR,2,year) && read_dgus(ADDR_DAY,1,day)
+		&& read_dgus(ADDR_MON,1,mon) && read_dgus(ADDR_HOUR,1,hour)
+		&& read_dgus(ADDR_MIN,1,min) && read_dgus(ADDR_SEC,1,second))
 	{
 		if(atoi(year)>0 && atoi(mon)>0 && atoi(mon)<=12 && atoi(day)>0 && atoi(day)<=31
 			&& atoi(hour)>=0 && atoi(hour)<=23 && atoi(min)>=0 && atoi(min)<=59
@@ -1178,7 +1178,7 @@ void jiaozhun(int on,char sensor,char jp)
 	else
 	{
 		
-		switch_pic(SENSOR_TEST_PAGE);
+		switch_pic(SENSOR_SETTING_PAGE);
 		if(g_share_memory->factory_mode==SENSOR_VERIFY_MODE)
 		{
 			g_share_memory->factory_mode=NORMAL_MODE;
@@ -1191,7 +1191,7 @@ int getxiuzhen()
 {
 	char data[10]={0};
 	int d=0,p_get=0,y=0;
-	if(read_dgus(ADDR_VERIFY_VALUE,5,data))
+	if(read_dgus(ADDR_XIUZHENG,5,data))
 	{
 		printfLog(LCD_PROCESS"===>%s\n",data);
 		if(strchr(data,'.')!=NULL)
@@ -1307,7 +1307,7 @@ void show_point(int index,char sensor)
 				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe7,0x02,0x21};
 	char cmd[64]={0};
 	sprintf(cmd,"%f",g_share_memory->x[index]);
-	write_string(ADDR_VERIFY_VALUE,cmd,strlen(cmd));
+	write_string(ADDR_XIUZHENG,cmd,strlen(cmd));
 	//send_return(fd,sensor,index);
 	switch(index)
 	{
@@ -1561,8 +1561,8 @@ unsigned short input_handle(char *input)
 	{
 		if(g_index==TUN_ZERO_PAGE)
 			lcd_on(TUN_ZERO_PAGE);
-		else if(g_index==VERIFY_SELECT_PAGE)
-			lcd_on(VERIFY_SELECT_PAGE);
+		else if(g_index==INTERFACE_PAGE)
+			lcd_on(INTERFACE_PAGE);
 		else if(g_index==VERIFY_PAGE)
 			lcd_on(VERIFY_PAGE);
 		else
@@ -1574,7 +1574,7 @@ unsigned short input_handle(char *input)
 		alarm(0);
 		alarm(300);
 	}
-	if(addr==TOUCH_RUN_TIME_CO && (TOUCH_RUN_TIME_CO+0x100)==data)
+	if(addr==TOUCH_CO_REAL_1 && (TOUCH_CO_REAL_1+0x100)==data)
 	{//show history CO the first page
 		if(logged)
 		{
@@ -1598,7 +1598,7 @@ unsigned short input_handle(char *input)
 		}
 		g_index=LIST_CO_PAGE;
 	}
-	else if(addr==TOUCH_RUN_TIME_CO2 && (TOUCH_RUN_TIME_CO2+0x100)==data)
+	else if(addr==TOUCH_CO2_REAL_1 && (TOUCH_CO2_REAL_1+0x100)==data)
 	{//show history CO2 the first page
 		if(logged)
 		{
@@ -1622,7 +1622,7 @@ unsigned short input_handle(char *input)
 		}
 		g_index=LIST_CO2_PAGE;
 	}	
-	else if(addr==TOUCH_RUN_TIME_HCHO && (TOUCH_RUN_TIME_HCHO+0x100)==data)
+	else if(addr==TOUCH_HCHO_REAL_1 && (TOUCH_HCHO_REAL_1+0x100)==data)
 	{//show history HCHO the first page	
 		if(logged)
 		{
@@ -1646,7 +1646,7 @@ unsigned short input_handle(char *input)
 		}
 		g_index=LIST_HCHO_PAGE;
 	}	
-	else if(addr==TOUCH_RUN_TIME_SHIDU && (TOUCH_RUN_TIME_SHIDU+0x100)==data)
+	else if(addr==TOUCH_SHIDU_REAL_1 && (TOUCH_SHIDU_REAL_1+0x100)==data)
 	{//show history SHIDU the first page
 		if(logged)
 		{
@@ -1670,7 +1670,7 @@ unsigned short input_handle(char *input)
 		}		
 		g_index=LIST_SHIDU_PAGE;
 	}	
-	else if(addr==TOUCH_RUN_TIME_TEMP && (TOUCH_RUN_TIME_TEMP+0x100)==data)
+	else if(addr==TOUCH_TEMP_REAL_1 && (TOUCH_TEMP_REAL_1+0x100)==data)
 	{//show history TEMPERATURE the first page
 		if(logged)
 		{
@@ -1694,7 +1694,7 @@ unsigned short input_handle(char *input)
 		}		
 		g_index=LIST_TEMP_PAGE;
 	}	
-	else if(addr==TOUCH_RUN_TIME_PM25&& (TOUCH_RUN_TIME_PM25+0x100)==data)
+	else if(addr==TOUCH_PM25_REAL_1&& (TOUCH_PM25_REAL_1+0x100)==data)
 	{//show history PM25 the first page
 		if(logged)
 		{
@@ -1718,7 +1718,7 @@ unsigned short input_handle(char *input)
 		}
 		g_index=LIST_PM25_PAGE;
 	}	
-	else if(addr==TOUCH_CO_REFRESH_PAGE && (TOUCH_CO_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_CO_UPDATE && (TOUCH_CO_UPDATE+0x100)==data)
 	{//show history CO the next page
 		begin_co=0;
 		show_history(ID_CAP_CO,begin_co);
@@ -1739,7 +1739,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_CO,begin_co);
 		}
 	}
-	else if(addr==TOUCH_CO2_REFRESH_PAGE && (TOUCH_CO2_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_CO2_UPDATE && (TOUCH_CO2_UPDATE+0x100)==data)
 	{//show history CO2 the next page
 		begin_co2=0;
 		show_history(ID_CAP_CO2,begin_co2);
@@ -1760,7 +1760,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_CO2,begin_co2);
 		}
 	}
-	else if(addr==TOUCH_HCHO_REFRESH_PAGE && (TOUCH_HCHO_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_HCHO_UPDATE && (TOUCH_HCHO_UPDATE+0x100)==data)
 	{//show history HCHO the next page
 		begin_hcho=0;
 		show_history(ID_CAP_HCHO,begin_hcho);
@@ -1781,7 +1781,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_HCHO,begin_hcho);
 		}
 	}
-	else if(addr==TOUCH_TEMP_REFRESH_PAGE && (TOUCH_TEMP_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_TEMP_UPDATE && (TOUCH_TEMP_UPDATE+0x100)==data)
 	{//show history TEMPERATURE the next page
 		begin_temp=0;
 		show_history(ID_CAP_TEMPERATURE,begin_temp);
@@ -1802,7 +1802,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_TEMPERATURE,begin_temp);
 		}
 	}
-	else if(addr==TOUCH_SHIDU_REFRESH_PAGE&& (TOUCH_SHIDU_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
 	{//show history SHIDU the next page
 		begin_shidu=0;
 		show_history(ID_CAP_SHI_DU,begin_shidu);
@@ -1823,7 +1823,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_SHI_DU,begin_shidu);
 		}
 	}
-	else if(addr==TOUCH_PM25_REFRESH_PAGE && (TOUCH_PM25_REFRESH_PAGE+0x100)==data)
+	else if(addr==TOUCH_PM25_UPDATE && (TOUCH_PM25_UPDATE+0x100)==data)
 	{//show history PM25 the next page
 		begin_pm25=0;
 		show_history(ID_CAP_PM_25,begin_pm25);
@@ -1844,7 +1844,7 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_PM_25,begin_pm25);
 		}
 	}	
-	else if(addr==TOUCH_DEVICE_STATE&& (TOUCH_DEVICE_STATE+0x100)==data)
+	else if(addr==TOUCH_DEVICE_STATE_1&& (TOUCH_DEVICE_STATE_1+0x100)==data)
 	{//show sensor and network state
 		show_sensor_network();
 	}

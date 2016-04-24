@@ -810,22 +810,22 @@ void sync_server(int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
-				clear_buf(ADDR_USER_NAME,40);
-				clear_buf(ADDR_INSTALL_PLACE,60);
-				clear_buf(ADDR_USER_ADDR,40);
-				clear_buf(ADDR_USER_PHONE,40);
-				clear_buf(ADDR_USER_CONTACTER,40);
+				clear_buf(ADDR_INFO_USER_NAME,40);
+				clear_buf(ADDR_INFO_INSTALL_PLACE,60);
+				clear_buf(ADDR_INFO_ADDR,40);
+				clear_buf(ADDR_INFO_PHONE,40);
+				clear_buf(ADDR_INFO_CONTACTER,40);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
-					write_string(ADDR_USER_NAME,cmd,strlen(cmd));
+					write_string(ADDR_INFO_USER_NAME,cmd,strlen(cmd));
 					printfLog(MISC_PROCESS"user_name:%s\n",user_name);
 					free(user_name);
 				}
 				if(user_place && strlen(user_place)>0)
 				{		
 				    code_convert("utf-8","gbk",user_place,strlen(user_place),cmd,256);
-					write_string(ADDR_INSTALL_PLACE,cmd,strlen(cmd));
+					write_string(ADDR_INFO_INSTALL_PLACE,cmd,strlen(cmd));
 					printfLog(MISC_PROCESS"user_place:%s\n",user_place);
 					free(user_place);
 				}
@@ -833,21 +833,21 @@ void sync_server(int resend,int set_local)
 				{
 				
 					code_convert("utf-8","gbk",user_addr,strlen(user_addr),cmd,256);
-					write_string(ADDR_USER_ADDR,cmd,strlen(cmd));					
+					write_string(ADDR_INFO_ADDR,cmd,strlen(cmd));					
 					printfLog(MISC_PROCESS"user_addr:%s\n",user_addr);
 					free(user_addr);
 				}
 				if(user_phone && strlen(user_phone)>0)
 				{
 					code_convert("utf-8","gbk",user_phone,strlen(user_phone),cmd,256);
-					write_string(ADDR_USER_PHONE,cmd,strlen(cmd));					
+					write_string(ADDR_INFO_PHONE,cmd,strlen(cmd));					
 					printfLog(MISC_PROCESS"user_phone:%s\n",user_phone);
 					free(user_phone);
 				}
 				if(user_contraceer && strlen(user_contraceer)>0)
 				{
 					code_convert("utf-8","gbk",user_contraceer,strlen(user_contraceer),cmd,256);
-					write_string(ADDR_USER_CONTACTER,cmd,strlen(cmd));
+					write_string(ADDR_INFO_CONTACTER,cmd,strlen(cmd));
 					printfLog(MISC_PROCESS"user_contraceer:%s\n",user_contraceer);
 					free(user_contraceer);
 				}

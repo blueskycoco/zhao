@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
 	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
 	g_share_memory->factory_mode=NORMAL_MODE;
 	g_share_memory->history_done=0;
+	g_share_memory->ppm=0;
 	get_ip();
 	get_sensor_alarm_info();
 	get_uuid();

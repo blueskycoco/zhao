@@ -222,29 +222,107 @@ char *count_sensor_value(char cmd,char *json,int value)
 }
 void update_dwin_real_value(char *id,int value)
 {
-	if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
+	if(g_share_memory->ppm)
 	{
-		write_data(VAR_DATE_TIME_1,value);
+		if(strncmp(id,ID_CAP_CO_EXT,strlen(ID_CAP_CO_EXT))==0)
+		{
+			write_data(ADDR_CO_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0)
+		{						
+			write_data(ADDR_CO2_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_HCHO_EXT,strlen(ID_CAP_HCHO_EXT))==0)
+		{
+			write_data(ADDR_HCHO_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0)
+		{						
+			write_data(ADDR_CO2_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
+		{
+			write_data(ADDR_O3_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
+		{
+			write_data(ADDR_TEMP_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
+		{
+			write_data(ADDR_SHIDU_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
 	}
-	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-	{						
-		write_data(VAR_DATE_TIME_2,value);
-	}
-	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
+	else
 	{
-		write_data(VAR_DATE_TIME_3,value);
-	}
-	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
-	{
-		write_data(VAR_DATE_TIME_4,value);
-	}
-	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
-	{
-		write_data(VAR_ALARM_TYPE_1,value);
-	}
-	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
-	{
-		write_data(VAR_ALARM_TYPE_2,value);
+		if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
+		{
+			write_data(ADDR_CO_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
+		{						
+			write_data(ADDR_CO2_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
+		{
+			write_data(ADDR_HCHO_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0)
+		{						
+			write_data(ADDR_CO2_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0)
+		{
+			write_data(ADDR_O3_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
+		{
+			write_data(ADDR_TEMP_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
+		{
+			write_data(ADDR_SHIDU_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
+		{
+			write_data(ADDR_PM25_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
+		{
+			write_data(ADDR_PM25_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
+		{
+			write_data(ADDR_PM25_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
+		{
+			write_data(ADDR_PM25_REAL_1,value);
+		}
+		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
+		{
+			write_data(ADDR_PM25_REAL_1,value);
+		}
 	}
 }
 /*
@@ -673,8 +751,8 @@ void show_factory(int zero,char *cmd,int len)
 		{
 			if(cmd[3]==g_share_memory->jiaozhun_sensor)				
 			{
-				clear_buf(ADDR_REAL_VALUE,4);
-				write_string(ADDR_REAL_VALUE,data,strlen(data));
+				clear_buf(ADDR_JIAOZHUN_REAL,4);
+				write_string(ADDR_JIAOZHUN_REAL,data,strlen(data));
 			}
 		}
 	}
@@ -685,28 +763,28 @@ void show_verify_point()
 {
 	char cmd[64]={0};
 	sprintf(cmd,"%f",g_share_memory->p[0]);
-	write_string(ADDR_VERIFY_P_0,cmd,strlen(cmd));
+	write_string(ADDR_VP_0,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[1]);
-	write_string(ADDR_VERIFY_P_1,cmd,strlen(cmd));
+	write_string(ADDR_VP_1,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[2]);
-	write_string(ADDR_VERIFY_P_2,cmd,strlen(cmd));
+	write_string(ADDR_VP_2,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[3]);
-	write_string(ADDR_VERIFY_P_3,cmd,strlen(cmd));
+	write_string(ADDR_VP_3,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[4]);
-	write_string(ADDR_VERIFY_P_4,cmd,strlen(cmd));
+	write_string(ADDR_VP_4,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[5]);
-	write_string(ADDR_VERIFY_P_5,cmd,strlen(cmd));
+	write_string(ADDR_VP_5,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[6]);
-	write_string(ADDR_VERIFY_P_6,cmd,strlen(cmd));
+	write_string(ADDR_VP_6,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
 	sprintf(cmd,"%f",g_share_memory->p[7]);
-	write_string(ADDR_VERIFY_P_7,cmd,strlen(cmd));
+	write_string(ADDR_VP_7,cmd,strlen(cmd));
 	clear_point();
 }
 

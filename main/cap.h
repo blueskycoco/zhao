@@ -41,13 +41,19 @@
 //#include "dwin.h"
 #include "log.h"
 
-#define SENSOR_NO		10
+#define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
 #define SENSOR_HCHO		2
 #define SENSOR_TEMP		3
 #define SENSOR_SHIDU	4
 #define SENSOR_PM25		5
+#define	SENSOR_PM10		6
+#define	SENSOR_WIND		7
+#define	SENSOR_NOISE	8
+#define	SENSOR_PRESS	9
+#define	SENSOR_TVOC		10
+#define	SENSOR_O3		11
 #define HISTORY_PATH 	"/home/user/history"
 struct nano{
 	char time[20];
@@ -60,6 +66,12 @@ struct history{
 	struct nano *temp;
 	struct nano *shidu;
 	struct nano *pm25;
+	struct nano *pm10;
+	struct nano *wind;
+	struct nano *noise;
+	struct nano *press;
+	struct nano *tvoc;
+	struct nano *o3;
 };
 struct share_memory{
 	long 	cnt[SENSOR_NO];			//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count	
@@ -71,7 +83,7 @@ struct share_memory{
 	char 	alarm[SENSOR_NO];		//alarm state
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times
-	int 	sensor_interface_mem[11];
+	int 	sensor_interface_mem[12];
 	char	factory_mode;
 	int 	jiaozhun_sensor;	
 	int 	cur_ch2o;
@@ -84,6 +96,7 @@ struct share_memory{
 	int 	fd_gprs;	
 	char 	ip[20];	
 	char 	uuid[256];
+	char 	ppm;
 };
 extern struct history sensor_history;
 extern struct share_memory *g_share_memory;
@@ -95,7 +108,561 @@ extern key_t  shmid_history_hcho;
 extern key_t  shmid_history_temp;
 extern key_t  shmid_history_shidu;
 extern key_t  shmid_history_pm25;
+
 #define MAIN_PAGE 				1
+#define MAIN_PAGE_PPM			2
+#define	CURVE_PAGE_HCHO			3
+#define	CURVE_PAGE_PM10			4
+#define	CURVE_PAGE_PM25			5
+#define	CURVE_PAGE_CO			6
+#define	CURVE_PAGE_CO2			7
+#define	CURVE_PAGE_TEMP			8
+#define	CURVE_PAGE_SHIDU		9
+#define	CURVE_PAGE_WIND			10
+#define	CURVE_PAGE_NOISE		11
+#define	CURVE_PAGE_PRESS		12
+#define	CURVE_PAGE_TVOC			13
+#define	CURVE_PAGE_O3			15
+#define LIST_PAGE_PM25			16
+#define LIST_PAGE_CO			17
+#define LIST_PAGE_CO2			18
+#define LIST_PAGE_TEMP			19
+#define LIST_PAGE_SHIDU			20
+#define LIST_PAGE_WIND			21
+#define LIST_PAGE_NOISE			22
+#define LIST_PAGE_PRESS			23
+#define LIST_PAGE_TVOC			24
+#define LIST_PAGE_O3			25
+#define LIST_PAGE_HCHO			26
+#define LIST_PAGE_PM10			27
+#define FACTORY_PAGE			28
+#define PRODUCT_PAGE			29
+#define SENSOR_SETTING_PAGE		30
+#define GPRS_DONE_PAGE			31
+#define WIFI_DONE_PAGE			32
+#define STATE_PAGE_O_O			33
+#define STATE_PAGE_I_O			34
+#define STATE_PAGE_I_I			35
+#define STATE_PAGE_O_I			36
+#define TIME_PAGE_SETTING		39
+#define VERIFY_PAGE				40
+#define XFER_SETTING_PAGE		41
+#define TIME_SETTING_PAGE		42
+#define TUN_ZERO_PAGE			43
+#define LOGIN_PAGE				44
+#define SYSTEM_SETTING_PAGE		45
+#define INTERFACE_PAGE			46
+#define SENSOR_SEL_PAGE			47
+#define USER_INFO_PAGE			49
+#define OFF_PAGE				99
+#define	ADDR_HCHO_REAL_1	0x0000
+#define	ADDR_PM10_REAL_1	0x0001
+#define	ADDR_PM25_REAL_1	0x0002
+#define	ADDR_CO_REAL_1	0x0003
+#define	ADDR_CO2_REAL_1	0x0004
+#define	ADDR_TEMP_REAL_1	0x0005
+#define	ADDR_SHIDU_REAL_1	0x0006
+#define	ADDR_WIND_REAL_1	0x0007
+#define	ADDR_NOISE_REAL_1	0x0008
+#define	ADDR_PRESS_REAL_1	0x0009
+#define	ADDR_TVOC_REAL_1	0x000a
+#define	ADDR_O3_REAL_1	0x000b
+#define	TOUCH_HCHO_REAL_1	0x000c
+#define	TOUCH_PM10_REAL_1	0x000d
+#define	TOUCH_PM25_REAL_1	0x000e
+#define	TOUCH_CO_REAL_1	0x000f
+#define	TOUCH_CO2_REAL_1	0x0010
+#define	TOUCH_TEMP_REAL_1	0x0011
+#define	TOUCH_SHIDU_REAL_1	0x0012
+#define	TOUCH_WIND_REAL_1	0x0013
+#define	TOUCH_NOISE_REAL_1	0x0014
+#define	TOUCH_PRESS_REAL_1	0x0015
+#define	TOUCH_TVOC_REAL_1	0x0016
+#define	TOUCH_O3_REAL_1	0x0017
+#define	TOUCH_DEVICE_STATE_1	0x0018
+#define	TOUCH_PRODUCT_INFO_1	0x0019
+#define	TOUCH_SYSTEM_SETTING_1	0x001a
+#define	TOUCH_CONVERSION_1	0x001b
+#define 	ADDR_CUT_VP_CO_1	0x0ba1
+		
+#define	ADDR_HCHO_REAL_2	0x001c
+#define	ADDR_PM10_REAL_2	0x001d
+#define	ADDR_PM25_REAL_2	0x001e
+#define	ADDR_CO_REAL_2	0x001f
+#define	ADDR_CO2_REAL_2	0x0020
+#define	ADDR_TEMP_REAL_2	0x0021
+#define	ADDR_SHIDU_REAL_2	0x0022
+#define	ADDR_WIND_REAL_2	0x0023
+#define	ADDR_NOISE_REAL_2	0x0024
+#define	ADDR_PRESS_REAL_2	0x0025
+#define	ADDR_TVOC_REAL_2	0x0026
+#define	ADDR_O3_REAL_2	0x0027
+#define	TOUCH_HCHO_REAL_2	0x0028
+#define	TOUCH_PM10_REAL_2	0x0029
+#define	TOUCH_PM25_REAL_2	0x002a
+#define	TOUCH_CO_REAL_2	0x002b
+#define	TOUCH_CO2_REAL_2	0x002c
+#define	TOUCH_TEMP_REAL_2	0x002d
+#define	TOUCH_SHIDU_REAL_2	0x002e
+#define	TOUCH_WIND_REAL_2	0x002f
+#define	TOUCH_NOISE_REAL_2	0x0030
+#define	TOUCH_PRESS_REAL_2	0x0031
+#define	TOUCH_TVOC_REAL_2	0x0032
+#define	TOUCH_O3_REAL_2	0x0033
+#define	TOUCH_DEVICE_STATE_2	0x0034
+#define	TOUCH_PRODUCT_INFO_2	0x0035
+#define	TOUCH_SYSTEM_SETTING_2	0x0036
+#define	TOUCH_CONVERSION_2	0x0037
+#define 	ADDR_CUT_VP_CO_2	0x0baa
+		
+#define	TOUCH_HCHO_HISTORY	0x0038
+#define	TOUCH_HCHO_RETURN	0x0039
+		
+#define	TOUCH_PM10_HISTORY	0x003a
+#define	TOUCH_PM10_RETURN	0x003b
+		
+#define	TOUCH_PM25_HISTORY	0x003c
+#define	TOUCH_PM25_RETURN	0x003d
+		
+#define	TOUCH_CO_HISTORY	0x003e
+#define	TOUCH_CO_RETURN	0x003f
+		
+#define	TOUCH_CO2_HISTORY	0x0040
+#define	TOUCH_CO2_RETURN	0x0041
+		
+#define	TOUCH_TEMP_HISTORY	0x0042
+#define	TOUCH_TEMP_RETURN	0x0043
+		
+#define	TOUCH_SHIDU_HISTORY	0x0044
+#define	TOUCH_SHIDU_RETURN	0x0045
+		
+#define	TOUCH_WIND_HISTORY	0x0046
+#define	TOUCH_WIND_RETURN	0x0047
+		
+#define	TOUCH_NOISE_HISTORY	0x0048
+#define	TOUCH_NOISE_RETURN	0x0049
+		
+#define	TOUCH_PRESS_HISTORY	0x004a
+#define	TOUCH_PRESS_RETURN	0x004b
+		
+#define	TOUCH_TVOC_HISTORY	0x004c
+#define	TOUCH_TVOC_RETURN	0x004d
+		
+#define	TOUCH_O3_HISTORY	0x004e
+#define	TOUCH_O3_RETURN	0x004f
+		
+#define	ADDR_PM25_TIME_0	0x00d3
+#define	ADDR_PM25_DATA_0	0x00e3
+#define	ADDR_PM25_TIME_1	0x00e9
+#define	ADDR_PM25_DATA_1	0x00f9
+#define	ADDR_PM25_TIME_2	0x00ff
+#define	ADDR_PM25_DATA_2	0x010f
+#define	ADDR_PM25_TIME_3	0x0115
+#define	ADDR_PM25_DATA_3	0x0125
+#define	ADDR_PM25_TIME_4	0x012b
+#define	ADDR_PM25_DATA_4	0x013b
+#define	ADDR_PM25_TIME_5	0x0141
+#define	ADDR_PM25_DATA_5	0x0151
+#define	ADDR_PM25_TIME_6	0x0157
+#define	ADDR_PM25_DATA_6	0x0167
+#define	TOUCH_PM25_LAST_PAGE	0x0050
+#define	TOUCH_PM25_NEXT_PAGE	0x0051
+#define	TOUCH_PM25_UPDATE	0x0052
+#define	TOUCH_PM25_HISTORY_RETURN	0x0053
+#define	ADDR_PM25_PAGE_N	0x016d
+#define 	ADDR_PM25_PAGE_ALL	0x0171
+		
+#define	ADDR_CO_TIME_0	0x0175
+#define	ADDR_CO_DATA_0	0x0185
+#define	ADDR_CO_TIME_1	0x018b
+#define	ADDR_CO_DATA_1	0x019b
+#define	ADDR_CO_TIME_2	0x01a1
+#define	ADDR_CO_DATA_2	0x01b1
+#define	ADDR_CO_TIME_3	0x01b7
+#define	ADDR_CO_DATA_3	0x01c7
+#define	ADDR_CO_TIME_4	0x01cd
+#define	ADDR_CO_DATA_4	0x01dd
+#define	ADDR_CO_TIME_5	0x01e3
+#define	ADDR_CO_DATA_5	0x01f3
+#define	ADDR_CO_TIME_6	0x01f9
+#define	ADDR_CO_DATA_6	0x0209
+#define	TOUCH_CO_LAST_PAGE	0x0054
+#define	TOUCH_CO_NEXT_PAGE	0x0055
+#define	TOUCH_CO_UPDATE	0x0056
+#define	TOUCH_CO_HISTORY_RETURN	0x0057
+#define	ADDR_CO_PAGE_N	0x020f
+#define 	ADDR_CO_PAGE_ALL	0x0213
+		
+#define	ADDR_CO2_TIME_0	0x0217
+#define	ADDR_CO2_DATA_0	0x0227
+#define	ADDR_CO2_TIME_1	0x022d
+#define	ADDR_CO2_DATA_1	0x023d
+#define	ADDR_CO2_TIME_2	0x0243
+#define	ADDR_CO2_DATA_2	0x0253
+#define	ADDR_CO2_TIME_3	0x0259
+#define	ADDR_CO2_DATA_3	0x0269
+#define	ADDR_CO2_TIME_4	0x026f
+#define	ADDR_CO2_DATA_4	0x027f
+#define	ADDR_CO2_TIME_5	0x0285
+#define	ADDR_CO2_DATA_5	0x0295
+#define	ADDR_CO2_TIME_6	0x029b
+#define	ADDR_CO2_DATA_6	0x02ab
+#define	TOUCH_CO2_LAST_PAGE	0x0058
+#define	TOUCH_CO2_NEXT_PAGE	0x0059
+#define	TOUCH_CO2_UPDATE	0x005a
+#define	TOUCH_CO2_HISTORY_RETURN	0x005b
+#define	ADDR_CO2_PAGE_N	0x02b1
+#define 	ADDR_CO2_PAGE_ALL	0x02b5
+		
+#define	ADDR_TEMP_TIME_0	0x02b9
+#define	ADDR_TEMP_DATA_0	0x02c9
+#define	ADDR_TEMP_TIME_1	0x02cf
+#define	ADDR_TEMP_DATA_1	0x02df
+#define	ADDR_TEMP_TIME_2	0x02e5
+#define	ADDR_TEMP_DATA_2	0x02f5
+#define	ADDR_TEMP_TIME_3	0x02fb
+#define	ADDR_TEMP_DATA_3	0x030b
+#define	ADDR_TEMP_TIME_4	0x0311
+#define	ADDR_TEMP_DATA_4	0x0321
+#define	ADDR_TEMP_TIME_5	0x0327
+#define	ADDR_TEMP_DATA_5	0x0337
+#define	ADDR_TEMP_TIME_6	0x033d
+#define	ADDR_TEMP_DATA_6	0x034d
+#define	TOUCH_TEMP_LAST_PAGE	0x005c
+#define	TOUCH_TEMP_NEXT_PAGE	0x005d
+#define	TOUCH_TEMP_UPDATE	0x005e
+#define	TOUCH_TEMP_HISTORY_RETURN	0x005f
+#define	ADDR_TEMP_PAGE_N	0x0353
+#define 	ADDR_TEMP_PAGE_ALL	0x0357
+		
+#define	ADDR_SHIDU_TIME_0	0x035b
+#define	ADDR_SHIDU_DATA_0	0x036b
+#define	ADDR_SHIDU_TIME_1	0x0371
+#define	ADDR_SHIDU_DATA_1	0x0381
+#define	ADDR_SHIDU_TIME_2	0x0387
+#define	ADDR_SHIDU_DATA_2	0x0397
+#define	ADDR_SHIDU_TIME_3	0x039d
+#define	ADDR_SHIDU_DATA_3	0x03ad
+#define	ADDR_SHIDU_TIME_4	0x03b3
+#define	ADDR_SHIDU_DATA_4	0x03c3
+#define	ADDR_SHIDU_TIME_5	0x03c9
+#define	ADDR_SHIDU_DATA_5	0x03d9
+#define	ADDR_SHIDU_TIME_6	0x03df
+#define	ADDR_SHIDU_DATA_6	0x03ef
+#define	TOUCH_SHIDU_LAST_PAGE	0x0060
+#define	TOUCH_SHIDU_NEXT_PAGE	0x0061
+#define	TOUCH_SHIDU_UPDATE	0x0062
+#define	TOUCH_SHIDU_HISTORY_RETURN	0x0063
+#define	ADDR_SHIDU_PAGE_N	0x03f5
+#define 	ADDR_SHIDU_PAGE_ALL	0x03f9
+		
+#define	ADDR_WIND_TIME_0	0x03fd
+#define	ADDR_WIND_DATA_0	0x040d
+#define	ADDR_WIND_TIME_1	0x0413
+#define	ADDR_WIND_DATA_1	0x0423
+#define	ADDR_WIND_TIME_2	0x0429
+#define	ADDR_WIND_DATA_2	0x0439
+#define	ADDR_WIND_TIME_3	0x043f
+#define	ADDR_WIND_DATA_3	0x044f
+#define	ADDR_WIND_TIME_4	0x0455
+#define	ADDR_WIND_DATA_4	0x0465
+#define	ADDR_WIND_TIME_5	0x046b
+#define	ADDR_WIND_DATA_5	0x047b
+#define	ADDR_WIND_TIME_6	0x0481
+#define	ADDR_WIND_DATA_6	0x0491
+#define	TOUCH_WIND_LAST_PAGE	0x0064
+#define	TOUCH_WIND_NEXT_PAGE	0x0065
+#define	TOUCH_WIND_UPDATE	0x0066
+#define	TOUCH_WIND_HISTORY_RETURN	0x0067
+#define	ADDR_WIND_PAGE_N	0x0497
+#define 	ADDR_WIND_PAGE_ALL	0x049b
+		
+#define	ADDR_NOISE_TIME_0	0x049f
+#define	ADDR_NOISE_DATA_0	0x04af
+#define	ADDR_NOISE_TIME_1	0x04b5
+#define	ADDR_NOISE_DATA_1	0x04c5
+#define	ADDR_NOISE_TIME_2	0x04cb
+#define	ADDR_NOISE_DATA_2	0x04db
+#define	ADDR_NOISE_TIME_3	0x04e1
+#define	ADDR_NOISE_DATA_3	0x04f1
+#define	ADDR_NOISE_TIME_4	0x04f7
+#define	ADDR_NOISE_DATA_4	0x0507
+#define	ADDR_NOISE_TIME_5	0x050d
+#define	ADDR_NOISE_DATA_5	0x051d
+#define	ADDR_NOISE_TIME_6	0x0523
+#define	ADDR_NOISE_DATA_6	0x0533
+#define	TOUCH_NOISE_LAST_PAGE	0x0068
+#define	TOUCH_NOISE_NEXT_PAGE	0x0069
+#define	TOUCH_NOISE_UPDATE	0x006a
+#define	TOUCH_NOISE_HISTORY_RETURN	0x006b
+#define	ADDR_NOISE_PAGE_N	0x0539
+#define 	ADDR_NOISE_PAGE_ALL	0x053d
+		
+#define	ADDR_PRESS_TIME_0	0x0541
+#define	ADDR_PRESS_DATA_0	0x0551
+#define	ADDR_PRESS_TIME_1	0x0557
+#define	ADDR_PRESS_DATA_1	0x0567
+#define	ADDR_PRESS_TIME_2	0x056d
+#define	ADDR_PRESS_DATA_2	0x057d
+#define	ADDR_PRESS_TIME_3	0x0583
+#define	ADDR_PRESS_DATA_3	0x0593
+#define	ADDR_PRESS_TIME_4	0x0599
+#define	ADDR_PRESS_DATA_4	0x05a9
+#define	ADDR_PRESS_TIME_5	0x05af
+#define	ADDR_PRESS_DATA_5	0x05bf
+#define	ADDR_PRESS_TIME_6	0x05c5
+#define	ADDR_PRESS_DATA_6	0x05d5
+#define	TOUCH_PRESS_LAST_PAGE	0x006c
+#define	TOUCH_PRESS_NEXT_PAGE	0x006d
+#define	TOUCH_PRESS_UPDATE	0x006e
+#define	TOUCH_PRESS_HISTORY_RETURN	0x006f
+#define	ADDR_PRESS_PAGE_N	0x05db
+#define 	ADDR_PRESS_PAGE_ALL	0x05df
+		
+#define	ADDR_TVOC_TIME_0	0x05e3
+#define	ADDR_TVOC_DATA_0	0x05f3
+#define	ADDR_TVOC_TIME_1	0x05f9
+#define	ADDR_TVOC_DATA_1	0x0609
+#define	ADDR_TVOC_TIME_2	0x060f
+#define	ADDR_TVOC_DATA_2	0x061f
+#define	ADDR_TVOC_TIME_3	0x0625
+#define	ADDR_TVOC_DATA_3	0x0635
+#define	ADDR_TVOC_TIME_4	0x063b
+#define	ADDR_TVOC_DATA_4	0x064b
+#define	ADDR_TVOC_TIME_5	0x0651
+#define	ADDR_TVOC_DATA_5	0x0661
+#define	ADDR_TVOC_TIME_6	0x0667
+#define	ADDR_TVOC_DATA_6	0x0677
+#define	TOUCH_TVOC_LAST_PAGE	0x0070
+#define	TOUCH_TVOC_NEXT_PAGE	0x0071
+#define	TOUCH_TVOC_UPDATE	0x0072
+#define	TOUCH_TVOC_HISTORY_RETURN	0x0073
+#define	ADDR_TVOC_PAGE_N	0x067d
+#define 	ADDR_TVOC_PAGE_ALL	0x0681
+		
+#define	ADDR_O3_TIME_0	0x0685
+#define	ADDR_O3_DATA_0	0x0695
+#define	ADDR_O3_TIME_1	0x069b
+#define	ADDR_O3_DATA_1	0x06ab
+#define	ADDR_O3_TIME_2	0x06b1
+#define	ADDR_O3_DATA_2	0x06c1
+#define	ADDR_O3_TIME_3	0x06c7
+#define	ADDR_O3_DATA_3	0x06d7
+#define	ADDR_O3_TIME_4	0x06dd
+#define	ADDR_O3_DATA_4	0x06ed
+#define	ADDR_O3_TIME_5	0x06f3
+#define	ADDR_O3_DATA_5	0x0703
+#define	ADDR_O3_TIME_6	0x0709
+#define	ADDR_O3_DATA_6	0x0719
+#define	TOUCH_O3_LAST_PAGE	0x0074
+#define	TOUCH_O3_NEXT_PAGE	0x0075
+#define	TOUCH_O3_UPDATE	0x0076
+#define	TOUCH_O3_HISTORY_RETURN	0x0077
+#define	ADDR_O3_PAGE_N	0x071f
+#define 	ADDR_O3_PAGE_ALL	0x0723
+		
+#define	ADDR_HCHO_TIME_0	0x0727
+#define	ADDR_HCHO_DATA_0	0x0737
+#define	ADDR_HCHO_TIME_1	0x073d
+#define	ADDR_HCHO_DATA_1	0x074d
+#define	ADDR_HCHO_TIME_2	0x0753
+#define	ADDR_HCHO_DATA_2	0x0763
+#define	ADDR_HCHO_TIME_3	0x0769
+#define	ADDR_HCHO_DATA_3	0x0779
+#define	ADDR_HCHO_TIME_4	0x077f
+#define	ADDR_HCHO_DATA_4	0x078f
+#define	ADDR_HCHO_TIME_5	0x0795
+#define	ADDR_HCHO_DATA_5	0x07a5
+#define	ADDR_HCHO_TIME_6	0x07ab
+#define	ADDR_HCHO_DATA_6	0x07bb
+#define	TOUCH_HCHO_LAST_PAGE	0x0078
+#define	TOUCH_HCHO_NEXT_PAGE	0x0079
+#define	TOUCH_HCHO_UPDATE	0x007a
+#define	TOUCH_HCHO_HISTORY_RETURN	0x007b
+#define	ADDR_HCHO_PAGE_N	0x07c1
+#define 	ADDR_HCHO_PAGE_ALL	0x07c5
+		
+#define	ADDR_PM10_TIME_0	0x07c9
+#define	ADDR_PM10_DATA_0	0x07d9
+#define	ADDR_PM10_TIME_1	0x07df
+#define	ADDR_PM10_DATA_1	0x07ef
+#define	ADDR_PM10_TIME_2	0x07f5
+#define	ADDR_PM10_DATA_2	0x0805
+#define	ADDR_PM10_TIME_3	0x08db
+#define	ADDR_PM10_DATA_3	0x08eb
+#define	ADDR_PM10_TIME_4	0x0821
+#define	ADDR_PM10_DATA_4	0x0831
+#define	ADDR_PM10_TIME_5	0x0837
+#define	ADDR_PM10_DATA_5	0x0847
+#define	ADDR_PM10_TIME_6	0x084d
+#define	ADDR_PM10_DATA_6	0x085d
+#define	TOUCH_PM10_LAST_PAGE	0x007c
+#define	TOUCH_PM10_NEXT_PAGE	0x007d
+#define	TOUCH_PM10_UPDATE	0x007e
+#define	TOUCH_PM10_HISTORY_RETURN	0x007f
+#define	ADDR_PM10_PAGE_N	0x0863
+#define 	ADDR_PM10_PAGE_ALL	0x0867
+		
+#define	TOUCH_FACTORY_INFO_RETURN	0x0080
+		
+#define	TOUCH_PRODUCT_INFO_RETURN	0x0081
+#define	ADDR_PRODUCT_NAME	0x086b
+#define	ADDR_PRODUCT_MODEL	0x088b
+#define	ADDR_PRODUCT_ID	0x08ab
+		
+#define	TOUCH_TUN_ZERO	0x0082
+#define	TOUCH_VERIFY	0x0083
+#define	TOUCH_SEL_INTERFACE	0x0084
+#define	TOUCH_SETTING_RETURN	0x0085
+		
+#define	TOUCH_GPRS_OK	0x0086
+		
+#define	TOUCH_WIFI_OK	0x0087
+		
+#define	TOUCH_TEST_GPRS_1	0x0088
+#define	TOUCH_STATE_RETURN_1	0x0089
+#define 	ADDR_CUT_VP_GPRS_1_1	0x0bb3
+#define 	ADDR_CUT_VP_GPRS_1_2	0x0bbc
+		
+#define	TOUCH_TEST_GPRS_2	0x008a
+#define	TOUCH_STATE_RETURN_2	0x008b
+#define 	ADDR_CUT_VP_GPRS_2_1	0x0bc5
+#define 	ADDR_CUT_VP_GPRS_2_2	0x0bce
+		
+#define	TOUCH_TEST_GPRS_3	0x008c
+#define	TOUCH_STATE_RETURN_3	0x008d
+#define 	ADDR_CUT_VP_GPRS_3_1	0x0bd7
+#define 	ADDR_CUT_VP_GPRS_3_2	0x0be0
+		
+#define	TOUCH_TEST_GPRS_4	0x008e
+#define	TOUCH_STATE_RETURN_4	0x008f
+#define 	ADDR_CUT_VP_GPRS_4_1	0x0be9
+#define 	ADDR_CUT_VP_GPRS_4_2	0x0bf2
+		
+#define	TOUCH_ONE_MINS	0x0090
+#define	TOUCH_FIVE_MINS	0x0091
+#define	TOUCH_TEN_MINS	0x0092
+#define	TOUCH_NEVER_MINS	0x0093
+		
+#define	TOUCH_EXIT_VERIFY	0x0094
+#define	TOUCH_SEL_VP_0	0x0095
+#define	TOUCH_SEL_VP_1	0x0096
+#define	TOUCH_SEL_VP_2	0x0097
+#define	TOUCH_SEL_VP_3	0x0098
+#define	TOUCH_SEL_VP_4	0x0099
+#define	TOUCH_SEL_VP_5	0x009a
+#define	TOUCH_SEL_VP_6	0x009b
+#define	TOUCH_SEL_VP_7	0x009c
+#define	ADDR_VP_0	0x08b5
+#define	ADDR_VP_1	0x08bf
+#define	ADDR_VP_2	0x08c9
+#define	ADDR_VP_3	0x08d3
+#define	ADDR_VP_4	0x08dd
+#define	ADDR_VP_5	0x08e7
+#define	ADDR_VP_6	0x08f1
+#define	ADDR_VP_7	0x08fb
+#define	ADDR_XIUZHENG	0x0905
+#define	ADDR_JIAOZHUN_REAL	0x090f
+#define 	ADDR_CUT_VP_0	0x0b59
+#define 	ADDR_CUT_VP_1	0x0b62
+#define 	ADDR_CUT_VP_2	0x0b6b
+#define 	ADDR_CUT_VP_3	0x0b74
+#define 	ADDR_CUT_VP_4	0x0b7d
+#define 	ADDR_CUT_VP_5	0x0b86
+#define 	ADDR_CUT_VP_6	0x0b8f
+#define 	ADDR_CUT_VP_7	0x0b98
+		
+#define	TOUCH_SEL_GPRS	0x009d
+#define	TOUCH_SEL_WIFI	0x009e
+#define	TOUCH_XFER_OK	0x009f
+#define	TOUCH_XFER_RETURN	0x00a0
+#define	ADDR_XFER_SELECT	0x0919
+#define	ADDR_WIFI_STATUS	0x0921
+#define	ADDR_AP_NAME	0x0941
+#define	ADDR_AP_KEY	0x0961
+		
+#define	ADDR_YEAR	0x0981
+#define	ADDR_MON	0x0985
+#define	ADDR_DAY	0x0987
+#define	ADDR_HOUR	0x0989
+#define	ADDR_MIN	0x098b
+#define	ADDR_SEC	0x098d
+#define	TOUCH_SYNC_SERVER	0x00a7
+#define	TOUCH_TIME_OK	0x00a8
+#define	TOUCH_TIME_RETURN	0x00a9
+		
+#define	TOUCH_TUN_ZERO_START	0x00aa
+#define	TOUCH_TUN_ZERO_END	0x00ab
+#define	TOUCH_TUN_ZERO_RETURN	0x00ac
+#define	ADDR_TUN_ZERO_CO	0x098f
+#define	ADDR_TUN_ZERO_HCHO	0x0995
+		
+#define	TOUCH_LOGIN_OK	0x00ad
+#define	TOUCH_LOGIN_RETURN	0x00ae
+#define	ADDR_LOGIN_USER_NAME	0x099b
+#define	ADDR_LOGIN_USER_KEY	0x09bb
+		
+#define	TOUCH_SENSOR_SETTING	0x00af
+#define	TOUCH_XFER_SETTING	0x00b0
+#define	TOUCH_TIME_SETTING	0x00b1
+#define	TOUCH_USER_INFO	0x00b2
+#define	TOUCH_FACTORY_INFO	0x00b3
+#define	TOUCH_SLEEP_SETTING	0x00b4
+#define	TOUCH_SYSTEM_SETTING_RETURN	0x00b5
+		
+#define	TOUCH_INTRFACE_0	0x00b6
+#define	TOUCH_INTRFACE_1	0x00b7
+#define	TOUCH_INTRFACE_2	0x00b8
+#define	TOUCH_INTRFACE_3	0x00b9
+#define	TOUCH_INTRFACE_4	0x00ba
+#define	TOUCH_INTRFACE_5	0x00bb
+#define	TOUCH_INTRFACE_6	0x00bc
+#define	TOUCH_INTRFACE_7	0x00bd
+#define	TOUCH_INTRFACE_8	0x00be
+#define	TOUCH_INTRFACE_9	0x00bf
+#define	TOUCH_INTRFACE_10	0x00c0
+#define	TOUCH_INTRFACE_11	0x00c1
+#define	TOUCH_INTRFACE_OK	0x00c2
+#define	TOUCH_INTRFACE_RETURN	0x00c3
+#define	ADDR_INTERFACE_0	0x09db
+#define	ADDR_INTERFACE_1	0x09eb
+#define	ADDR_INTERFACE_2	0x09fb
+#define	ADDR_INTERFACE_3	0x0a0b
+#define	ADDR_INTERFACE_4	0x0a1b
+#define	ADDR_INTERFACE_5	0x0a2b
+#define	ADDR_INTERFACE_6	0x0a3b
+#define	ADDR_INTERFACE_7	0x0a4b
+#define	ADDR_INTERFACE_8	0x0a5b
+#define	ADDR_INTERFACE_9	0x0a6b
+#define	ADDR_INTERFACE_10	0x0a7b
+#define	ADDR_INTERFACE_11	0x0a8b
+		
+#define	TOUCH_SEL_HCHO_1	0x00c4
+#define	TOUCH_SEL_HCHO_2	0x00c5
+#define	TOUCH_SEL_CO_1	0x00c6
+#define	TOUCH_SEL_CO_2	0x00c7
+#define	TOUCH_SEL_CO2_1	0x00c8
+#define	TOUCH_SEL_CO2_2	0x00c9
+#define	TOUCH_SEL_WENSHI_1	0x00ca
+#define	TOUCH_SEL_PRESS_1	0x00cb
+#define	TOUCH_SEL_PM25_1	0x00cc
+#define	TOUCH_SEL_NOISE_1	0x00cd
+#define	TOUCH_SEL_WIND_1	0x00ce
+#define	TOUCH_SEL_UNKNOWN_1	0x00cf
+#define	TOUCH_INTERFACE_RETURN	0x00d0
+#define	ADDR_CURRENT_SELECT	0x0a9b
+		
+#define	TOUCH_USER_INFO_RETURN	0x00d1
+#define	ADDR_INFO_USER_NAME	0x0aab
+#define	ADDR_INFO_INSTALL_PLACE	0x0abb
+#define	ADDR_INFO_HANGYE	0x0ae5
+#define	ADDR_INFO_ADDR	0x0b0f
+#define	ADDR_INFO_PHONE	0x0b39
+#define	ADDR_INFO_CONTACTER	0x0b49
+		
+#define	TOUCH_WAKE_UP	0x00d2
+
+#if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
 #define LIST_SHIDU_PAGE 		7
@@ -438,7 +1005,7 @@ extern key_t  shmid_history_pm25;
 #define ADDR_VERIFY_WENSHI		0x0800
 #define ADDR_VERIFY_FENGSU		0x080A
 #define ADDR_VERIFY_QIYA		0x0814
-
+#endif
 #define TYPE_DGRAM_REGISTER				"1"
 #define TYPE_DGRAM_DATA					"2"
 #define TYPE_DGRAM_RE_DATA				"3"
@@ -494,6 +1061,7 @@ extern key_t  shmid_history_pm25;
 #define ID_CAP_WEI_S_WU					"164"
 
 #define ID_CAP_CO_EXT					"260"
+#define ID_CAP_CO2_EXT					"261"
 #define ID_CAP_HCHO_EXT					"262"
 #define ID_CAP_CHOU_YANG_EXT			"270"
 #define ID_CAP_SO2_EXT					"271"
@@ -539,6 +1107,7 @@ extern key_t  shmid_history_pm25;
 #define MAX_PM25	1000
 #define MIN_PM25	0
 #define MAX_COUNT_TIMES 12
+#if 0
 #define STATE_LOGO			0
 #define STATE_MAIN			1
 #define STATE_DETAIL_CO		2
@@ -692,7 +1261,7 @@ extern key_t  shmid_history_pm25;
 #define VAR_ALARM_TYPE_4 0x0111
 #define VAR_RUN_TIME	 0x0112
 #define VAR_REAL_TIME_TEMP 0x0113
-
+#endif
 #define TYPE_SENSOR_CO_WEISHEN	0x0101
 #define TYPE_SENSOR_CO_DD	0x0102
 #define TYPE_SENSOR_CO2_WEISHEN	0x0201
