@@ -1580,23 +1580,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_CO);
 				show_curve(ID_CAP_CO,&curve_co);
 			}
 			else
 			{
-				switch_pic(LIST_CO_PAGE);
+				switch_pic(LIST_PAGE_CO);
 				show_history(ID_CAP_CO,begin_co);
 				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}
-		g_index=LIST_CO_PAGE;
+		g_index=LIST_PAGE_CO;
 	}
 	else if(addr==TOUCH_CO2_REAL_1 && (TOUCH_CO2_REAL_1+0x100)==data)
 	{//show history CO2 the first page
@@ -1604,23 +1604,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_CO2);
 				show_curve(ID_CAP_CO2,&curve_co2);
 			}
 			else
 			{
-				switch_pic(LIST_CO2_PAGE);
+				switch_pic(LIST_PAGE_CO2);
 				show_history(ID_CAP_CO2,begin_co2);
 				//begin_co2=0;
 			}
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);	
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}
-		g_index=LIST_CO2_PAGE;
+		g_index=LIST_PAGE_CO2;
 	}	
 	else if(addr==TOUCH_HCHO_REAL_1 && (TOUCH_HCHO_REAL_1+0x100)==data)
 	{//show history HCHO the first page	
@@ -1628,23 +1628,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_HCHO);
 				show_curve(ID_CAP_HCHO,&curve_hcho);
 			}
 			else
 			{
-				switch_pic(LIST_HCHO_PAGE);
+				switch_pic(LIST_PAGE_HCHO);
 				show_history(ID_CAP_HCHO,begin_hcho);
 				//begin_co=0;
 			}
 		}
 		else
 		{		
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);			
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}
-		g_index=LIST_HCHO_PAGE;
+		g_index=LIST_PAGE_HCHO;
 	}	
 	else if(addr==TOUCH_SHIDU_REAL_1 && (TOUCH_SHIDU_REAL_1+0x100)==data)
 	{//show history SHIDU the first page
@@ -1652,23 +1652,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_SHIDU);
 				show_curve(ID_CAP_SHI_DU,&curve_shidu);
 			}
 			else
 			{
-				switch_pic(LIST_SHIDU_PAGE);
+				switch_pic(LIST_PAGE_SHIDU);
 				show_history(ID_CAP_SHI_DU,begin_shidu);
 				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}		
-		g_index=LIST_SHIDU_PAGE;
+		g_index=LIST_PAGE_SHIDU;
 	}	
 	else if(addr==TOUCH_TEMP_REAL_1 && (TOUCH_TEMP_REAL_1+0x100)==data)
 	{//show history TEMPERATURE the first page
@@ -1676,23 +1676,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_TEMP);
 				show_curve(ID_CAP_TEMPERATURE,&curve_temp);
 			}
 			else
 			{
-				switch_pic(LIST_TEMP_PAGE);
+				switch_pic(LIST_PAGE_TEMP);
 				show_history(ID_CAP_TEMPERATURE,begin_temp);
 				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}		
-		g_index=LIST_TEMP_PAGE;
+		g_index=LIST_PAGE_TEMP;
 	}	
 	else if(addr==TOUCH_PM25_REAL_1&& (TOUCH_PM25_REAL_1+0x100)==data)
 	{//show history PM25 the first page
@@ -1700,23 +1700,23 @@ unsigned short input_handle(char *input)
 		{
 			if(g_share_memory->history_done)
 			{
-				switch_pic(CURVE_PAGE);
+				switch_pic(CURVE_PAGE_PM25);
 				show_curve(ID_CAP_PM_25,&curve_pm25);
 			}
 			else
 			{
-				switch_pic(LIST_PM25_PAGE);
+				switch_pic(LIST_PAGE_PM25);
 				show_history(ID_CAP_PM_25,begin_pm25);
 				//begin_co=0;
 			}
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
 		}
-		g_index=LIST_PM25_PAGE;
+		g_index=LIST_PAGE_PM25;
 	}	
 	else if(addr==TOUCH_CO_UPDATE && (TOUCH_CO_UPDATE+0x100)==data)
 	{//show history CO the next page
@@ -1848,66 +1848,64 @@ unsigned short input_handle(char *input)
 	{//show sensor and network state
 		show_sensor_network();
 	}
-	else if(addr==TOUCH_TIME_SET&& (TOUCH_TIME_SET+0x100)==data)
+	else if(addr==TOUCH_TIME_SETTING&& (TOUCH_TIME_SETTING+0x100)==data)
 	{//set time
-		clear_buf(ADDR_TIME_YEAR,4);
-		clear_buf(ADDR_TIME_MONTH,2);
-		clear_buf(ADDR_TIME_DAY,2);
-		clear_buf(ADDR_TIME_HOUR,2);
-		clear_buf(ADDR_TIME_MIN,2);
-		clear_buf(ADDR_TIME_SECOND,2);
+		clear_buf(ADDR_YEAR,4);
+		clear_buf(ADDR_MON,2);
+		clear_buf(ADDR_DAY,2);
+		clear_buf(ADDR_HOUR,2);
+		clear_buf(ADDR_MIN,2);
+		clear_buf(ADDR_SEC,2);
 		//switch_pic(fd_lcd, TIME_SETTING_PAGE);
 	}
-	else if(addr==TOUCH_SELECT_OK&& (TOUCH_SELECT_OK+0x100)==data)
+	else if(addr==TOUCH_XFER_OK&& (TOUCH_XFER_OK+0x100)==data)
 	{//WiFi Passwd changed
 		g_share_memory->send_by_wifi=wifi_select;
 		if(wifi_select)
 		{
 			wifi_handle();
-			switch_pic(WIFI_PAGE);
+			switch_pic(WIFI_DONE_PAGE);
 		}
 		else
-			switch_pic(GPRS_PAGE);
+			switch_pic(GPRS_DONE_PAGE);
 		set_net_interface();		
 	}
-	else if((addr==TOUCH_SELECT_WIFI)&& (TOUCH_SELECT_WIFI+0x100)==data)
+	else if((addr==TOUCH_SEL_WIFI)&& (TOUCH_SEL_WIFI+0x100)==data)
 	{//WiFi Passwd changed
 		//wifi_handle(fd_lcd);
 		wifi_select=1;
 		//set_net_interface();
-		write_string(ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
+		write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
 	}
-	else if(addr==TOUCH_SELECT_RETURN&& (TOUCH_SELECT_RETURN+0x100)==data)
+	else if(addr==TOUCH_XFER_RETURN&& (TOUCH_XFER_RETURN+0x100)==data)
 	{//use gprs to xfer
 		wifi_select=g_share_memory->send_by_wifi;
 	}
-	else if(addr==TOUCH_SELECT_GPRS&& (TOUCH_SELECT_GPRS+0x100)==data)
+	else if(addr==TOUCH_SEL_GPRS&& (TOUCH_SEL_GPRS+0x100)==data)
 	{//use gprs to xfer
 		wifi_select=0;
 		//set_net_interface();
-		write_string(ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
+		write_string(ADDR_XFER_SELECT,"GPRS",strlen("GPRS"));
 	}
-	else if(addr==TOUCH_XFER_SET&&(TOUCH_XFER_SET+0x100)==data)
+	else if(addr==TOUCH_XFER_SETTING&&(TOUCH_XFER_SETTING+0x100)==data)
 	{//enter wifi passwd setting
 		clear_buf(ADDR_AP_NAME,20);
-		clear_buf(ADDR_AP_PASSWD,20);
+		clear_buf(ADDR_AP_KEY,20);
 		if(g_share_memory->send_by_wifi)
 		{
-			write_string(ADDR_XFER_MODE,"WIFI",strlen("WIFI"));
+			write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
 		}
 		else
 		{
-			write_string(ADDR_XFER_MODE,"GPRS",strlen("GPRS"));
+			write_string(ADDR_XFER_SELECT,"GPRS",strlen("GPRS"));
 		}
 	}
-	else if((addr==TOUCH_TIME_CHANGE_OK && (TOUCH_TIME_CHANGE_OK+0x100)==data)
-		|| ((addr==TOUCH_TIME_CHANGE_MANUL) && (TOUCH_TIME_CHANGE_MANUL+0x100)==data))
+	else if(addr==TOUCH_TIME_OK && (TOUCH_TIME_OK+0x100)==data)
 	{//manul set time
 		manul_set_time();
-		if(addr==TOUCH_TIME_CHANGE_OK)
-		switch_pic(SYSTEM_SET_PAGE);
+		switch_pic(SYSTEM_SETTING_PAGE);
 	}
-	else if(addr==TOUCH_TIME_CHANGE_SERVER && (TOUCH_TIME_CHANGE_SERVER+0x100)==data)
+	else if(addr==TOUCH_SYNC_SERVER && (TOUCH_SYNC_SERVER+0x100)==data)
 	{//set time from server
 		sync_server(0,0);
 		display_time(g_share_memory->server_time[5]+2000,g_share_memory->server_time[6],g_share_memory->server_time[7],
@@ -1915,98 +1913,98 @@ unsigned short input_handle(char *input)
 		//sleep(3);
 		//switch_pic(fd_lcd,18);
 	}
-	else if(addr==TOUCH_VERIFY_HCHO && (TOUCH_VERIFY_HCHO+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_1 && (TOUCH_INTRFACE_1+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=0;
-		g_share_memory->jiaozhun_sensor=atoi(ID_CAP_HCHO);
+		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_PM25 && (TOUCH_VERIFY_PM25+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_2 && (TOUCH_INTRFACE_2+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;		
 		verify_object=1;
-		g_share_memory->jiaozhun_sensor=atoi(ID_CAP_PM_25);
+		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT3 && (TOUCH_VERIFY_INT3+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_3 && (TOUCH_INTRFACE_3+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=2;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT4 && (TOUCH_VERIFY_INT4+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_4 && (TOUCH_INTRFACE_4+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=3;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT5 && (TOUCH_VERIFY_INT5+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_5 && (TOUCH_INTRFACE_5+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=4;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT6 && (TOUCH_VERIFY_INT6+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_6 && (TOUCH_INTRFACE_6+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=5;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT7 && (TOUCH_VERIFY_INT7+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_7 && (TOUCH_INTRFACE_7+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=6;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_INT8 && (TOUCH_VERIFY_INT8+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_8 && (TOUCH_INTRFACE_8+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=7;
 		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 		jiaozhun(1,verify_object,verify_point);
 	}
-	else if(addr==TOUCH_VERIFY_WENSHI && (TOUCH_VERIFY_WENSHI+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_9 && (TOUCH_INTRFACE_9+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=8;
 		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(ID_CAP_TEMPERATURE);
+		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 	}
-	else if(addr==TOUCH_VERIFY_FENGSU && (TOUCH_VERIFY_FENGSU+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_10 && (TOUCH_INTRFACE_10+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=9;
 		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(ID_CAP_FENG_SU);
+		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 	}
-	else if(addr==TOUCH_VERIFY_QIYA && (TOUCH_VERIFY_QIYA+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_11 && (TOUCH_INTRFACE_11+0x100)==data)
 	{
 		g_index=VERIFY_PAGE;
 		verify_object=10;
 		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(ID_CAP_QI_YA);
+		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
 	}
 	else if(addr==TOUCH_VERIFY && (TOUCH_VERIFY+0x100)==data)
 	{	//verify sensor display
 		g_share_memory->sensor_interface_mem[0]=0x1234;
 		ask_interface();
-		show_cur_interface(VERIFY_SELECT_PAGE);
-		g_index=VERIFY_SELECT_PAGE;
+		show_cur_interface(INTERFACE_PAGE);
+		g_index=SENSOR_SEL_PAGE;
 	}
-	else if(addr==TOUCH_VERIFY_EXIT && (TOUCH_VERIFY_EXIT+0x100)==data)
+	else if(addr==TOUCH_EXIT_VERIFY && (TOUCH_EXIT_VERIFY+0x100)==data)
 	{	//verify sensor display
 		if(verify_point==0)
 			tun_zero(0);
 		verify_point=100;
 		jiaozhun(0,verify_object,verify_point);
 	}
-	else if(addr==ADDR_VERIFY_VALUE)
+	else if(addr==ADDR_XIUZHENG)
 	{
 		char ch;
 		while(read(g_share_memory->fd_lcd,&ch,1)==1);
@@ -2021,7 +2019,7 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_TUN_ZERO_HCHO,4);
 		clear_buf(ADDR_TUN_ZERO_CO,4);
 	}
-	else if(addr==TOUCH_TUN_ZERO_BEGIN && (TOUCH_TUN_ZERO_BEGIN+0x100)==data)
+	else if(addr==TOUCH_TUN_ZERO_START && (TOUCH_TUN_ZERO_START+0x100)==data)
 	{//tun zero point start
 		if(g_share_memory->factory_mode!=TUN_ZERO_MODE)
 		{
@@ -2038,13 +2036,13 @@ unsigned short input_handle(char *input)
 			g_share_memory->factory_mode=NORMAL_MODE;
 		}
 	}
-	else if(addr==TOUCH_INTERFACE_SET && (TOUCH_INTERFACE_SET+0x100)==data)
+	else if(addr==TOUCH_SEL_INTERFACE && (TOUCH_SEL_INTERFACE+0x100)==data)
 	{//set sensor interface
 		g_share_memory->sensor_interface_mem[0]=0x1234;
 		ask_interface();
-		show_cur_interface(INTERFACE_SELECT_PAGE);
+		show_cur_interface(INTERFACE_PAGE);
 	}
-	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
+	else if(addr==TOUCH_INTRFACE_1 && (TOUCH_INTRFACE_1+0x100)==data)
 	{
 		interface_config_no=0;
 		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
