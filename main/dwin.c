@@ -1018,7 +1018,10 @@ void log_in()
 	if(g_index!=SYSTEM_SETTING_PAGE)
 		switch_pic(MAIN_PAGE);
 	else
+	{
 		switch_pic(SENSOR_SETTING_PAGE);
+		ctl_fan(0);
+	}
 }
 void show_cur_select_intr(int sel)
 {
@@ -1440,7 +1443,24 @@ void set_interface()
 	printfLog(LCD_PROCESS"\ngoing to set_interface end\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 }
-
+void ctl_fan(int on)
+{
+	int i =0;
+	char cmd[]=	{0x6c,ARM_TO_CAP,0x00,0x09,0x01,0x00,0x00,0x00};
+	if(on)
+	{
+		cmd[5]=0x01;
+		printfLog("open fan\n");
+	}
+	else
+		printfLog("close fan\n");
+	int crc=CRC_check((unsigned char *)cmd,6);
+	cmd[6]=(crc&0xff00)>>8;cmd[7]=crc&0x00ff;		
+	//for(i=0;i<sizeof(cmd);i++)
+	//	printfLog("%02X ",cmd[i]);
+	//printfLog("\n");
+	write(g_share_memory->fd_com,cmd,sizeof(cmd));
+}
 void tun_zero(int on)
 {
 	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x07,0x01,0x00,0x00,0x00};	
@@ -2255,6 +2275,7 @@ unsigned short input_handle(char *input)
 	{//show history CO2 the first page
 		if(logged)
 		{			
+			ctl_fan(0);
 			switch_pic(SENSOR_SETTING_PAGE);
 		}
 		else
@@ -2583,12 +2604,18 @@ int lcd_init()
 	fpid=fork();
 	if(fpid==0)
 	{
-		sensor_history.co	= (struct nano *)shmat(shmid_history_co,	 0, 0);
-		sensor_history.co2	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
-		sensor_history.hcho = (struct nano *)shmat(shmid_history_hcho,	 0, 0);
-		sensor_history.temp = (struct nano *)shmat(shmid_history_temp,	 0, 0);
-		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,  0, 0);
-		sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
+		sensor_history.co= (struct nano *)shmat(shmid_history_co,0, 0);
+		sensor_history.co2 = (struct nano *)shmat(shmid_history_co2,0, 0);
+		sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
+		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
+		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
+		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);		
+		sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
+		sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
+		sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
+		sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
+		sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
+		sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
 		signal(SIGALRM, lcd_off);

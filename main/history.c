@@ -40,12 +40,18 @@ void load_history(const char *name)
 	char mon_j[3]={0},mon_m[3]={0};
 	char day_j[3]={0},day_m[3]={0};
 	
-	sensor_history.co 	= (struct nano *)shmat(shmid_history_co,	 0, 0);
-	sensor_history.co2 	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
-	sensor_history.hcho = (struct nano *)shmat(shmid_history_hcho,	 0, 0);
-	sensor_history.temp = (struct nano *)shmat(shmid_history_temp,	 0, 0);
-	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,	 0, 0);
-	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
+	sensor_history.co= (struct nano *)shmat(shmid_history_co,0, 0);
+	sensor_history.co2 = (struct nano *)shmat(shmid_history_co2,0, 0);
+	sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
+	sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
+	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
+	sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0); 	
+	sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
+	sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
+	sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
+	sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
+	sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
+	sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
 	g_share_memory 	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 	g_share_memory->history_done = 0;
 	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
@@ -142,6 +148,19 @@ void load_history(const char *name)
 												&(g_share_memory->cnt[SENSOR_TEMP]));
 				set_data(line,ID_CAP_PM_25,		&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),	
 												&(g_share_memory->cnt[SENSOR_PM25]));
+				
+				set_data(line,ID_CAP_FENG_SU,		&(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]]),	
+												&(g_share_memory->cnt[SENSOR_WIND]));
+				set_data(line,ID_CAP_QI_YA,		&(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]]),	
+												&(g_share_memory->cnt[SENSOR_PRESS]));
+				set_data(line,ID_CAP_BUZZY,		&(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]]),	
+												&(g_share_memory->cnt[SENSOR_NOISE]));
+				set_data(line,ID_CAP_TVOC,	&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),	
+												&(g_share_memory->cnt[SENSOR_TVOC]));
+				set_data(line,ID_CAP_CHOU_YANG,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
+												&(g_share_memory->cnt[SENSOR_O3]));
+				set_data(line,ID_CAP_PM_10,		&(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]]),	
+												&(g_share_memory->cnt[SENSOR_PM10]));
 			}
 			else
 			{
@@ -157,6 +176,19 @@ void load_history(const char *name)
 											&(g_share_memory->cnt[SENSOR_TEMP]));
 				set_history_time(file_list[j],line,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),	
 											&(g_share_memory->cnt[SENSOR_PM25]));
+				
+				set_history_time(file_list[j],line,&(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]]),	
+											&(g_share_memory->cnt[SENSOR_WIND]));
+				set_history_time(file_list[j],line,&(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]]),	
+											&(g_share_memory->cnt[SENSOR_PRESS]));
+				set_history_time(file_list[j],line,&(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]]),	
+											&(g_share_memory->cnt[SENSOR_NOISE]));
+				set_history_time(file_list[j],line,&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),	
+											&(g_share_memory->cnt[SENSOR_TVOC]));
+				set_history_time(file_list[j],line,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
+											&(g_share_memory->cnt[SENSOR_O3]));
+				set_history_time(file_list[j],line,&(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]]),	
+											&(g_share_memory->cnt[SENSOR_PM10]));
 			}
 			cnt++;
 		}

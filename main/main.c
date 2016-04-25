@@ -6,13 +6,18 @@
 #define MAIN_PROCESS	"[MainCtlSystem] "
 struct share_memory *g_share_memory;
 struct history sensor_history;
-key_t  	shmid_share_memory;
 key_t	shmid_history_co;
 key_t	shmid_history_co2;
 key_t	shmid_history_hcho;
 key_t	shmid_history_temp;
 key_t	shmid_history_shidu;
 key_t	shmid_history_pm25;
+key_t	shmid_history_wind;
+key_t	shmid_history_noise;
+key_t	shmid_history_o3;
+key_t	shmid_history_press;
+key_t	shmid_history_tvoc;
+key_t	shmid_history_pm10;
 key_t	shmid_share_memory;
 int main(int argc, char *argv[])
 {
@@ -58,12 +63,18 @@ int main(int argc, char *argv[])
         exit(1);
     }	
 	
-	sensor_history.co	= (struct nano *)shmat(shmid_history_co,	 0, 0);
-	sensor_history.co2	= (struct nano *)shmat(shmid_history_co2,	 0, 0);
-	sensor_history.hcho = (struct nano *)shmat(shmid_history_hcho,	 0, 0);
-	sensor_history.temp = (struct nano *)shmat(shmid_history_temp,	 0, 0);
-	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,  0, 0);
-	sensor_history.pm25 = (struct nano *)shmat(shmid_history_pm25,	 0, 0);
+	sensor_history.co= (struct nano *)shmat(shmid_history_co,0, 0);
+	sensor_history.co2 = (struct nano *)shmat(shmid_history_co2,0, 0);
+	sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
+	sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
+	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
+	sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0); 	
+	sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
+	sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
+	sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
+	sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
+	sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
+	sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
 	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
 	g_share_memory->factory_mode=NORMAL_MODE;
 	g_share_memory->history_done=0;

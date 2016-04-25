@@ -108,6 +108,13 @@ extern key_t  shmid_history_hcho;
 extern key_t  shmid_history_temp;
 extern key_t  shmid_history_shidu;
 extern key_t  shmid_history_pm25;
+extern key_t  shmid_history_pm25;
+extern key_t  shmid_history_wind;
+extern key_t  shmid_history_noise;
+extern key_t  shmid_history_o3;
+extern key_t  shmid_history_press;
+extern key_t  shmid_history_tvoc;
+extern key_t  shmid_history_pm10;
 
 #define MAIN_PAGE 				1
 #define MAIN_PAGE_PPM			2

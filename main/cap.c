@@ -70,6 +70,36 @@ void send_server_save_local(char *date,char *message,char save)
 		if(data!=NULL)
 			set_upload_data(ID_CAP_PM_25,&(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]]),
 			&(g_share_memory->cnt[SENSOR_PM25]),data,date);
+		
+		data=doit_data(message,ID_CAP_BUZZY);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_BUZZY,&(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]]),
+			&(g_share_memory->cnt[SENSOR_NOISE]),data,date);
+		
+		data=doit_data(message,ID_CAP_FENG_SU);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_FENG_SU,&(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]]),
+			&(g_share_memory->cnt[SENSOR_WIND]),data,date);
+		
+		data=doit_data(message,ID_CAP_CHOU_YANG);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_CHOU_YANG,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),
+			&(g_share_memory->cnt[SENSOR_O3]),data,date);
+		
+		data=doit_data(message,ID_CAP_QI_YA);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_QI_YA,&(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]]),
+			&(g_share_memory->cnt[SENSOR_PRESS]),data,date);
+		
+		data=doit_data(message,ID_CAP_TVOC);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_TVOC,&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),
+			&(g_share_memory->cnt[SENSOR_TVOC]),data,date);
+		
+		data=doit_data(message,ID_CAP_PM_10);
+		if(data!=NULL)
+			set_upload_data(ID_CAP_PM_10,&(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]]),
+			&(g_share_memory->cnt[SENSOR_PM10]),data,date);
 	}
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
@@ -172,6 +202,60 @@ char *count_sensor_value(char cmd,char *json,int value)
 		max=MAX_PM25;
 		alarm=&(g_share_memory->alarm[SENSOR_PM25]);
 		strcpy(id,ID_CAP_PM_25);
+	}
+	else if(cmd==atoi(ID_CAP_BUZZY))
+	{
+		times=&(g_share_memory->times[SENSOR_NOISE]);
+		sent=&(g_share_memory->sent[SENSOR_NOISE]);
+		min=MIN_NOISE;
+		max=MAX_NOISE;
+		alarm=&(g_share_memory->alarm[SENSOR_NOISE]);
+		strcpy(id,ID_CAP_BUZZY);
+	}
+	else if(cmd==atoi(ID_CAP_QI_YA))
+	{
+		times=&(g_share_memory->times[SENSOR_PRESS]);
+		sent=&(g_share_memory->sent[SENSOR_PRESS]);
+		min=MIN_PRESS;
+		max=MAX_PRESS;
+		alarm=&(g_share_memory->alarm[SENSOR_PRESS]);
+		strcpy(id,ID_CAP_QI_YA);
+	}
+	else if(cmd==atoi(ID_CAP_TVOC))
+	{
+		times=&(g_share_memory->times[SENSOR_TVOC]);
+		sent=&(g_share_memory->sent[SENSOR_TVOC]);
+		min=MIN_TVOC;
+		max=MAX_TVOC;
+		alarm=&(g_share_memory->alarm[SENSOR_TVOC]);
+		strcpy(id,ID_CAP_TVOC);
+	}
+	else if(cmd==atoi(ID_CAP_FENG_SU))
+	{
+		times=&(g_share_memory->times[SENSOR_WIND]);
+		sent=&(g_share_memory->sent[SENSOR_WIND]);
+		min=MIN_WIND;
+		max=MAX_WIND;
+		alarm=&(g_share_memory->alarm[SENSOR_WIND]);
+		strcpy(id,ID_CAP_FENG_SU);
+	}
+	else if(cmd==atoi(ID_CAP_CHOU_YANG))
+	{
+		times=&(g_share_memory->times[SENSOR_O3]);
+		sent=&(g_share_memory->sent[SENSOR_O3]);
+		min=MIN_O3;
+		max=MAX_O3;
+		alarm=&(g_share_memory->alarm[SENSOR_SHIDU]);
+		strcpy(id,ID_CAP_CHOU_YANG);
+	}
+	else if(cmd==atoi(ID_CAP_PM_10))
+	{
+		times=&(g_share_memory->times[SENSOR_PM10]);
+		sent=&(g_share_memory->sent[SENSOR_PM10]);
+		min=MIN_PM10;
+		max=MAX_PM10;
+		alarm=&(g_share_memory->alarm[SENSOR_PM10]);
+		strcpy(id,ID_CAP_PM_10);
 	}
 	if(times!=NULL)
 	{
@@ -362,7 +446,19 @@ char *build_message(char *cmd,int len,char *message)
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_TEMPERATURE,
 									&(g_share_memory->alarm[SENSOR_TEMP]),&(g_share_memory->sent[SENSOR_TEMP]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_PM_25,
-									&(g_share_memory->alarm[SENSOR_PM25]),&(g_share_memory->sent[SENSOR_PM25]));
+									&(g_share_memory->alarm[SENSOR_PM25]),&(g_share_memory->sent[SENSOR_PM25]));					
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_FENG_SU,
+									&(g_share_memory->alarm[SENSOR_WIND]),&(g_share_memory->sent[SENSOR_WIND]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_TVOC,
+									&(g_share_memory->alarm[SENSOR_TVOC]),&(g_share_memory->sent[SENSOR_TVOC]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_CHOU_YANG,
+									&(g_share_memory->alarm[SENSOR_O3]),&(g_share_memory->sent[SENSOR_O3]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_QI_YA,
+									&(g_share_memory->alarm[SENSOR_PRESS]),&(g_share_memory->sent[SENSOR_PRESS]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_BUZZY,
+									&(g_share_memory->alarm[SENSOR_NOISE]),&(g_share_memory->sent[SENSOR_NOISE]));
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_PM_10,
+									&(g_share_memory->alarm[SENSOR_PM10]),&(g_share_memory->sent[SENSOR_PM10]));
 					if(warnning_msg!=NULL)
 						free(warnning_msg);
 					warnning_msg=NULL;
@@ -424,6 +520,37 @@ char *build_message(char *cmd,int len,char *message)
 						g_share_memory->alarm[SENSOR_PM25]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_PM25]=0;
 					}
+					else if(cmd[3]==atoi(ID_CAP_TVOC) && !(g_share_memory->alarm[SENSOR_TVOC] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_TVOC]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_TVOC]=0;
+					}
+					else if(cmd[3]==atoi(ID_CAP_QI_YA) && !(g_share_memory->alarm[SENSOR_PRESS] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_PRESS]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_PRESS]=0;
+					}
+					else if(cmd[3]==atoi(ID_CAP_FENG_SU) && !(g_share_memory->alarm[SENSOR_WIND] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_WIND]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_WIND]=0;
+					}
+					else if(cmd[3]==atoi(ID_CAP_CHOU_YANG) && !(g_share_memory->alarm[SENSOR_O3] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_O3]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_O3]=0;
+					}
+					else if(cmd[3]==atoi(ID_CAP_BUZZY)&& !(g_share_memory->alarm[SENSOR_NOISE] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_NOISE]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_NOISE]=0;
+					}
+					else if(cmd[3]==atoi(ID_CAP_PM_10)&& !(g_share_memory->alarm[SENSOR_PM10] & ALARM_UNINSERT))
+					{
+						g_share_memory->alarm[SENSOR_PM10]|=ALARM_UNINSERT;
+						g_share_memory->sent[SENSOR_PM10]=0;
+					}
+					
 					else 
 						return message;
 					//inform server
@@ -474,6 +601,42 @@ char *build_message(char *cmd,int len,char *message)
 					{
 						clear_alarm(ID_CAP_PM_25,ID_ALERT_UNINSERT);
 						g_share_memory->alarm[SENSOR_PM25]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_FENG_SU) && (g_share_memory->alarm[SENSOR_WIND]&ALARM_UNINSERT))
+					{					
+						clear_alarm(ID_CAP_FENG_SU,ID_ALERT_UNINSERT);						
+						g_share_memory->alarm[SENSOR_WIND]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_CHOU_YANG) && (g_share_memory->alarm[SENSOR_O3]&ALARM_UNINSERT))
+					{
+						clear_alarm(ID_CAP_CHOU_YANG,ID_ALERT_UNINSERT);
+						g_share_memory->alarm[SENSOR_O3]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_BUZZY) && (g_share_memory->alarm[SENSOR_NOISE]&ALARM_UNINSERT))
+					{
+						clear_alarm(ID_CAP_BUZZY,ID_ALERT_UNINSERT);
+						g_share_memory->alarm[SENSOR_NOISE]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_QI_YA) && (g_share_memory->alarm[SENSOR_PRESS]&ALARM_UNINSERT))
+					{
+						clear_alarm(ID_CAP_QI_YA,ID_ALERT_UNINSERT);
+						g_share_memory->alarm[SENSOR_PRESS]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_TVOC)&& (g_share_memory->alarm[SENSOR_TVOC]&ALARM_UNINSERT))
+					{
+						clear_alarm(ID_CAP_TVOC,ID_ALERT_UNINSERT);
+						g_share_memory->alarm[SENSOR_TVOC]&=~ALARM_UNINSERT;	
+						save_sensor_alarm_info();
+					}
+					if(cmd[3]==atoi(ID_CAP_PM_10)&& (g_share_memory->alarm[SENSOR_PM10]&ALARM_UNINSERT))
+					{
+						clear_alarm(ID_CAP_PM_10,ID_ALERT_UNINSERT);
+						g_share_memory->alarm[SENSOR_PM10]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
 					if(message==NULL)
@@ -961,7 +1124,13 @@ int cap_init()
 		sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
 		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
 		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
-		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);
+		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);		
+		sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
+		sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
+		sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
+		sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
+		sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
+		sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
 		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
 
 		signal(SIGALRM, set_upload_flag);
