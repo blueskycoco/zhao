@@ -238,7 +238,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0)
 		{						
-			write_data(ADDR_CO2_REAL_2,value);
+			write_data(ADDR_TVOC_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
 		{
@@ -258,19 +258,19 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
 		{
-			write_data(ADDR_PM25_REAL_2,value);
+			write_data(ADDR_PM10_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
 		{
-			write_data(ADDR_PM25_REAL_2,value);
+			write_data(ADDR_WIND_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
 		{
-			write_data(ADDR_PM25_REAL_2,value);
+			write_data(ADDR_PRESS_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
 		{
-			write_data(ADDR_PM25_REAL_2,value);
+			write_data(ADDR_NOISE_REAL_1,value);
 		}
 	}
 	else
@@ -289,7 +289,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0)
 		{						
-			write_data(ADDR_CO2_REAL_1,value);
+			write_data(ADDR_TVOC_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0)
 		{
@@ -309,19 +309,19 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
 		{
-			write_data(ADDR_PM25_REAL_1,value);
+			write_data(ADDR_PM10_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
 		{
-			write_data(ADDR_PM25_REAL_1,value);
+			write_data(ADDR_WIND_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
 		{
-			write_data(ADDR_PM25_REAL_1,value);
+			write_data(ADDR_PRESS_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
 		{
-			write_data(ADDR_PM25_REAL_1,value);
+			write_data(ADDR_NOISE_REAL_1,value);
 		}
 	}
 }
@@ -869,9 +869,9 @@ int cap_board_mon()
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					//show_cap_value(to_check+2,message_len);
-					printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
-						message_type);
+					show_cap_value(to_check+2,message_len);
+					//printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
+					//	message_type);
 					if(g_share_memory->factory_mode==NORMAL_MODE)
 					{
 						if(message_type == 0x0004)

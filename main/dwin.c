@@ -4,7 +4,7 @@
 #include "netlib.h"
 #include "xfer.h"
 int lcd_state=1;
-char logged=0,g_index=0;
+char logged=0,g_index=0,interface_select=0;
 extern char g_uuid[256];
 extern char ip[20];
 
@@ -1913,82 +1913,191 @@ unsigned short input_handle(char *input)
 		//sleep(3);
 		//switch_pic(fd_lcd,18);
 	}
-	else if(addr==TOUCH_INTRFACE_1 && (TOUCH_INTRFACE_1+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=0;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=0;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);
+		}
+		else
+		{
+			interface_config_no=0;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_2 && (TOUCH_INTRFACE_2+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_2 && (TOUCH_INTERFACE_2+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;		
-		verify_object=1;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;		
+			verify_object=1;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);
+		}
+		else
+		{
+			interface_config_no=1;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_3 && (TOUCH_INTRFACE_3+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_3 && (TOUCH_INTERFACE_3+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=2;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{	
+			g_index=VERIFY_PAGE;
+			verify_object=2;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=2;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_4 && (TOUCH_INTRFACE_4+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_4 && (TOUCH_INTERFACE_4+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=3;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=3;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=3;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_5 && (TOUCH_INTRFACE_5+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_5 && (TOUCH_INTERFACE_5+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=4;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=4;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=4;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_6 && (TOUCH_INTRFACE_6+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_6 && (TOUCH_INTERFACE_6+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=5;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=5;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=5;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_7 && (TOUCH_INTRFACE_7+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_7 && (TOUCH_INTERFACE_7+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=6;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=6;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=6;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_8 && (TOUCH_INTRFACE_8+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_8 && (TOUCH_INTERFACE_8+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=7;
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
-		jiaozhun(1,verify_object,verify_point);
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=7;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=7;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_9 && (TOUCH_INTRFACE_9+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_9 && (TOUCH_INTERFACE_9+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=8;
-		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=8;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));		
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=8;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_10 && (TOUCH_INTRFACE_10+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_10 && (TOUCH_INTERFACE_10+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=9;
-		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=9;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));		
+			jiaozhun(1,verify_object,verify_point);		
+		}
+		else
+		{
+			interface_config_no=9;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
-	else if(addr==TOUCH_INTRFACE_11 && (TOUCH_INTRFACE_11+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_11 && (TOUCH_INTERFACE_11+0x100)==data)
 	{
-		g_index=VERIFY_PAGE;
-		verify_object=10;
-		jiaozhun(1,verify_object,verify_point);
-		g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=10;
+			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			jiaozhun(1,verify_object,verify_point);
+		}
+		else
+		{
+			interface_config_no=10;
+			cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
+			show_cur_select_intr(cur_select_interface);
+			switch_pic(SENSOR_SEL_PAGE);
+		}
 	}
 	else if(addr==TOUCH_VERIFY && (TOUCH_VERIFY+0x100)==data)
 	{	//verify sensor display
@@ -1996,6 +2105,7 @@ unsigned short input_handle(char *input)
 		ask_interface();
 		show_cur_interface(INTERFACE_PAGE);
 		g_index=SENSOR_SEL_PAGE;
+		interface_select=0;
 	}
 	else if(addr==TOUCH_EXIT_VERIFY && (TOUCH_EXIT_VERIFY+0x100)==data)
 	{	//verify sensor display
@@ -2041,85 +2151,9 @@ unsigned short input_handle(char *input)
 		g_share_memory->sensor_interface_mem[0]=0x1234;
 		ask_interface();
 		show_cur_interface(INTERFACE_PAGE);
+		interface_select=1;
 	}
-	else if(addr==TOUCH_INTRFACE_1 && (TOUCH_INTRFACE_1+0x100)==data)
-	{
-		interface_config_no=0;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		//switch_pic(fd_lcd,INTERFACE_SELECT_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_2 && (TOUCH_INTERFACE_2+0x100)==data)
-	{
-		interface_config_no=1;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_3 && (TOUCH_INTERFACE_3+0x100)==data)
-	{
-		interface_config_no=2;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_4 && (TOUCH_INTERFACE_4+0x100)==data)
-	{
-		interface_config_no=3;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_5 && (TOUCH_INTERFACE_5+0x100)==data)
-	{
-		interface_config_no=4;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}		
-	else if(addr==TOUCH_INTERFACE_6 && (TOUCH_INTERFACE_6+0x100)==data)
-	{
-		interface_config_no=5;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_7 && (TOUCH_INTERFACE_7+0x100)==data)
-	{
-		interface_config_no=6;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_8 && (TOUCH_INTERFACE_8+0x100)==data)
-	{
-		interface_config_no=7;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_9 && (TOUCH_INTERFACE_9+0x100)==data)
-	{
-		interface_config_no=8;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_10 && (TOUCH_INTERFACE_10+0x100)==data)
-	{
-		interface_config_no=9;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_INTERFACE_11 && (TOUCH_INTERFACE_11+0x100)==data)
-	{
-		interface_config_no=10;
-		cur_select_interface=g_share_memory->sensor_interface_mem[interface_config_no];
-		show_cur_select_intr(cur_select_interface);
-		switch_pic(INTERFACE_ALL_PAGE);
-	}
-	else if(addr==TOUCH_JIAOZHUN_P0 && (TOUCH_JIAOZHUN_P0+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_0 && (TOUCH_SEL_VP_0+0x100)==data)
 	{
 		if(verify_point!=0)
 		{
@@ -2128,7 +2162,7 @@ unsigned short input_handle(char *input)
 			show_point(0,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P1 && (TOUCH_JIAOZHUN_P1+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_1 && (TOUCH_SEL_VP_1+0x100)==data)
 	{
 		if(verify_point!=1)
 		{
@@ -2138,7 +2172,7 @@ unsigned short input_handle(char *input)
 			show_point(1,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P2 && (TOUCH_JIAOZHUN_P2+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_2 && (TOUCH_SEL_VP_2+0x100)==data)
 	{
 		if(verify_point!=2)
 		{
@@ -2148,7 +2182,7 @@ unsigned short input_handle(char *input)
 			show_point(2,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P3 && (TOUCH_JIAOZHUN_P3+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_3 && (TOUCH_SEL_VP_3+0x100)==data)
 	{
 		if(verify_point!=3)
 		{
@@ -2158,7 +2192,7 @@ unsigned short input_handle(char *input)
 			show_point(3,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P4 && (TOUCH_JIAOZHUN_P4+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_4 && (TOUCH_SEL_VP_4+0x100)==data)
 	{
 		if(verify_point!=4)
 		{
@@ -2168,7 +2202,7 @@ unsigned short input_handle(char *input)
 			show_point(4,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P5 && (TOUCH_JIAOZHUN_P5+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_5 && (TOUCH_SEL_VP_5+0x100)==data)
 	{
 		if(verify_point!=5)
 		{
@@ -2178,7 +2212,7 @@ unsigned short input_handle(char *input)
 			show_point(5,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P6 && (TOUCH_JIAOZHUN_P6+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_6 && (TOUCH_SEL_VP_6+0x100)==data)
 	{
 		if(verify_point!=6)
 		{
@@ -2188,7 +2222,7 @@ unsigned short input_handle(char *input)
 			show_point(6,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_P7 && (TOUCH_JIAOZHUN_P7+0x100)==data)
+	else if(addr==TOUCH_SEL_VP_7 && (TOUCH_SEL_VP_7+0x100)==data)
 	{
 		if(verify_point!=7)
 		{
@@ -2198,15 +2232,7 @@ unsigned short input_handle(char *input)
 			show_point(7,verify_object);
 		}
 	}
-	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
-	{
-		//handle_xiuzhen(1,verify_object,verify_point);
-	}
-	else if(addr==TOUCH_JIAOZHUN_UP && (TOUCH_JIAOZHUN_UP+0x100)==data)
-	{
-		//handle_xiuzhen(0,verify_object,verify_point);
-	}
-	else if(addr==TOUCH_SET_RETURN && (TOUCH_SET_RETURN+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_RETURN2 && (TOUCH_INTERFACE_RETURN2+0x100)==data)
 	{
 		if(interface_config_no!=0)
 		{
@@ -2221,146 +2247,159 @@ unsigned short input_handle(char *input)
 				&& cur_select_interface!=TYPE_SENSOR_FENGSU))
 			g_share_memory->sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printfLog(LCD_PROCESS"save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
-			show_cur_interface(INTERFACE_SELECT_PAGE);
+			show_cur_interface(INTERFACE_PAGE);
 			//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 		}
 	}
-	else if(addr==TOUCH_SENSOR_SET && (TOUCH_SENSOR_SET+0x100)==data)
+	else if(addr==TOUCH_SENSOR_SETTING && (TOUCH_SENSOR_SETTING+0x100)==data)
 	{//show history CO2 the first page
 		if(logged)
 		{			
-			switch_pic(SENSOR_TEST_PAGE);
+			switch_pic(SENSOR_SETTING_PAGE);
 		}
 		else
 		{
-			clear_buf(ADDR_USER_NAME_VERIFY,16);
-			clear_buf(ADDR_USER_PWD_VERIFY,16);
-			switch_pic(LOG_IN_PAGE);	
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);	
 		}
-		g_index=SYSTEM_SET_PAGE;
+		g_index=SYSTEM_SETTING_PAGE;
 	}	
-	else if(addr==TOUCH_INTERFACE_RETURN && (TOUCH_INTERFACE_RETURN+0x100)==data)
+	else if(addr==TOUCH_INTERFACE_RETURN1 && (TOUCH_INTERFACE_RETURN1+0x100)==data)
 	{		
 		//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 	}
 	else if(addr==TOUCH_INTERFACE_OK && (TOUCH_INTERFACE_OK+0x100)==data)
 	{		
+		if(interface_select==1)
 		set_interface();
 		//switch_pic(fd_lcd,SYSTEM_SET_PAGE);
 	}
-	else if(addr==TOUCH_SET_HCHO_1 && (TOUCH_SET_HCHO_1+0x100)==data)
+	else if(addr==TOUCH_SEL_HCHO_1 && (TOUCH_SEL_HCHO_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CH2O_WEISHEN;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_HCHO_2 && (TOUCH_SET_HCHO_2+0x100)==data)
+	else if(addr==TOUCH_SEL_HCHO_2 && (TOUCH_SEL_HCHO_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CH2O_AERSHEN;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_WENSHI_1 && (TOUCH_SET_WENSHI_1+0x100)==data)
+	else if(addr==TOUCH_SEL_WENSHI_1 && (TOUCH_SEL_WENSHI_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_WENSHI_RUSHI;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_PM25_1 && (TOUCH_SET_PM25_1+0x100)==data)
+	else if(addr==TOUCH_SEL_PM25_1 && (TOUCH_SEL_PM25_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_PM25_WEISHEN;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_ZAOSHEN && (TOUCH_SET_ZAOSHEN+0x100)==data)
+	else if(addr==TOUCH_SEL_NOISE_1 && (TOUCH_SEL_NOISE_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_ZHAOSHEN;
 		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_SET_CO_1 && (TOUCH_SET_CO_1+0x100)==data)
+	else if(addr==TOUCH_SEL_CO_1 && (TOUCH_SEL_CO_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO_WEISHEN;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_CO_2 && (TOUCH_SET_CO_2+0x100)==data)
+	else if(addr==TOUCH_SEL_CO_2 && (TOUCH_SEL_CO_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO_DD;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_CO2_1 && (TOUCH_SET_CO2_1+0x100)==data)
+	else if(addr==TOUCH_SEL_CO2_1 && (TOUCH_SEL_CO2_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO2_WEISHEN;
 		show_cur_select_intr(cur_select_interface);
 	}	
-	else if(addr==TOUCH_SET_CO2_2 && (TOUCH_SET_CO2_2+0x100)==data)
+	else if(addr==TOUCH_SEL_CO2_2 && (TOUCH_SEL_CO2_2+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_CO2_RUDIAN;
 		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_SET_FENGSU && (TOUCH_SET_FENGSU+0x100)==data)
+	else if(addr==TOUCH_SEL_WIND_1 && (TOUCH_SEL_WIND_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_FENGSU;
 		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_SET_QIYA && (TOUCH_SET_QIYA+0x100)==data)
+	else if(addr==TOUCH_SEL_PRESS_1 && (TOUCH_SEL_PRESS_1+0x100)==data)
 	{
 		cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
 		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_UNKNOWN&& (TOUCH_UNKNOWN+0x100)==data)
+	else if(addr==TOUCH_SEL_UNKNOWN_1&& (TOUCH_SEL_UNKNOWN_1+0x100)==data)
 	{
 		cur_select_interface=0x00;
 		show_cur_select_intr(cur_select_interface);
 	}
-	else if(addr==TOUCH_SYS_SET_RETURN&& (TOUCH_SYS_SET_RETURN+0x100)==data)
+	else if(addr==TOUCH_SYSTEM_SETTING_RETURN&& (TOUCH_SYSTEM_SETTING_RETURN+0x100)==data)
 	{
 		g_index=MAIN_PAGE;
 	}
-	else if(addr==TOUCH_PRODUCT_INFO && (TOUCH_PRODUCT_INFO+0x100)==data)
+	else if((addr==TOUCH_PRODUCT_INFO_1 && (TOUCH_PRODUCT_INFO_1+0x100)==data)||
+		(addr==TOUCH_PRODUCT_INFO_2 && (TOUCH_PRODUCT_INFO_2+0x100)==data))
 	{//product info
 		clear_buf(ADDR_PRODUCT_NAME,40);
-		clear_buf(ADDR_PRODUCT_MODE,40);
+		clear_buf(ADDR_PRODUCT_MODEL,40);
 		clear_buf(ADDR_PRODUCT_ID,40);
 		write_string(ADDR_PRODUCT_ID,g_share_memory->uuid,strlen(g_share_memory->uuid));
 	}		
-	else if(addr==TOUCH_CURVE_LIST&& (TOUCH_CURVE_LIST+0x100)==data)
+	else if((addr==TOUCH_HCHO_HISTORY&& (TOUCH_HCHO_HISTORY+0x100)==data)||
+			(addr==TOUCH_CO_HISTORY&& (TOUCH_CO_HISTORY+0x100)==data)||
+			(addr==TOUCH_CO2_HISTORY&& (TOUCH_CO2_HISTORY+0x100)==data)||
+			(addr==TOUCH_PRESS_HISTORY&& (TOUCH_PRESS_HISTORY+0x100)==data)||
+			(addr==TOUCH_PM25_HISTORY&& (TOUCH_PM25_HISTORY+0x100)==data)||
+			(addr==TOUCH_PM10_HISTORY&& (TOUCH_PM10_HISTORY+0x100)==data)||
+			(addr==TOUCH_WIND_HISTORY&& (TOUCH_WIND_HISTORY+0x100)==data)||
+			(addr==TOUCH_TVOC_HISTORY&& (TOUCH_TVOC_HISTORY+0x100)==data)||
+			(addr==TOUCH_TEMP_HISTORY&& (TOUCH_TEMP_HISTORY+0x100)==data)||
+			(addr==TOUCH_SHIDU_HISTORY&& (TOUCH_SHIDU_HISTORY+0x100)==data)||
+			(addr==TOUCH_NOISE_HISTORY&& (TOUCH_NOISE_HISTORY+0x100)==data)||
+			(addr==TOUCH_O3_HISTORY&& (TOUCH_O3_HISTORY+0x100)==data))
 	{//show detail in list
 		switch (g_index)
 		{
-			case LIST_CO_PAGE:
+			case CURVE_PAGE_CO:
 			{//co
-				switch_pic(LIST_CO_PAGE);
+				switch_pic(LIST_PAGE_CO);
 				show_history(ID_CAP_CO,begin_co);
 				//begin_co=0;
 			}
 			break;
-			case LIST_CO2_PAGE:
+			case CURVE_PAGE_CO2:
 			{//co2
-				switch_pic(LIST_CO2_PAGE);
+				switch_pic(LIST_PAGE_CO2);
 				show_history(ID_CAP_CO2,begin_co2);
 				//begin_co2=0;
 			}
 			break;
-			case LIST_HCHO_PAGE:
+			case CURVE_PAGE_HCHO:
 			{//hcho
-				switch_pic(LIST_HCHO_PAGE);
+				switch_pic(LIST_PAGE_HCHO);
 				show_history(ID_CAP_HCHO,begin_hcho);
 				//begin_hcho=0;
 			}
 			break;
-			case LIST_SHIDU_PAGE:
+			case CURVE_PAGE_SHIDU:
 			{//shidu
-				switch_pic(LIST_SHIDU_PAGE);
+				switch_pic(LIST_PAGE_SHIDU);
 				show_history(ID_CAP_SHI_DU,begin_shidu);
 				//begin_shidu=0;
 			}
 			break;
-			case LIST_TEMP_PAGE:
+			case CURVE_PAGE_TEMP:
 			{//temp
-				switch_pic(LIST_TEMP_PAGE);
+				switch_pic(LIST_PAGE_TEMP);
 				show_history(ID_CAP_TEMPERATURE,begin_temp);
 				//begin_temp=0;
 			}
 			break;
-			case LIST_PM25_PAGE:
+			case CURVE_PAGE_PM25:
 			{//pm25
-				switch_pic(LIST_PM25_PAGE);
+				switch_pic(LIST_PAGE_PM25);
 				show_history(ID_CAP_PM_25,begin_pm25);
 				//begin_pm25=0;
 			}
@@ -2369,14 +2408,14 @@ unsigned short input_handle(char *input)
 				break;
 		}
 	}
-	else if(addr==TOUCH_USER_RETURN_VERIFY&& (TOUCH_USER_RETURN_VERIFY+0x100)==data)
+	else if(addr==TOUCH_LOGIN_RETURN&& (TOUCH_LOGIN_RETURN+0x100)==data)
 	{
-		if(g_index!=SYSTEM_SET_PAGE)
-			switch_pic(MAIN_PAGE);
+		if(g_index!=MAIN_PAGE && g_index!=MAIN_PAGE_PPM)
+			switch_pic(g_index);
 		else
-			switch_pic(SYSTEM_SET_PAGE);
+			switch_pic(SYSTEM_SETTING_PAGE);
 	}
-	else if(addr==TOUCH_USER_OK_VERIFY&& (TOUCH_USER_OK_VERIFY+0x100)==data)
+	else if(addr==TOUCH_LOGIN_OK&& (TOUCH_LOGIN_OK+0x100)==data)
 	{//Login if didn't 
 		log_in();
 		printfLog(LCD_PROCESS"lcd=>history_done %d\n",g_share_memory->history_done);
@@ -2385,80 +2424,80 @@ unsigned short input_handle(char *input)
 			if(g_share_memory->history_done==0)
 			switch (g_index)
 			{
-			case LIST_CO_PAGE:
+			case CURVE_PAGE_CO:
 			{//co
-				switch_pic(LIST_CO_PAGE);
+				switch_pic(LIST_PAGE_CO);
 				show_history(ID_CAP_CO,begin_co);
 				//begin_co=0;
 			}
 			break;
-			case LIST_CO2_PAGE:
+			case CURVE_PAGE_CO2:
 			{//co2
-				switch_pic(LIST_CO2_PAGE);
+				switch_pic(LIST_PAGE_CO2);
 				show_history(ID_CAP_CO2,begin_co2);
 				//begin_co2=0;
 			}
 			break;
-			case LIST_HCHO_PAGE:
+			case CURVE_PAGE_HCHO:
 			{//hcho
-				switch_pic(LIST_HCHO_PAGE);
+				switch_pic(LIST_PAGE_HCHO);
 				show_history(ID_CAP_HCHO,begin_hcho);
 				//begin_hcho=0;
 			}
 			break;
-			case LIST_SHIDU_PAGE:
+			case CURVE_PAGE_SHIDU:
 			{//shidu
-				switch_pic(LIST_SHIDU_PAGE);
+				switch_pic(LIST_PAGE_SHIDU);
 				show_history(ID_CAP_SHI_DU,begin_shidu);
 				//begin_shidu=0;
 			}
 			break;
-			case LIST_TEMP_PAGE:
+			case CURVE_PAGE_TEMP:
 			{//temp
-				switch_pic(LIST_TEMP_PAGE);
+				switch_pic(LIST_PAGE_TEMP);
 				show_history(ID_CAP_TEMPERATURE,begin_temp);
 				//begin_temp=0;
 			}
 			break;
-			case LIST_PM25_PAGE:
+			case CURVE_PAGE_PM25:
 			{//pm25
-				switch_pic(LIST_PM25_PAGE);
+				switch_pic(LIST_PAGE_PM25);
 				show_history(ID_CAP_PM_25,begin_pm25);
 				//begin_pm25=0;
 			}
 			break;
 			default:
 				break;
-			}
+		}
 			else
 			switch (g_index)
 			{
-				case LIST_CO_PAGE:
+				case LIST_PAGE_CO:
 				{//co
 					show_curve(ID_CAP_CO,&curve_co);
 				}
 				break;
-				case LIST_CO2_PAGE:
+				case LIST_PAGE_CO2:
 				{//co2
 					show_curve(ID_CAP_CO2,&curve_co2);
 				}
 				break;
-				case LIST_HCHO_PAGE:
+				case LIST_PAGE_HCHO:
 				{//hcho
 					show_curve(ID_CAP_HCHO,&curve_hcho);
 				}
 				break;
-				case LIST_SHIDU_PAGE:
+				case LIST_PAGE_SHIDU:
 				{//shidu
 					show_curve(ID_CAP_SHI_DU,&curve_shidu);
 				}
 				break;
-				case LIST_TEMP_PAGE:
+				case LIST_PAGE_TEMP:
 				{//temp
 					show_curve(ID_CAP_TEMPERATURE,&curve_temp);
 				}
 				break;
-				case LIST_PM25_PAGE:
+				case LIST_PAGE_PM25:
 				{//pm25
 					show_curve(ID_CAP_PM_25,&curve_pm25);
 				}
@@ -2468,7 +2507,7 @@ unsigned short input_handle(char *input)
 			}
 		}
 	}
-	return STATE_MAIN;
+	return 0;
 }
 
 void lcd_loop()
