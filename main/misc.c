@@ -6,7 +6,6 @@
 #define MISC_PROCESS	"[MISC] "
 #define RTCDEV 			"/dev/rtc0"
 #define ETH_NAME "ra0"
-extern int fd_com;
 int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 {
 	struct termios newtio,oldtio;
@@ -426,21 +425,42 @@ void get_sensor_alarm_info()
 	g_share_memory->times[SENSOR_SHIDU]	=0;
 	g_share_memory->times[SENSOR_TEMP]	=0;
 	g_share_memory->times[SENSOR_PM25]	=0;
+	g_share_memory->times[SENSOR_WIND]		=0;
+	g_share_memory->times[SENSOR_NOISE]	=0;
+	g_share_memory->times[SENSOR_PRESS]	=0;
+	g_share_memory->times[SENSOR_TVOC]	=0;
+	g_share_memory->times[SENSOR_O3]	=0;
+	g_share_memory->times[SENSOR_PM10]	=0;
+
 	FILE *fp=fopen(CONFIG_FILE,"r");
 	if(fp==NULL)
 	{
-		g_share_memory->alarm[SENSOR_CO]		=0;
+		g_share_memory->alarm[SENSOR_CO]	=0;
 		g_share_memory->alarm[SENSOR_CO2]	=0;
 		g_share_memory->alarm[SENSOR_HCHO]	=0;
 		g_share_memory->alarm[SENSOR_SHIDU]	=0;
 		g_share_memory->alarm[SENSOR_TEMP]	=0;
 		g_share_memory->alarm[SENSOR_PM25]	=0;
+		g_share_memory->alarm[SENSOR_WIND]	=0;
+		g_share_memory->alarm[SENSOR_NOISE]	=0;
+		g_share_memory->alarm[SENSOR_PRESS]	=0;
+		g_share_memory->alarm[SENSOR_TVOC]	=0;
+		g_share_memory->alarm[SENSOR_O3]	=0;
+		g_share_memory->alarm[SENSOR_PM10]	=0;
+
 		g_share_memory->sent[SENSOR_CO]		=0;
-		g_share_memory->sent[SENSOR_CO2]		=0;
+		g_share_memory->sent[SENSOR_CO2]	=0;
 		g_share_memory->sent[SENSOR_HCHO]	=0;
 		g_share_memory->sent[SENSOR_SHIDU]	=0;
 		g_share_memory->sent[SENSOR_TEMP]	=0;
 		g_share_memory->sent[SENSOR_PM25]	=0;
+		g_share_memory->sent[SENSOR_WIND]		=0;
+		g_share_memory->sent[SENSOR_NOISE]	=0;
+		g_share_memory->sent[SENSOR_PRESS]	=0;
+		g_share_memory->sent[SENSOR_TVOC]	=0;
+		g_share_memory->sent[SENSOR_O3]	=0;
+		g_share_memory->sent[SENSOR_PM10]	=0;
+
 		fp=fopen(CONFIG_FILE,"w");
 		fwrite(g_share_memory->alarm,sizeof(char)*SENSOR_NO,1,fp);
 		fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
@@ -455,10 +475,20 @@ void get_sensor_alarm_info()
 	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory->alarm[SENSOR_SHIDU];
 	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory->alarm[SENSOR_TEMP];
 	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory->alarm[SENSOR_PM25];
+	g_share_memory->sensor_state[SENSOR_WIND]	=g_share_memory->alarm[SENSOR_WIND];
+	g_share_memory->sensor_state[SENSOR_NOISE]	=g_share_memory->alarm[SENSOR_NOISE];
+	g_share_memory->sensor_state[SENSOR_PRESS]	=g_share_memory->alarm[SENSOR_PRESS];
+	g_share_memory->sensor_state[SENSOR_TVOC]	=g_share_memory->alarm[SENSOR_TVOC];
+	g_share_memory->sensor_state[SENSOR_O3]		=g_share_memory->alarm[SENSOR_O3];
+	g_share_memory->sensor_state[SENSOR_PM10]	=g_share_memory->alarm[SENSOR_PM10];
+
 	fclose(fp);
-	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
+	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,
+							wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
 		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
-		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25]);
+		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25],
+		g_share_memory->alarm[SENSOR_WIND],g_share_memory->alarm[SENSOR_NOISE],g_share_memory->alarm[SENSOR_PRESS],
+		g_share_memory->alarm[SENSOR_TVOC],g_share_memory->alarm[SENSOR_O3],g_share_memory->alarm[SENSOR_PM10]);
 }
 void save_sensor_alarm_info()
 {
@@ -469,12 +499,22 @@ void save_sensor_alarm_info()
 	g_share_memory->sensor_state[SENSOR_SHIDU]	=g_share_memory->alarm[SENSOR_SHIDU];
 	g_share_memory->sensor_state[SENSOR_TEMP]	=g_share_memory->alarm[SENSOR_TEMP];
 	g_share_memory->sensor_state[SENSOR_PM25]	=g_share_memory->alarm[SENSOR_PM25];
+	g_share_memory->sensor_state[SENSOR_WIND]	=g_share_memory->alarm[SENSOR_WIND];
+	g_share_memory->sensor_state[SENSOR_NOISE]	=g_share_memory->alarm[SENSOR_NOISE];
+	g_share_memory->sensor_state[SENSOR_PRESS]	=g_share_memory->alarm[SENSOR_PRESS];
+	g_share_memory->sensor_state[SENSOR_TVOC]	=g_share_memory->alarm[SENSOR_TVOC];
+	g_share_memory->sensor_state[SENSOR_O3]		=g_share_memory->alarm[SENSOR_O3];
+	g_share_memory->sensor_state[SENSOR_PM10]	=g_share_memory->alarm[SENSOR_PM10];
+	
 	fwrite(g_share_memory->sensor_state,sizeof(char)*SENSOR_NO,1,fp);
 	fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
 	fclose(fp);
-	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",
+	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,
+							wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
 		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
-		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25]);
+		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25],
+		g_share_memory->alarm[SENSOR_WIND],g_share_memory->alarm[SENSOR_NOISE],g_share_memory->alarm[SENSOR_PRESS],
+		g_share_memory->alarm[SENSOR_TVOC],g_share_memory->alarm[SENSOR_O3],g_share_memory->alarm[SENSOR_PM10]);
 }
 void set_net_interface()
 {

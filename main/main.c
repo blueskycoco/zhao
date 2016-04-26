@@ -56,6 +56,36 @@ int main(int argc, char *argv[])
         printfLog(MAIN_PROCESS"Create pm25 history share Error %s/n/a", strerror(errno));  
         exit(1);
     }
+	if((shmid_history_wind = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create wind history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_o3 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create o3 history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_tvoc = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create tvoc history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_noise = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create noise history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_press = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create press history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
+	if((shmid_history_pm10 = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
+	{
+        printfLog(MAIN_PROCESS"Create pm10 history share Error %s/n/a", strerror(errno));  
+        exit(1);
+    }
 	
 	if((shmid_share_memory = shmget(IPC_PRIVATE, sizeof(struct share_memory), PERM)) == -1 )
 	{
@@ -69,12 +99,12 @@ int main(int argc, char *argv[])
 	sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
 	sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
 	sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0); 	
-	sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
-	sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
-	sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
-	sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
-	sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
-	sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
+	sensor_history.pm10= (struct nano *)shmat(shmid_history_pm10,0, 0);
+	sensor_history.noise = (struct nano *)shmat(shmid_history_noise,0, 0);
+	sensor_history.press= (struct nano *)shmat(shmid_history_press,0, 0);
+	sensor_history.tvoc= (struct nano *)shmat(shmid_history_tvoc,0, 0);
+	sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
+	sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
 	g_share_memory->factory_mode=NORMAL_MODE;
 	g_share_memory->history_done=0;

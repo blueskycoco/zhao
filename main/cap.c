@@ -4,11 +4,8 @@
 #include "netlib.h"
 #include "xfer.h"
 #define CAP_PROCESS "[CAP_PROCESS] "
-extern int fd_lcd,fd_com;
 int g_upload=0;
 char *post_message=NULL,*warnning_msg=NULL;
-extern char g_uuid[256];
-extern char ip[20];
 //set g_upload flag to make 10 mins upload once.
 void set_upload_flag(int a)
 {
@@ -135,7 +132,7 @@ char *update_alarm(char *json,char *data,char *alarm,char *sent)
 {
 	if(*alarm&&(!(*sent)))
 	{
-		json=build_alarm_json(json,data);					
+		json=build_alarm_json(json,data);
 		printfLog(CAP_PROCESS"Upload alarm msg :\n%s\n",json);
 		send_server_save_local(NULL,json,0);
 		*sent=1;
@@ -1125,12 +1122,12 @@ int cap_init()
 		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
 		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
 		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);		
-		sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
-		sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
-		sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
-		sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
-		sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
-		sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
+		sensor_history.pm10= (struct nano *)shmat(shmid_history_pm10,0, 0);
+		sensor_history.noise = (struct nano *)shmat(shmid_history_noise,0, 0);
+		sensor_history.press= (struct nano *)shmat(shmid_history_press,0, 0);
+		sensor_history.tvoc= (struct nano *)shmat(shmid_history_tvoc,0, 0);
+		sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
+		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
 
 		signal(SIGALRM, set_upload_flag);

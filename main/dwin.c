@@ -2610,12 +2610,12 @@ int lcd_init()
 		sensor_history.temp= (struct nano *)shmat(shmid_history_temp,0, 0);
 		sensor_history.shidu= (struct nano *)shmat(shmid_history_shidu,0, 0);
 		sensor_history.pm25= (struct nano *)shmat(shmid_history_pm25,0, 0);		
-		sensor_history.pm10= (struct nano *)shmat(shmid_history_co,0, 0);
-		sensor_history.noise = (struct nano *)shmat(shmid_history_co2,0, 0);
-		sensor_history.press= (struct nano *)shmat(shmid_history_hcho,0, 0);
-		sensor_history.tvoc= (struct nano *)shmat(shmid_history_temp,0, 0);
-		sensor_history.o3= (struct nano *)shmat(shmid_history_shidu,0, 0);
-		sensor_history.wind= (struct nano *)shmat(shmid_history_pm25,0, 0);
+		sensor_history.pm10= (struct nano *)shmat(shmid_history_pm10,0, 0);
+		sensor_history.noise = (struct nano *)shmat(shmid_history_noise,0, 0);
+		sensor_history.press= (struct nano *)shmat(shmid_history_press,0, 0);
+		sensor_history.tvoc= (struct nano *)shmat(shmid_history_tvoc,0, 0);
+		sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
+		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
 		signal(SIGALRM, lcd_off);
