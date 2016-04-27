@@ -54,7 +54,7 @@ void printfLog(const char *fmt, ...)
 void init_log(const char *time)
 {
 	pthread_mutex_init(&mutex_log, NULL);  
-	system("rm /mnt/cdrom/log.log");
+	//system("rm /mnt/cdrom/log.log");
 	strcpy(log_name,LOG_PATH);
 	strcat(log_name,time);
 	strcat(log_name,".log");
