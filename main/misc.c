@@ -103,6 +103,31 @@ void dump_curr_time(int fd)
 	//	sprintf(*out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
 	//}
 }
+void read_curr_time(char **out)
+{
+	int retval;
+	struct rtc_time rtc_tm;
+	int fd;
+	fd = open(RTCDEV, O_RDWR);
+	if(fd==-1)
+		return;
+	/* Read the current RTC time/date */
+	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
+	if (retval == -1) {
+		printfLog(MISC_PROCESS"RTC_RD_TIME ioctl error");
+		exit(errno);
+	}
+
+	printfLog(MISC_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
+			rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
+			rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+	if(*out!=NULL)
+	{
+		sprintf(*out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
+	}
+	close(fd);
+}
+
 void set_time(int year,int mon,int day,int hour,int minute,int second)
 {	
 	int fd, retval;

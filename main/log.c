@@ -13,19 +13,22 @@
 #define PATH_BUF_SIZE 	256
 #define LOG_LENGTH		1024
 #define LOG_PATH		"/mnt/cdrom/log"
+unsigned char log_name[256]={0};
 pthread_mutex_t mutex_log;
 void printfLog(const char *fmt, ...)
 {
 	FILE *fp;
 	char file_path[PATH_BUF_SIZE]={0};
+	if(strlen(log_name)==0)
+		return;
 	pthread_mutex_lock(&mutex_log);
-	strcpy(file_path,LOG_PATH);
+	//strcpy(file_path,LOG_PATH);
 	//memcpy(file_path+strlen(LOG_PATH),(char *)(g_share_memory->server_time),10);
-	strcat(file_path,".log");
-	fp = fopen(file_path, "r");
+	//strcat(file_path,".log");
+	fp = fopen(log_name, "r");
 	if (fp == NULL)
 	{
-		fp=fopen(file_path,"w");
+		fp=fopen(log_name,"w");
 		if(fp==NULL)
 		{
 			printf("can not create %s\r\n",file_path);
@@ -36,7 +39,7 @@ void printfLog(const char *fmt, ...)
 	else
 	{
 		fclose(fp);
-		fp=fopen(file_path, "a");
+		fp=fopen(log_name, "a");
 	}
     va_list ap;
     char buf[LOG_LENGTH] = { 0 };
@@ -48,10 +51,14 @@ void printfLog(const char *fmt, ...)
 	fclose(fp);
 	pthread_mutex_unlock(&mutex_log);
 }
-void init_log()
+void init_log(const char *time)
 {
 	pthread_mutex_init(&mutex_log, NULL);  
 	system("rm /mnt/cdrom/log.log");
+	strcpy(log_name,LOG_PATH);
+	strcat(log_name,time);
+	strcat(log_name,".log");
+	printfLog("\n\n\nBegin LOG %s ====>\n",time);
 }
 #if 0
 #define PROCESS1 "[PROCESS1]"

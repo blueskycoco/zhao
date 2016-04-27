@@ -101,7 +101,6 @@ void send_server_save_local(char *date,char *message,char save)
 	send_web_post(URL,message,9,&rcv);
 	if(rcv != NULL)
 	{	
-		//int len = strlen(rcv);
 		free(rcv);
 		rcv=NULL;
 	}			
@@ -764,13 +763,13 @@ void show_cap_value(char *buf,int len)
 			printfLog(CAP_PROCESS"[CAP][NOISY] ");
 			break;
 		case 68:
-			printfLog(CAP_PROCESS"[CAP][FENGSU] ");
+			printfLog(CAP_PROCESS"[CAP][WIND] ");
 			break;
 		case 69:
-			printfLog(CAP_PROCESS"[CAP][QIYA] ");
+			printfLog(CAP_PROCESS"[CAP][PRESS] ");
 			break;
 		case 70:
-			printfLog(CAP_PROCESS"[CAP][CHOUYANG] ");
+			printfLog(CAP_PROCESS"[CAP][O3] ");
 			break;
 		case 71:
 			printfLog(CAP_PROCESS"[CAP][SO2] ");
@@ -815,42 +814,45 @@ void show_cap_value(char *buf,int len)
 			printfLog(CAP_PROCESS"[CAP][WIESHENGWU] ");
 			break;
 		case 260:
-			printfLog(CAP_PROCESS"[CAP][CO_2] ");
+			printfLog(CAP_PROCESS"[CAP][CO_PPM] ");
 			break;
 		case 262:
-			printfLog(CAP_PROCESS"[CAP][CH2O] ");
+			printfLog(CAP_PROCESS"[CAP][HCHO_PPM] ");
 			break;
 		case 270:
-			printfLog(CAP_PROCESS"[CAP][CHOYANG2] ");
+			printfLog(CAP_PROCESS"[CAP][O3_PPM] ");
 			break;
 		case 271:
-			printfLog(CAP_PROCESS"[CAP][SO2_2] ");
+			printfLog(CAP_PROCESS"[CAP][SO2_PPM] ");
 			break;
 		case 274:
-			printfLog(CAP_PROCESS"[CAP][TVOC2] ");
+			printfLog(CAP_PROCESS"[CAP][TVOC_PPM] ");
 			break;
 		case 275:
-			printfLog(CAP_PROCESS"[CAP][BENG_2] ");
+			printfLog(CAP_PROCESS"[CAP][BENG_PPM] ");
 			break;
 		case 276:
-			printfLog(CAP_PROCESS"[CAP][JIABEN_2] ");
+			printfLog(CAP_PROCESS"[CAP][JIABEN_PPM] ");
 			break;
 		case 277:
-			printfLog(CAP_PROCESS"[CAP][ERJIABENG_2] ");
+			printfLog(CAP_PROCESS"[CAP][ERJIABENG_PPM] ");
 			break;
 		case 278:
 			printfLog(CAP_PROCESS"[CAP][ANQI_3] ");
 			break;
 		case 360:
-			printfLog(CAP_PROCESS"[CAP][NO_2] ");
+			printfLog(CAP_PROCESS"[CAP][NO_PPM] ");
 			break;
 		case 361:
-			printfLog(CAP_PROCESS"[CAP][NO2_2] ");
+			printfLog(CAP_PROCESS"[CAP][NO2_PPM] ");
 			break;
 	}
-	for(i=3;i<len+3;i++)
-		printfLog("%02x ",buf[i]);
-	printfLog("\n");
+	if((buf[0]<<8|buf[1]) != 0x0001)
+	{
+		for(i=3;i<len+3;i++)
+			printfLog("%02x ",buf[i]);
+		printfLog("\n");
+	}
 
 }
 
@@ -911,7 +913,7 @@ void show_factory(int zero,char *cmd,int len)
 		{
 			if(cmd[3]==g_share_memory->jiaozhun_sensor)				
 			{
-				clear_buf(ADDR_JIAOZHUN_REAL,4);
+				clear_buf(ADDR_JIAOZHUN_REAL,8);
 				write_string(ADDR_JIAOZHUN_REAL,data,strlen(data));
 			}
 		}

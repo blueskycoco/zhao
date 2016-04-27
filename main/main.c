@@ -22,10 +22,15 @@ key_t	shmid_share_memory;
 int main(int argc, char *argv[])
 {
 	int fpid;	
+	char curr_time[256]={0};
 	//long i;
 	//key_t shmid;
 	signal(SIGCHLD, SIG_IGN);
-	init_log();
+	read_curr_time(&curr_time);
+	if(strlen(curr_time)==0)
+		init_log("no_time");
+	else
+		init_log(curr_time);
 	if((shmid_history_co = shmget(IPC_PRIVATE, sizeof(struct nano)*100000, PERM)) == -1 )
 	{
         printfLog(MAIN_PROCESS"Create co history share Error %s/n/a", strerror(errno));  
@@ -105,7 +110,7 @@ int main(int argc, char *argv[])
 	sensor_history.tvoc= (struct nano *)shmat(shmid_history_tvoc,0, 0);
 	sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
 	sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
-	g_share_memory		= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
+	g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);	
 	g_share_memory->factory_mode=NORMAL_MODE;
 	g_share_memory->history_done=0;
 	g_share_memory->ppm=0;

@@ -108,7 +108,6 @@ extern key_t  shmid_history_hcho;
 extern key_t  shmid_history_temp;
 extern key_t  shmid_history_shidu;
 extern key_t  shmid_history_pm25;
-extern key_t  shmid_history_pm25;
 extern key_t  shmid_history_wind;
 extern key_t  shmid_history_noise;
 extern key_t  shmid_history_o3;
@@ -1113,6 +1112,18 @@ extern key_t  shmid_history_pm10;
 #define MIN_TEMP	(-20)
 #define MAX_PM25	1000
 #define MIN_PM25	0
+#define MIN_NOISE	0
+#define MAX_NOISE	100
+#define	MIN_PRESS	0
+#define MAX_PRESS	100
+#define MIN_TVOC	0
+#define MAX_TVOC	100
+#define MIN_WIND	0
+#define MAX_WIND	100
+#define MIN_O3		0
+#define MAX_O3		100
+#define MIN_PM10	0
+#define MAX_PM10	500
 #define MAX_COUNT_TIMES 12
 #if 0
 #define STATE_LOGO			0
