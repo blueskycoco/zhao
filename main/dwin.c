@@ -159,6 +159,7 @@ void show_sensor_network()
 		&&(!g_share_memory->network_state))
 		pic=STATE_PAGE_O_I;
 	switch_pic(pic);
+	g_index=pic;
 }
 
 void show_history(char *id,int offset)
@@ -1493,7 +1494,7 @@ void log_in()
 void show_cur_select_intr(int sel)
 {
 	char name[256]={0};
-	clear_buf(ADDR_CURRENT_SELECT,10);	
+	clear_buf(ADDR_CURRENT_SELECT,10);
 	interface_to_string(sel,name);
 	write_string(ADDR_CURRENT_SELECT,name,strlen(name));
 }
@@ -1632,6 +1633,7 @@ void jiaozhun(int on,char sensor,char jp)
 	if(on)
 	{
 		switch_pic(VERIFY_PAGE);
+		g_index=VERIFY_PAGE;
 		if(g_share_memory->factory_mode!=SENSOR_VERIFY_MODE)
 		{
 			printfLog(LCD_PROCESS"Begin to JiaoZhun %d\n",sensor);
@@ -1649,11 +1651,11 @@ void jiaozhun(int on,char sensor,char jp)
 	{
 		
 		switch_pic(SENSOR_SETTING_PAGE);
+		g_index=SENSOR_SETTING_PAGE;
 		if(g_share_memory->factory_mode==SENSOR_VERIFY_MODE)
 		{
 			g_share_memory->factory_mode=NORMAL_MODE;
 			printfLog(LCD_PROCESS"End to JiaoZhun %d\n",sensor);
-			//send_return(fd,sensor,jp);
 		}
 	}
 }
@@ -2023,37 +2025,41 @@ unsigned short input_handle(char *input)
 	static int begin_temp=0;
 	static int begin_shidu=0;
 	static int begin_pm25=0;
+	static int begin_noise=0;
+	static int begin_press=0;
+	static int begin_wind=0;
+	static int begin_o3=0;
+	static int begin_tvoc=0;
+	static int begin_pm10=0;	
 	static int curve_co=0;
 	static int curve_co2=0;
 	static int curve_hcho=0;
 	static int curve_temp=0;
 	static int curve_shidu=0;
-	static int curve_pm25=0;
+	static int curve_pm25=0;	
+	static int curve_noise=0;
+	static int curve_press=0;
+	static int curve_wind=0;
+	static int curve_o3=0;
+	static int curve_tvoc=0;
+	static int curve_pm10=0;
 	static int interface_config_no = 0;
 	static int cur_select_interface = TYPE_SENSOR_CO_WEISHEN;
-	//char * line = NULL;
-	//char date1[32]={0};
-	//char date2[32]={0};
-	//char date3[32]={0};
-	//char data1[32]={0};
-	//char data2[32]={0};
-	//char data3[32]={0};
-	//char time[]={0x32,0x30,0x31 ,0x35 ,0x2d,0x31 ,0x31 ,0x2d ,0x32 ,0x30 ,0x20,0x32 ,0x37 ,0x3A ,0x32 ,0x30 ,0x3A ,0x30 ,0x30};
-	//char co[]={0x30,0x2e,0x31,0x32};
 	input[0]=2;
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
 	printfLog(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(lcd_state==0)
 	{
-		if(g_index==TUN_ZERO_PAGE)
+		/*if(g_index==TUN_ZERO_PAGE)
 			lcd_on(TUN_ZERO_PAGE);
 		else if(g_index==INTERFACE_PAGE)
 			lcd_on(INTERFACE_PAGE);
 		else if(g_index==VERIFY_PAGE)
 			lcd_on(VERIFY_PAGE);
 		else
-			lcd_on(MAIN_PAGE);
+			lcd_on(MAIN_PAGE);*/
+		lcd_on(g_index);
 		alarm(300);
 	}
 	else
@@ -2069,12 +2075,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_CO);
 				show_curve(ID_CAP_CO,&curve_co);
+				g_index=CURVE_PAGE_CO;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_CO);
 				show_history(ID_CAP_CO,begin_co);
-				//begin_co=0;
+				g_index=LIST_PAGE_CO;
 			}
 		}
 		else
@@ -2082,8 +2089,158 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_CO;
 		}
-		g_index=LIST_PAGE_CO;
+	}
+	else if(addr==TOUCH_PRESS_REAL_1 && (TOUCH_PRESS_REAL_1+0x100)==data)
+	{//show history QIYA the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_PRESS);
+				show_curve(ID_CAP_QI_YA,&curve_press);				
+				g_index=CURVE_PAGE_PRESS;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_PRESS);
+				show_history(ID_CAP_QI_YA,begin_press);
+				g_index=LIST_PAGE_PRESS;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_PRESS;
+		}
+	}
+	else if(addr==TOUCH_TVOC_REAL_1 && (TOUCH_TVOC_REAL_1+0x100)==data)
+	{//show history TVOC the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_TVOC);
+				show_curve(ID_CAP_TVOC,&curve_tvoc);
+				g_index=CURVE_PAGE_TVOC;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_TVOC);
+				show_history(ID_CAP_TVOC,begin_tvoc);
+				g_index=LIST_PAGE_TVOC;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_TVOC;
+		}
+	}
+	else if(addr==TOUCH_PM10_REAL_1 && (TOUCH_PM10_REAL_1+0x100)==data)
+	{//show history PM10 the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_PM10);
+				show_curve(ID_CAP_PM_10,&curve_pm10);
+				g_index=CURVE_PAGE_PM10;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_PM10);
+				show_history(ID_CAP_PM_10,begin_pm10);
+				g_index=LIST_PAGE_PM10;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_PM10;
+		}		
+	}
+	else if(addr==TOUCH_O3_REAL_1 && (TOUCH_O3_REAL_1+0x100)==data)
+	{//show history O3 the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_O3);
+				show_curve(ID_CAP_CHOU_YANG,&curve_o3);
+				g_index=CURVE_PAGE_O3;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_O3);
+				show_history(ID_CAP_CHOU_YANG,begin_o3);
+				g_index=LIST_PAGE_O3;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_O3;
+		}		
+	}
+	else if(addr==TOUCH_WIND_REAL_1 && (TOUCH_WIND_REAL_1+0x100)==data)
+	{//show history WIND the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_WIND);
+				show_curve(ID_CAP_FENG_SU,&curve_wind);
+				g_index=CURVE_PAGE_WIND;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_WIND);
+				show_history(ID_CAP_FENG_SU,begin_wind);
+				g_index=LIST_PAGE_WIND;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_WIND;
+		}		
+	}
+	else if(addr==TOUCH_NOISE_REAL_1 && (TOUCH_NOISE_REAL_1+0x100)==data)
+	{//show history NOISE the first page
+		if(logged)
+		{
+			if(g_share_memory->history_done)
+			{
+				switch_pic(CURVE_PAGE_NOISE);
+				show_curve(ID_CAP_BUZZY,&curve_noise);
+				g_index=CURVE_PAGE_NOISE;
+			}
+			else
+			{
+				switch_pic(LIST_PAGE_NOISE);
+				show_history(ID_CAP_BUZZY,begin_noise);
+				g_index=LIST_PAGE_NOISE;
+			}
+		}
+		else
+		{
+			clear_buf(ADDR_LOGIN_USER_NAME,16);
+			clear_buf(ADDR_LOGIN_USER_KEY,16);
+			switch_pic(LOGIN_PAGE);
+			g_index=LIST_PAGE_NOISE;
+		}		
 	}
 	else if(addr==TOUCH_CO2_REAL_1 && (TOUCH_CO2_REAL_1+0x100)==data)
 	{//show history CO2 the first page
@@ -2093,12 +2250,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_CO2);
 				show_curve(ID_CAP_CO2,&curve_co2);
+				g_index=CURVE_PAGE_CO2;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_CO2);
 				show_history(ID_CAP_CO2,begin_co2);
-				//begin_co2=0;
+				g_index=LIST_PAGE_CO2;
 			}
 		}
 		else
@@ -2106,8 +2264,8 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
-		}
-		g_index=LIST_PAGE_CO2;
+			g_index=LIST_PAGE_CO2;
+		}		
 	}	
 	else if(addr==TOUCH_HCHO_REAL_1 && (TOUCH_HCHO_REAL_1+0x100)==data)
 	{//show history HCHO the first page	
@@ -2117,12 +2275,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_HCHO);
 				show_curve(ID_CAP_HCHO,&curve_hcho);
+				g_index=CURVE_PAGE_HCHO;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_HCHO);
 				show_history(ID_CAP_HCHO,begin_hcho);
-				//begin_co=0;
+				g_index=LIST_PAGE_HCHO;
 			}
 		}
 		else
@@ -2130,8 +2289,8 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
-		}
-		g_index=LIST_PAGE_HCHO;
+			g_index=LIST_PAGE_HCHO;
+		}		
 	}	
 	else if(addr==TOUCH_SHIDU_REAL_1 && (TOUCH_SHIDU_REAL_1+0x100)==data)
 	{//show history SHIDU the first page
@@ -2141,12 +2300,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_SHIDU);
 				show_curve(ID_CAP_SHI_DU,&curve_shidu);
+				g_index=CURVE_PAGE_SHIDU;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_SHIDU);
 				show_history(ID_CAP_SHI_DU,begin_shidu);
-				//begin_co=0;
+				g_index=LIST_PAGE_SHIDU;
 			}
 		}
 		else
@@ -2154,8 +2314,8 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
-		}		
-		g_index=LIST_PAGE_SHIDU;
+			g_index=LIST_PAGE_SHIDU;
+		}				
 	}	
 	else if(addr==TOUCH_TEMP_REAL_1 && (TOUCH_TEMP_REAL_1+0x100)==data)
 	{//show history TEMPERATURE the first page
@@ -2165,12 +2325,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_TEMP);
 				show_curve(ID_CAP_TEMPERATURE,&curve_temp);
+				g_index=CURVE_PAGE_TEMP;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_TEMP);
 				show_history(ID_CAP_TEMPERATURE,begin_temp);
-				//begin_co=0;
+				g_index=LIST_PAGE_TEMP;
 			}
 		}
 		else
@@ -2178,8 +2339,8 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
-		}		
-		g_index=LIST_PAGE_TEMP;
+			g_index=LIST_PAGE_TEMP;
+		}				
 	}	
 	else if(addr==TOUCH_PM25_REAL_1&& (TOUCH_PM25_REAL_1+0x100)==data)
 	{//show history PM25 the first page
@@ -2189,12 +2350,13 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(CURVE_PAGE_PM25);
 				show_curve(ID_CAP_PM_25,&curve_pm25);
+				g_index=CURVE_PAGE_PM25;
 			}
 			else
 			{
 				switch_pic(LIST_PAGE_PM25);
 				show_history(ID_CAP_PM_25,begin_pm25);
-				//begin_co=0;
+				g_index=LIST_PAGE_PM25;
 			}
 		}
 		else
@@ -2202,13 +2364,43 @@ unsigned short input_handle(char *input)
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
 			switch_pic(LOGIN_PAGE);
-		}
-		g_index=LIST_PAGE_PM25;
+			g_index=LIST_PAGE_PM25;
+		}		
 	}	
 	else if(addr==TOUCH_CO_UPDATE && (TOUCH_CO_UPDATE+0x100)==data)
 	{//show history CO the next page
 		begin_co=0;
 		show_history(ID_CAP_CO,begin_co);
+	}
+	else if(addr==TOUCH_O3_UPDATE && (TOUCH_O3_UPDATE+0x100)==data)
+	{//show history O3 the next page
+		begin_o3=0;
+		show_history(ID_CAP_CHOU_YANG,begin_o3);
+	}
+	else if(addr==TOUCH_PRESS_UPDATE && (TOUCH_PRESS_UPDATE+0x100)==data)
+	{//show history PRESS the next page
+		begin_press=0;
+		show_history(ID_CAP_QI_YA,begin_press);
+	}
+	else if(addr==TOUCH_TVOC_UPDATE && (TOUCH_TVOC_UPDATE+0x100)==data)
+	{//show history TVOC the next page
+		begin_tvoc=0;
+		show_history(ID_CAP_TVOC,begin_tvoc);
+	}
+	else if(addr==TOUCH_PM10_UPDATE && (TOUCH_PM10_UPDATE+0x100)==data)
+	{//show history PM10 the next page
+		begin_pm10=0;
+		show_history(ID_CAP_PM_10,begin_pm10);
+	}
+	else if(addr==TOUCH_WIND_UPDATE && (TOUCH_WIND_UPDATE+0x100)==data)
+	{//show history WIND the next page
+		begin_wind=0;
+		show_history(ID_CAP_FENG_SU,begin_wind);
+	}
+	else if(addr==TOUCH_NOISE_UPDATE && (TOUCH_NOISE_UPDATE+0x100)==data)
+	{//show history NOISE the next page
+		begin_noise=0;
+		show_history(ID_CAP_BUZZY,begin_noise);
 	}
 	else if(addr==TOUCH_CO_LAST_PAGE && (TOUCH_CO_LAST_PAGE+0x100)==data)
 	{//show history CO the next page
@@ -2218,12 +2410,108 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_CO,begin_co);
 		}
 	}
+	else if(addr==TOUCH_NOISE_LAST_PAGE && (TOUCH_NOISE_LAST_PAGE+0x100)==data)
+	{//show history NOISE the next page
+		if(begin_noise>=7)
+		{
+			begin_noise-=7;
+			show_history(ID_CAP_BUZZY,begin_noise);
+		}
+	}
+	else if(addr==TOUCH_PRESS_LAST_PAGE && (TOUCH_PRESS_LAST_PAGE+0x100)==data)
+	{//show history PRESS the next page
+		if(begin_press>=7)
+		{
+			begin_press-=7;
+			show_history(ID_CAP_QI_YA,begin_press);
+		}
+	}
+	else if(addr==TOUCH_WIND_LAST_PAGE && (TOUCH_WIND_LAST_PAGE+0x100)==data)
+	{//show history WIND the next page
+		if(begin_wind>=7)
+		{
+			begin_wind-=7;
+			show_history(ID_CAP_FENG_SU,begin_wind);
+		}
+	}
+	else if(addr==TOUCH_O3_LAST_PAGE && (TOUCH_O3_LAST_PAGE+0x100)==data)
+	{//show history O3 the next page
+		if(begin_o3>=7)
+		{
+			begin_o3-=7;
+			show_history(ID_CAP_CHOU_YANG,begin_o3);
+		}
+	}
+	else if(addr==TOUCH_TVOC_LAST_PAGE && (TOUCH_TVOC_LAST_PAGE+0x100)==data)
+	{//show history TVOC the next page
+		if(begin_tvoc>=7)
+		{
+			begin_tvoc-=7;
+			show_history(ID_CAP_TVOC,begin_tvoc);
+		}
+	}
+	else if(addr==TOUCH_PM10_LAST_PAGE && (TOUCH_PM10_LAST_PAGE+0x100)==data)
+	{//show history PM10 the next page
+		if(begin_pm10>=7)
+		{
+			begin_pm10-=7;
+			show_history(ID_CAP_PM_10,begin_pm10);
+		}
+	}
 	else if(addr==TOUCH_CO_NEXT_PAGE && (TOUCH_CO_NEXT_PAGE+0x100)==data)
 	{//show history CO the next page
 		if(begin_co+7<g_share_memory->cnt[SENSOR_CO])
 		{
 			begin_co+=7;
 			show_history(ID_CAP_CO,begin_co);
+		}
+	}
+	else if(addr==TOUCH_PM10_NEXT_PAGE && (TOUCH_PM10_NEXT_PAGE+0x100)==data)
+	{//show history PM10 the next page
+		if(begin_pm10+7<g_share_memory->cnt[SENSOR_PM10])
+		{
+			begin_pm10+=7;
+			show_history(ID_CAP_PM_10,begin_pm10);
+		}
+	}
+	else if(addr==TOUCH_TVOC_NEXT_PAGE && (TOUCH_TVOC_NEXT_PAGE+0x100)==data)
+	{//show history TVOC the next page
+		if(begin_tvoc+7<g_share_memory->cnt[SENSOR_TVOC])
+		{
+			begin_tvoc+=7;
+			show_history(ID_CAP_TVOC,begin_tvoc);
+		}
+	}
+	else if(addr==TOUCH_O3_NEXT_PAGE && (TOUCH_O3_NEXT_PAGE+0x100)==data)
+	{//show history O3 the next page
+		if(begin_o3+7<g_share_memory->cnt[SENSOR_O3])
+		{
+			begin_o3+=7;
+			show_history(ID_CAP_CHOU_YANG,begin_o3);
+		}
+	}
+	else if(addr==TOUCH_PRESS_NEXT_PAGE && (TOUCH_PRESS_NEXT_PAGE+0x100)==data)
+	{//show history PRESS the next page
+		if(begin_press+7<g_share_memory->cnt[SENSOR_PRESS])
+		{
+			begin_press+=7;
+			show_history(ID_CAP_QI_YA,begin_press);
+		}
+	}
+	else if(addr==TOUCH_WIND_NEXT_PAGE && (TOUCH_WIND_NEXT_PAGE+0x100)==data)
+	{//show history WIND the next page
+		if(begin_wind+7<g_share_memory->cnt[SENSOR_WIND])
+		{
+			begin_wind+=7;
+			show_history(ID_CAP_FENG_SU,begin_wind);
+		}
+	}
+	else if(addr==TOUCH_NOISE_NEXT_PAGE && (TOUCH_NOISE_NEXT_PAGE+0x100)==data)
+	{//show history NOISE the next page
+		if(begin_noise+7<g_share_memory->cnt[SENSOR_NOISE])
+		{
+			begin_noise+=7;
+			show_history(ID_CAP_BUZZY,begin_noise);
 		}
 	}
 	else if(addr==TOUCH_CO2_UPDATE && (TOUCH_CO2_UPDATE+0x100)==data)
@@ -2330,7 +2618,7 @@ unsigned short input_handle(char *input)
 			begin_pm25+=7;
 			show_history(ID_CAP_PM_25,begin_pm25);
 		}
-	}	
+	}
 	else if(addr==TOUCH_DEVICE_STATE_1&& (TOUCH_DEVICE_STATE_1+0x100)==data)
 	{//show sensor and network state
 		show_sensor_network();
@@ -2343,7 +2631,8 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_HOUR,2);
 		clear_buf(ADDR_MIN,2);
 		clear_buf(ADDR_SEC,2);
-		//switch_pic(fd_lcd, TIME_SETTING_PAGE);
+		switch_pic(TIME_SETTING_PAGE);
+		g_index=TIME_SETTING_PAGE;
 	}
 	else if(addr==TOUCH_XFER_OK&& (TOUCH_XFER_OK+0x100)==data)
 	{//WiFi Passwd changed
@@ -2352,16 +2641,18 @@ unsigned short input_handle(char *input)
 		{
 			wifi_handle();
 			switch_pic(WIFI_DONE_PAGE);
+			g_index=WIFI_DONE_PAGE;
 		}
 		else
+		{
 			switch_pic(GPRS_DONE_PAGE);
+			g_index=GPRS_DONE_PAGE;
+		}
 		set_net_interface();		
 	}
 	else if((addr==TOUCH_SEL_WIFI)&& (TOUCH_SEL_WIFI+0x100)==data)
 	{//WiFi Passwd changed
-		//wifi_handle(fd_lcd);
 		wifi_select=1;
-		//set_net_interface();
 		write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
 	}
 	else if(addr==TOUCH_XFER_RETURN&& (TOUCH_XFER_RETURN+0x100)==data)
@@ -2371,13 +2662,14 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_SEL_GPRS&& (TOUCH_SEL_GPRS+0x100)==data)
 	{//use gprs to xfer
 		wifi_select=0;
-		//set_net_interface();
 		write_string(ADDR_XFER_SELECT,"GPRS",strlen("GPRS"));
 	}
 	else if(addr==TOUCH_XFER_SETTING&&(TOUCH_XFER_SETTING+0x100)==data)
 	{//enter wifi passwd setting
 		clear_buf(ADDR_AP_NAME,20);
 		clear_buf(ADDR_AP_KEY,20);
+		switch_pic(XFER_SETTING_PAGE);
+		g_index=XFER_SETTING_PAGE;
 		if(g_share_memory->send_by_wifi)
 		{
 			write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
@@ -2391,14 +2683,13 @@ unsigned short input_handle(char *input)
 	{//manul set time
 		manul_set_time();
 		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
 	}
 	else if(addr==TOUCH_SYNC_SERVER && (TOUCH_SYNC_SERVER+0x100)==data)
 	{//set time from server
 		sync_server(0,0);
 		display_time(g_share_memory->server_time[5]+2000,g_share_memory->server_time[6],g_share_memory->server_time[7],
 			g_share_memory->server_time[8],g_share_memory->server_time[9],g_share_memory->server_time[10]);
-		//sleep(3);
-		//switch_pic(fd_lcd,18);
 	}
 	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
 	{
