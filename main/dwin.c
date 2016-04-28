@@ -2067,7 +2067,65 @@ unsigned short input_handle(char *input)
 		alarm(0);
 		alarm(300);
 	}
-	if(addr==TOUCH_CO_REAL_1 && (TOUCH_CO_REAL_1+0x100)==data)
+	if((addr==TOUCH_STATE_RETURN_2 && (TOUCH_STATE_RETURN_2+0x100)==data)||
+		(addr==TOUCH_STATE_RETURN_1 && (TOUCH_STATE_RETURN_1+0x100)==data)||
+		(addr==TOUCH_STATE_RETURN_4 && (TOUCH_STATE_RETURN_4+0x100)==data)||
+		(addr==TOUCH_STATE_RETURN_3 && (TOUCH_STATE_RETURN_3+0x100)==data)||
+		(addr==TOUCH_PRODUCT_INFO_RETURN && (TOUCH_PRODUCT_INFO_RETURN+0x100)==data)||
+		(addr==TOUCH_SYSTEM_SETTING_RETURN && (TOUCH_SYSTEM_SETTING_RETURN+0x100)==data))
+	{
+		if(g_share_memory->ppm)
+		{
+			switch_pic(MAIN_PAGE_PPM);
+			g_index=MAIN_PAGE_PPM;
+		}
+		else
+		{
+			switch_pic(MAIN_PAGE);
+			g_index=MAIN_PAGE;
+		}
+	}
+	else if((addr==TOUCH_TEST_GPRS_2 && (TOUCH_TEST_GPRS_2+0x100)==data)||
+		(addr==TOUCH_TEST_GPRS_1 && (TOUCH_TEST_GPRS_1+0x100)==data)||
+		(addr==TOUCH_TEST_GPRS_3 && (TOUCH_TEST_GPRS_3+0x100)==data)||
+		(addr==TOUCH_TEST_GPRS_4 && (TOUCH_TEST_GPRS_4+0x100)==data))
+	{
+		if(ping_server_by_gprs())
+		{
+			printfLog("ping server by gprs ok\n");
+			gprs_state(1,g_index);
+		}
+		else
+		{
+			printfLog("ping server by gprs failed\n");
+			gprs_state(0,g_index);
+		}
+	}
+	else if((addr==TOUCH_PRODUCT_INFO_1 && (TOUCH_PRODUCT_INFO_1+0x100)==data)||
+		(addr==TOUCH_PRODUCT_INFO_2 && (TOUCH_PRODUCT_INFO_2+0x100)==data))
+	{
+			switch_pic(PRODUCT_PAGE);
+			g_index=PRODUCT_PAGE;
+	}
+	else if((addr==TOUCH_SYSTEM_SETTING_1 && (TOUCH_SYSTEM_SETTING_1+0x100)==data)||
+		(addr==TOUCH_SYSTEM_SETTING_2 && (TOUCH_SYSTEM_SETTING_2+0x100)==data))
+	{
+			switch_pic(SYSTEM_SETTING_PAGE);
+			g_index=SYSTEM_SETTING_PAGE;
+	}
+	else if(addr==TOUCH_CONVERSION_1 && (TOUCH_CONVERSION_1+0x100)==data)
+	{
+			g_share_memory->ppm=1;
+			switch_pic(MAIN_PAGE_PPM);
+			g_index=MAIN_PAGE_PPM;
+	}
+	else if(addr==TOUCH_CONVERSION_2 && (TOUCH_CONVERSION_2+0x100)==data)
+	{
+			g_share_memory->ppm=0;
+			switch_pic(MAIN_PAGE);
+			g_index=MAIN_PAGE;
+	}
+	else if(addr==TOUCH_CO_REAL_1 && (TOUCH_CO_REAL_1+0x100)==data)
 	{//show history CO the first page
 		if(logged)
 		{
@@ -2619,7 +2677,8 @@ unsigned short input_handle(char *input)
 			show_history(ID_CAP_PM_25,begin_pm25);
 		}
 	}
-	else if(addr==TOUCH_DEVICE_STATE_1&& (TOUCH_DEVICE_STATE_1+0x100)==data)
+	else if((addr==TOUCH_DEVICE_STATE_1&& (TOUCH_DEVICE_STATE_1+0x100)==data)||
+		(addr==TOUCH_DEVICE_STATE_2&& (TOUCH_DEVICE_STATE_2+0x100)==data))
 	{//show sensor and network state
 		show_sensor_network();
 	}

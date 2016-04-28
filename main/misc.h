@@ -19,4 +19,6 @@ void get_net_interface();
 void save_to_file(char *date,char *message);
 void co_flash_alarm();
 void read_curr_time(char *out);
+int ping_server_by_gprs();
+void gprs_state(int state,int pic);
 #endif

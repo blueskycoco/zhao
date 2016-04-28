@@ -789,7 +789,28 @@ int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char 
 	iconv_close(cd);
 	return 0;
 }
+int ping_server_by_gprs()
+{
+	char *sync_message=NULL,*rcv=NULL,xfer_mode=0;
+	sync_message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_SYNC);
+	sync_message=add_item(sync_message,ID_DEVICE_UID,g_share_memory->uuid);
+	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,g_share_memory->ip);
+	sync_message=add_item(sync_message,ID_DEVICE_PORT,(char *)"9517");
+	printfLog(MISC_PROCESS"<ping_server_by_gprs>%s\n",sync_message);
+	xfer_mode=g_share_memory->send_by_wifi;
+	printfLog(MISC_PROCESS"xfer_mode %d\n",xfer_mode);
+	g_share_memory->send_by_wifi=0;
+	send_web_post(URL,sync_message,9,&rcv);
+	g_share_memory->send_by_wifi=xfer_mode;
+	free(sync_message);
+	if(rcv!=NULL&&strlen(rcv)!=0)
+	{	
+		free(rcv);
+		return 1;
+	}
 
+	return 0;
+}
 void sync_server(int resend,int set_local)
 {
 	//int i,j;
@@ -969,7 +990,59 @@ void cut_pic(int on)
 	else
 		write(g_share_memory->fd_lcd,off,sizeof(off));
 }
-
+void gprs_state(int state,int pic)
+{
+	char good[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x22,
+				0x01,0xae,0x01,0x76,0x02,0x75,0x01,0xc3,0x01,0xa8,0x01,0x76};
+	
+	char bad[]={0x5a,0xa5,0x15,0x82,0x06,0xf3,0x00,0x06,0x00,0x01,0x00,0x22,
+				0x02,0x87,0x01,0x76,0x03,0x4e,0x01,0xc3,0x02,0x81,0x01,0x76};
+	if(pic==STATE_PAGE_O_O)
+	{
+		good[4]=0x0b;good[5]=0xb3;
+		bad[4]=0x0b;bad[5]=0xbc;
+	}
+	else if(pic==STATE_PAGE_I_O)
+	{
+		good[4]=0x0b;good[5]=0xc5;
+		bad[4]=0x0b;bad[5]=0xce;
+	}
+	else if(pic==STATE_PAGE_I_I)
+	{
+		good[4]=0x0b;good[5]=0xd7;
+		bad[4]=0x0b;bad[5]=0xe0;
+	}
+	else if(pic==STATE_PAGE_O_I)
+	{
+		good[4]=0x0b;good[5]=0xe9;
+		bad[4]=0x0b;bad[5]=0xf2;
+	}
+	if(state)//gprs good
+	{
+		good[12]=0x01;good[13]=0xa7;
+		good[14]=0x01;good[15]=0x05;
+		good[16]=0x02;good[17]=0x7c;
+		good[18]=0x01;good[19]=0x5e;
+		bad[12]=0x02;bad[13]=0x80;
+		bad[14]=0x01;bad[15]=0x08;
+		bad[16]=0x03;bad[17]=0x56;
+		bad[18]=0x01;bad[19]=0x67;
+	}
+	else//gprs bad
+	{
+		good[12]=0x01;good[13]=0xab;
+		good[14]=0x00;good[15]=0xa4;
+		good[16]=0x02;good[17]=0x7d;
+		good[18]=0x00;good[19]=0xf5;
+		bad[12]=0x02;bad[13]=0x80;
+		bad[14]=0x00;bad[15]=0x9e;
+		bad[16]=0x03;bad[17]=0x4f;
+		bad[18]=0x00;bad[19]=0xef;
+	}
+	printfLog(MISC_PROCESS"gprs_state %d %d ,fd_lcd %d\n",state,pic,g_share_memory->fd_lcd);
+	write(g_share_memory->fd_lcd,good,sizeof(good));
+	write(g_share_memory->fd_lcd,bad,sizeof(bad));
+}
 void co_flash_alarm()
 {
 	int fpid=0;
