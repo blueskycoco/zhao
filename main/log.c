@@ -13,7 +13,7 @@
 #define PATH_BUF_SIZE 	256
 #define LOG_LENGTH		1024
 #define LOG_PATH		"/mnt/cdrom/log"
-unsigned char log_name[256]={0};
+char log_name[256]={0};
 pthread_mutex_t mutex_log;
 void printfLog(const char *fmt, ...)
 {

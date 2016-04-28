@@ -8,4 +8,5 @@ void write_string(unsigned int addr,char *data,int len);
 void write_data(unsigned int Index,int data);
 void clear_point();
 void switch_pic(unsigned char Index);
+void ctl_fan(int on);
 #endif

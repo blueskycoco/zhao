@@ -127,8 +127,7 @@ void show_sensor_network()
 {
 	int pic=0;
 	ping_server();
-	printfLog(LCD_PROCESS"sensor co %d, co2 %d, hcho %d, shidu %d, temp %d, pm25 %d,
-							noise %d, wind %d, o3 %d, press %d, pm10 %d, tvoc %d\nnetwork_state %d\n",
+	printfLog(LCD_PROCESS"sensor co %d, co2 %d, hcho %d, shidu %d, temp %d, pm25 %d,noise %d, wind %d, o3 %d, press %d, pm10 %d, tvoc %d\nnetwork_state %d\n",
 		g_share_memory->sensor_state[SENSOR_CO],g_share_memory->sensor_state[SENSOR_CO2],g_share_memory->sensor_state[SENSOR_HCHO],
 		g_share_memory->sensor_state[SENSOR_SHIDU],g_share_memory->sensor_state[SENSOR_TEMP],g_share_memory->sensor_state[SENSOR_PM25],		
 		g_share_memory->sensor_state[SENSOR_NOISE],g_share_memory->sensor_state[SENSOR_WIND],g_share_memory->sensor_state[SENSOR_O3],
@@ -1913,7 +1912,7 @@ void set_interface()
 }
 void ctl_fan(int on)
 {
-	int i =0;
+	//int i =0;
 	char cmd[]=	{0x6c,ARM_TO_CAP,0x00,0x09,0x01,0x00,0x00,0x00};
 	if(on)
 	{

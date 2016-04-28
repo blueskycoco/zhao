@@ -103,7 +103,7 @@ void dump_curr_time(int fd)
 	//	sprintf(*out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
 	//}
 }
-void read_curr_time(char **out)
+void read_curr_time(char *out)
 {
 	int retval;
 	struct rtc_time rtc_tm;
@@ -121,9 +121,9 @@ void read_curr_time(char **out)
 	printfLog(MISC_PROCESS"Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 			rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 			rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
-	if(*out!=NULL)
+	if(out!=NULL)
 	{
-		sprintf(*out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
+		sprintf(out,"%04d-%02d-%02d",rtc_tm.tm_year+1900,rtc_tm.tm_mon+1,rtc_tm.tm_mday);
 	}
 	close(fd);
 }
@@ -508,8 +508,7 @@ void get_sensor_alarm_info()
 	g_share_memory->sensor_state[SENSOR_PM10]	=g_share_memory->alarm[SENSOR_PM10];
 
 	fclose(fp);
-	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,
-							wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
+	printfLog(MISC_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
 		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
 		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25],
 		g_share_memory->alarm[SENSOR_WIND],g_share_memory->alarm[SENSOR_NOISE],g_share_memory->alarm[SENSOR_PRESS],
@@ -534,8 +533,7 @@ void save_sensor_alarm_info()
 	fwrite(g_share_memory->sensor_state,sizeof(char)*SENSOR_NO,1,fp);
 	fwrite(g_share_memory->sent,sizeof(char)*SENSOR_NO,1,fp);
 	fclose(fp);
-	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,
-							wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
+	printfLog(MISC_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d,wind %d, noise %d, press %d, tvoc %d, o3 %d, pm10 %d\n",
 		g_share_memory->alarm[SENSOR_CO],g_share_memory->alarm[SENSOR_CO2],g_share_memory->alarm[SENSOR_HCHO],
 		g_share_memory->alarm[SENSOR_SHIDU],g_share_memory->alarm[SENSOR_TEMP],g_share_memory->alarm[SENSOR_PM25],
 		g_share_memory->alarm[SENSOR_WIND],g_share_memory->alarm[SENSOR_NOISE],g_share_memory->alarm[SENSOR_PRESS],

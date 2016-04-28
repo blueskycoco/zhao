@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	//long i;
 	//key_t shmid;
 	signal(SIGCHLD, SIG_IGN);
-	read_curr_time(&curr_time);
+	read_curr_time(curr_time);
 	if(strlen(curr_time)==0)
 		init_log("no_time");
 	else

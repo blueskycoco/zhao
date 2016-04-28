@@ -18,5 +18,5 @@ void get_uuid();
 void get_net_interface();
 void save_to_file(char *date,char *message);
 void co_flash_alarm();
-void read_curr_time(char **out);
+void read_curr_time(char *out);
 #endif
