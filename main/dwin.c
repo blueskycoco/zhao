@@ -173,6 +173,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_PM10]-offset-7)>0)
 		{
+			clear_buf(ADDR_PM10_DATA_0,6);
+			clear_buf(ADDR_PM10_DATA_1,6);
+			clear_buf(ADDR_PM10_DATA_2,6);
+			clear_buf(ADDR_PM10_DATA_3,6);
+			clear_buf(ADDR_PM10_DATA_4,6);
+			clear_buf(ADDR_PM10_DATA_5,6);
+			clear_buf(ADDR_PM10_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_PM10_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -213,6 +221,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_PRESS]-offset-7)>0)
 		{
+			clear_buf(ADDR_PRESS_DATA_0,6);
+			clear_buf(ADDR_PRESS_DATA_1,6);
+			clear_buf(ADDR_PRESS_DATA_2,6);
+			clear_buf(ADDR_PRESS_DATA_3,6);
+			clear_buf(ADDR_PRESS_DATA_4,6);
+			clear_buf(ADDR_PRESS_DATA_5,6);
+			clear_buf(ADDR_PRESS_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_PRESS_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -253,6 +269,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_TVOC]-offset-7)>0)
 		{
+			clear_buf(ADDR_TVOC_DATA_0,6);
+			clear_buf(ADDR_TVOC_DATA_1,6);
+			clear_buf(ADDR_TVOC_DATA_2,6);
+			clear_buf(ADDR_TVOC_DATA_3,6);
+			clear_buf(ADDR_TVOC_DATA_4,6);
+			clear_buf(ADDR_TVOC_DATA_5,6);
+			clear_buf(ADDR_TVOC_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_TVOC_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -294,6 +318,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_O3]-offset-7)>0)
 		{
+			clear_buf(ADDR_O3_DATA_0,6);
+			clear_buf(ADDR_O3_DATA_1,6);
+			clear_buf(ADDR_O3_DATA_2,6);
+			clear_buf(ADDR_O3_DATA_3,6);
+			clear_buf(ADDR_O3_DATA_4,6);
+			clear_buf(ADDR_O3_DATA_5,6);
+			clear_buf(ADDR_O3_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_O3_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -335,6 +367,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_WIND]-offset-7)>0)
 		{
+			clear_buf(ADDR_WIND_DATA_0,6);
+			clear_buf(ADDR_WIND_DATA_1,6);
+			clear_buf(ADDR_WIND_DATA_2,6);
+			clear_buf(ADDR_WIND_DATA_3,6);
+			clear_buf(ADDR_WIND_DATA_4,6);
+			clear_buf(ADDR_WIND_DATA_5,6);
+			clear_buf(ADDR_WIND_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_WIND_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -375,6 +415,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_NOISE]-offset-7)>0)
 		{
+			clear_buf(ADDR_NOISE_DATA_0,6);
+			clear_buf(ADDR_NOISE_DATA_1,6);
+			clear_buf(ADDR_NOISE_DATA_2,6);
+			clear_buf(ADDR_NOISE_DATA_3,6);
+			clear_buf(ADDR_NOISE_DATA_4,6);
+			clear_buf(ADDR_NOISE_DATA_5,6);
+			clear_buf(ADDR_NOISE_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_NOISE_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -415,6 +463,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
 		if((g_share_memory->cnt[SENSOR_CO]-offset-7)>0)
 		{
+			clear_buf(ADDR_CO_DATA_0,6);
+			clear_buf(ADDR_CO_DATA_1,6);
+			clear_buf(ADDR_CO_DATA_2,6);
+			clear_buf(ADDR_CO_DATA_3,6);
+			clear_buf(ADDR_CO_DATA_4,6);
+			clear_buf(ADDR_CO_DATA_5,6);
+			clear_buf(ADDR_CO_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_CO_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -454,7 +510,15 @@ void show_history(char *id,int offset)
 	{
 //		printfLog(LCD_PROCESS"g_co2_cnt %d\n",g_share_memory->cnt[SENSOR_CO2]);
 		if((g_share_memory->cnt[SENSOR_CO2]-offset-7)>0)
-		{			
+		{	
+			clear_buf(ADDR_CO2_DATA_0,6);
+			clear_buf(ADDR_CO2_DATA_1,6);
+			clear_buf(ADDR_CO2_DATA_2,6);
+			clear_buf(ADDR_CO2_DATA_3,6);
+			clear_buf(ADDR_CO2_DATA_4,6);
+			clear_buf(ADDR_CO2_DATA_5,6);
+			clear_buf(ADDR_CO2_DATA_6,6);
+		
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_CO2_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -495,6 +559,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_hcho_cnt);
 		if((g_share_memory->cnt[SENSOR_HCHO]-offset-7)>0)
 		{
+			clear_buf(ADDR_HCHO_DATA_0,6);
+			clear_buf(ADDR_HCHO_DATA_1,6);
+			clear_buf(ADDR_HCHO_DATA_2,6);
+			clear_buf(ADDR_HCHO_DATA_3,6);
+			clear_buf(ADDR_HCHO_DATA_4,6);
+			clear_buf(ADDR_HCHO_DATA_5,6);
+			clear_buf(ADDR_HCHO_DATA_6,6);
+	
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_HCHO_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -535,6 +607,14 @@ void show_history(char *id,int offset)
 //		printfLog(LCD_PROCESS"g_shidu_cnt %d\n",*g_shidu_cnt);
 		if((g_share_memory->cnt[SENSOR_SHIDU]-offset-7)>0)
 		{
+			clear_buf(ADDR_SHIDU_DATA_0,6);
+			clear_buf(ADDR_SHIDU_DATA_1,6);
+			clear_buf(ADDR_SHIDU_DATA_2,6);
+			clear_buf(ADDR_SHIDU_DATA_3,6);
+			clear_buf(ADDR_SHIDU_DATA_4,6);
+			clear_buf(ADDR_SHIDU_DATA_5,6);
+			clear_buf(ADDR_SHIDU_DATA_6,6);
+
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_SHIDU_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -574,7 +654,15 @@ void show_history(char *id,int offset)
 	{
 //		printfLog(LCD_PROCESS"g_temp_cnt %d\n",*g_temp_cnt);
 		if((g_share_memory->cnt[SENSOR_TEMP]-offset-7)>0)
-		{
+		{	
+			clear_buf(ADDR_TEMP_DATA_0,6);
+			clear_buf(ADDR_TEMP_DATA_1,6);
+			clear_buf(ADDR_TEMP_DATA_2,6);
+			clear_buf(ADDR_TEMP_DATA_3,6);
+			clear_buf(ADDR_TEMP_DATA_4,6);
+			clear_buf(ADDR_TEMP_DATA_5,6);
+			clear_buf(ADDR_TEMP_DATA_6,6);
+
 			sprintf(tmp,"%4d",offset/7 + 1);
 			write_string(ADDR_TEMP_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
@@ -619,13 +707,13 @@ void show_history(char *id,int offset)
 			write_string(ADDR_PM25_PAGE_N,tmp,strlen(tmp));
 			memset(tmp,'\0',4);
 			sprintf(tmp,"%4ld",g_share_memory->cnt[SENSOR_PM25]/7);			
-			clear_buf(ADDR_PM25_DATA_0,4);
-			clear_buf(ADDR_PM25_DATA_1,4);
-			clear_buf(ADDR_PM25_DATA_2,4);
-			clear_buf(ADDR_PM25_DATA_3,4);
-			clear_buf(ADDR_PM25_DATA_4,4);
-			clear_buf(ADDR_PM25_DATA_5,4);
-			clear_buf(ADDR_PM25_DATA_6,4);
+			clear_buf(ADDR_PM25_DATA_0,6);
+			clear_buf(ADDR_PM25_DATA_1,6);
+			clear_buf(ADDR_PM25_DATA_2,6);
+			clear_buf(ADDR_PM25_DATA_3,6);
+			clear_buf(ADDR_PM25_DATA_4,6);
+			clear_buf(ADDR_PM25_DATA_5,6);
+			clear_buf(ADDR_PM25_DATA_6,6);
 			write_string(ADDR_PM25_PAGE_ALL,tmp,strlen(tmp));
 			write_string(ADDR_PM25_TIME_0,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time,
 				strlen(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time));
@@ -2081,7 +2169,19 @@ unsigned short input_handle(char *input)
 		(addr==TOUCH_SHIDU_HISTORY_RETURN && (TOUCH_SHIDU_HISTORY_RETURN+0x100)==data)||
 		(addr==TOUCH_NOISE_HISTORY_RETURN && (TOUCH_NOISE_HISTORY_RETURN+0x100)==data)||
 		(addr==TOUCH_PRESS_HISTORY_RETURN && (TOUCH_PRESS_HISTORY_RETURN+0x100)==data)||
-		(addr==TOUCH_WIND_HISTORY_RETURN && (TOUCH_WIND_HISTORY_RETURN+0x100)==data))
+		(addr==TOUCH_WIND_HISTORY_RETURN && (TOUCH_WIND_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_NOISE_RETURN && (TOUCH_NOISE_RETURN+0x100)==data)||
+		(addr==TOUCH_CO2_RETURN && (TOUCH_CO2_RETURN+0x100)==data)||
+		(addr==TOUCH_CO_RETURN && (TOUCH_CO_RETURN+0x100)==data)||
+		(addr==TOUCH_HCHO_RETURN && (TOUCH_HCHO_RETURN+0x100)==data)||
+		(addr==TOUCH_PRESS_RETURN && (TOUCH_PRESS_RETURN+0x100)==data)||
+		(addr==TOUCH_SHIDU_RETURN && (TOUCH_SHIDU_RETURN+0x100)==data)||
+		(addr==TOUCH_PM25_RETURN && (TOUCH_PM25_RETURN+0x100)==data)||
+		(addr==TOUCH_PM10_RETURN && (TOUCH_PM10_RETURN+0x100)==data)||
+		(addr==TOUCH_O3_RETURN && (TOUCH_O3_RETURN+0x100)==data)||
+		(addr==TOUCH_WIND_RETURN && (TOUCH_WIND_RETURN+0x100)==data)||
+		(addr==TOUCH_TVOC_RETURN && (TOUCH_TVOC_RETURN+0x100)==data)||
+		(addr==TOUCH_TEMP_RETURN && (TOUCH_TEMP_RETURN+0x100)==data))
 	{
 		if(g_share_memory->ppm)
 		{
@@ -3272,6 +3372,48 @@ unsigned short input_handle(char *input)
 			{//co
 				switch_pic(LIST_PAGE_CO);
 				show_history(ID_CAP_CO,begin_co);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_PRESS:
+			{//press
+				switch_pic(LIST_PAGE_PRESS);
+				show_history(ID_CAP_QI_YA,begin_press);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_PM10:
+			{//pm10
+				switch_pic(LIST_PAGE_PM10);
+				show_history(ID_CAP_PM_10,begin_pm10);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_WIND:
+			{//wind
+				switch_pic(LIST_PAGE_WIND);
+				show_history(ID_CAP_FENG_SU,begin_wind);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_TVOC:
+			{//tvoc
+				switch_pic(LIST_PAGE_TVOC);
+				show_history(ID_CAP_TVOC,begin_tvoc);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_O3:
+			{//o3
+				switch_pic(LIST_PAGE_O3);
+				show_history(ID_CAP_CHOU_YANG,begin_o3);
+				//begin_co=0;
+			}
+			break;
+			case CURVE_PAGE_NOISE:
+			{//noise
+				switch_pic(LIST_PAGE_NOISE);
+				show_history(ID_CAP_BUZZY,begin_noise);
 				//begin_co=0;
 			}
 			break;
