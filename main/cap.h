@@ -77,6 +77,7 @@ struct share_memory{
 	long 	cnt[SENSOR_NO];			//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count	
 	char 	history_done;			//history load done by history process
 	char 	send_by_wifi;			//send by wifi	
+	char 	sleep;					//0 no sleep , 1 one mins, 5 5 mins, 10 10 mins
 	char 	network_state;			//network state,ok or failed
 	char 	sensor_state[SENSOR_NO];//co/co2/ch20/pm25/temp/shidu state
 	char 	server_time[32];		//current time	

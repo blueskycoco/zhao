@@ -30,15 +30,18 @@ void switch_pic(unsigned char Index)
 void lcd_off(int a)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
-	write(g_share_memory->fd_lcd,cmd,6);
-	switch_pic(OFF_PAGE);
-	lcd_state=0;
-	printfLog(LCD_PROCESS"lcd off\n");
+	if(g_share_memory->sleep!=0)
+	{
+		write(g_share_memory->fd_lcd,cmd,6);
+		switch_pic(OFF_PAGE);
+		lcd_state=0;
+		printfLog(LCD_PROCESS"lcd off\n");
+	}
 }
 void lcd_on(int page)
 {
 	switch_pic(page);
-	usleep(100000);
+	usleep(200000);
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
 	write(g_share_memory->fd_lcd,cmd,6);
 	lcd_state=1;
@@ -1369,10 +1372,10 @@ void display_time(int year,int mon,int day,int hour,int min,int seconds)
 	write_string(ADDR_YEAR,buf,4);
 	memset(buf,0,5);
 	sprintf(buf,"%d",day);
-	write_string(ADDR_MON,buf,2);
+	write_string(ADDR_DAY,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",mon);
-	write_string(ADDR_DAY,buf,2);
+	write_string(ADDR_MON,buf,2);
 	memset(buf,0,5);
 	sprintf(buf,"%d",hour);
 	write_string(ADDR_HOUR,buf,2);
@@ -2051,28 +2054,34 @@ unsigned short input_handle(char *input)
 	printfLog(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 	if(lcd_state==0)
 	{
-		/*if(g_index==TUN_ZERO_PAGE)
-			lcd_on(TUN_ZERO_PAGE);
-		else if(g_index==INTERFACE_PAGE)
-			lcd_on(INTERFACE_PAGE);
-		else if(g_index==VERIFY_PAGE)
-			lcd_on(VERIFY_PAGE);
-		else
-			lcd_on(MAIN_PAGE);*/
 		lcd_on(g_index);
-		alarm(300);
 	}
 	else
 	{
 		alarm(0);
-		alarm(300);
 	}
+	if(g_share_memory->sleep!=0)
+		alarm(g_share_memory->sleep*60);
+	else
+		alarm(5*60);
 	if((addr==TOUCH_STATE_RETURN_2 && (TOUCH_STATE_RETURN_2+0x100)==data)||
 		(addr==TOUCH_STATE_RETURN_1 && (TOUCH_STATE_RETURN_1+0x100)==data)||
 		(addr==TOUCH_STATE_RETURN_4 && (TOUCH_STATE_RETURN_4+0x100)==data)||
 		(addr==TOUCH_STATE_RETURN_3 && (TOUCH_STATE_RETURN_3+0x100)==data)||
 		(addr==TOUCH_PRODUCT_INFO_RETURN && (TOUCH_PRODUCT_INFO_RETURN+0x100)==data)||
-		(addr==TOUCH_SYSTEM_SETTING_RETURN && (TOUCH_SYSTEM_SETTING_RETURN+0x100)==data))
+		(addr==TOUCH_SYSTEM_SETTING_RETURN && (TOUCH_SYSTEM_SETTING_RETURN+0x100)==data)||
+		(addr==TOUCH_HCHO_HISTORY_RETURN && (TOUCH_HCHO_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_CO_HISTORY_RETURN && (TOUCH_CO_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_CO2_HISTORY_RETURN && (TOUCH_CO2_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_O3_HISTORY_RETURN && (TOUCH_O3_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_TVOC_HISTORY_RETURN && (TOUCH_TVOC_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PM10_HISTORY_RETURN && (TOUCH_PM10_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PM25_HISTORY_RETURN && (TOUCH_PM25_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_TEMP_HISTORY_RETURN && (TOUCH_TEMP_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_SHIDU_HISTORY_RETURN && (TOUCH_SHIDU_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_NOISE_HISTORY_RETURN && (TOUCH_NOISE_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PRESS_HISTORY_RETURN && (TOUCH_PRESS_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_WIND_HISTORY_RETURN && (TOUCH_WIND_HISTORY_RETURN+0x100)==data))
 	{
 		if(g_share_memory->ppm)
 		{
@@ -2084,6 +2093,27 @@ unsigned short input_handle(char *input)
 			switch_pic(MAIN_PAGE);
 			g_index=MAIN_PAGE;
 		}
+	}
+	else if((addr==TOUCH_TIME_RETURN && (TOUCH_TIME_RETURN+0x100)==data)||
+		(addr==TOUCH_GPRS_OK && (TOUCH_GPRS_OK+0x100)==data)||
+		(addr==TOUCH_WIFI_OK && (TOUCH_WIFI_OK+0x100)==data)||
+		(addr==TOUCH_USER_INFO_RETURN && (TOUCH_USER_INFO_RETURN+0x100)==data)||
+		(addr==TOUCH_FACTORY_INFO_RETURN && (TOUCH_FACTORY_INFO_RETURN+0x100)==data)||
+		(addr==TOUCH_XFER_RETURN && (TOUCH_XFER_RETURN+0x100)==data)||
+		(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data))
+	{
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+	}
+	else if(addr==TOUCH_FACTORY_INFO && (TOUCH_FACTORY_INFO+0x100)==data)
+	{
+		switch_pic(FACTORY_PAGE);
+		g_index=FACTORY_PAGE;
+	}
+	else if(addr==TOUCH_USER_INFO && (TOUCH_USER_INFO+0x100)==data)
+	{
+		switch_pic(USER_INFO_PAGE);
+		g_index=USER_INFO_PAGE;
 	}
 	else if((addr==TOUCH_TEST_GPRS_2 && (TOUCH_TEST_GPRS_2+0x100)==data)||
 		(addr==TOUCH_TEST_GPRS_1 && (TOUCH_TEST_GPRS_1+0x100)==data)||
@@ -2100,13 +2130,7 @@ unsigned short input_handle(char *input)
 			printfLog("ping server by gprs failed\n");
 			gprs_state(0,g_index);
 		}
-	}
-	else if((addr==TOUCH_PRODUCT_INFO_1 && (TOUCH_PRODUCT_INFO_1+0x100)==data)||
-		(addr==TOUCH_PRODUCT_INFO_2 && (TOUCH_PRODUCT_INFO_2+0x100)==data))
-	{
-			switch_pic(PRODUCT_PAGE);
-			g_index=PRODUCT_PAGE;
-	}
+	}	
 	else if((addr==TOUCH_SYSTEM_SETTING_1 && (TOUCH_SYSTEM_SETTING_1+0x100)==data)||
 		(addr==TOUCH_SYSTEM_SETTING_2 && (TOUCH_SYSTEM_SETTING_2+0x100)==data))
 	{
@@ -2723,10 +2747,52 @@ unsigned short input_handle(char *input)
 		wifi_select=0;
 		write_string(ADDR_XFER_SELECT,"GPRS",strlen("GPRS"));
 	}
+	else if(addr==TOUCH_SLEEP_SETTING && (TOUCH_SLEEP_SETTING+0x100)==data)
+	{
+		switch_pic(TIME_PAGE_SETTING);
+		g_index=TIME_PAGE_SETTING;
+	}
+	else if(addr==TOUCH_ONE_MINS && (TOUCH_ONE_MINS+0x100)==data)
+	{
+		g_share_memory->sleep=1;
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+		set_net_interface();
+	}
+	else if(addr==TOUCH_FIVE_MINS && (TOUCH_FIVE_MINS+0x100)==data)
+	{
+		g_share_memory->sleep=5;
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+		set_net_interface();
+	}
+	else if(addr==TOUCH_TEN_MINS && (TOUCH_TEN_MINS+0x100)==data)
+	{
+		g_share_memory->sleep=10;
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+		set_net_interface();
+	}
+	else if(addr==TOUCH_NEVER_MINS && (TOUCH_NEVER_MINS+0x100)==data)
+	{
+		g_share_memory->sleep=0;
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+		set_net_interface();
+	}
 	else if(addr==TOUCH_XFER_SETTING&&(TOUCH_XFER_SETTING+0x100)==data)
 	{//enter wifi passwd setting
+		char buf1[]={"WIFIÒÑÁªÍø"};
+		char buf2[]={"ÇëÊäÈëWIFIÕËºÅºÍÃÜÂë"};
+		char cmd[256]={0};
 		clear_buf(ADDR_AP_NAME,20);
 		clear_buf(ADDR_AP_KEY,20);
+		clear_buf(ADDR_WIFI_STATUS,32);
+		if(ping_server())
+			sprintf(cmd,"%s",buf1);
+		else
+			sprintf(cmd,"%s",buf2);
+		write_string(ADDR_WIFI_STATUS,cmd,strlen(cmd));		
 		switch_pic(XFER_SETTING_PAGE);
 		g_index=XFER_SETTING_PAGE;
 		if(g_share_memory->send_by_wifi)
@@ -3184,6 +3250,8 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_PRODUCT_MODEL,40);
 		clear_buf(ADDR_PRODUCT_ID,40);
 		write_string(ADDR_PRODUCT_ID,g_share_memory->uuid,strlen(g_share_memory->uuid));
+		switch_pic(PRODUCT_PAGE);
+		g_index=PRODUCT_PAGE;
 	}		
 	else if((addr==TOUCH_HCHO_HISTORY&& (TOUCH_HCHO_HISTORY+0x100)==data)||
 			(addr==TOUCH_CO_HISTORY&& (TOUCH_CO_HISTORY+0x100)==data)||
@@ -3355,6 +3423,7 @@ void lcd_loop()
 	int get=0;
 	char ptr[32]={0};	
 	switch_pic(MAIN_PAGE);
+	g_index=MAIN_PAGE;
 	while(1)	
 	{	
 		if(read(g_share_memory->fd_lcd,&ch,1)==1)
@@ -3435,8 +3504,11 @@ int lcd_init()
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
-		signal(SIGALRM, lcd_off);
-		alarm(300);
+		signal(SIGALRM, lcd_off);		
+		if(g_share_memory->sleep!=0)
+			alarm(g_share_memory->sleep*60);
+		else
+			alarm(5*60);
 		while(1)
 			lcd_loop();
 	}

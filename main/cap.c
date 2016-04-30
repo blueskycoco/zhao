@@ -318,7 +318,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0)
 		{						
-			write_data(ADDR_TVOC_REAL_1,value);
+			write_data(ADDR_TVOC_REAL_2,value);
 		}
 		else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
 		{
@@ -338,19 +338,19 @@ void update_dwin_real_value(char *id,int value)
 		}
 		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
 		{
-			write_data(ADDR_PM10_REAL_1,value);
+			write_data(ADDR_PM10_REAL_2,value);
 		}
 		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
 		{
-			write_data(ADDR_WIND_REAL_1,value);
+			write_data(ADDR_WIND_REAL_2,value);
 		}
 		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
 		{
-			write_data(ADDR_PRESS_REAL_1,value);
+			write_data(ADDR_PRESS_REAL_2,value);
 		}
 		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
 		{
-			write_data(ADDR_NOISE_REAL_1,value);
+			write_data(ADDR_NOISE_REAL_2,value);
 		}
 	}
 	else

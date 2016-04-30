@@ -435,6 +435,8 @@ void get_net_interface()
 	{
 		if(fread(&(g_share_memory->send_by_wifi),1,1,fp)<0)
 			g_share_memory->send_by_wifi=1;
+		if(fread(&(g_share_memory->sleep),1,1,fp)<0)
+			g_share_memory->sleep=5;
 		fclose(fp);
 	}
 	else
@@ -543,6 +545,7 @@ void set_net_interface()
 {
 	FILE *fp=fopen("/home/user/interface.txt","w");
 	fwrite(&(g_share_memory->send_by_wifi),1,1,fp);
+	fwrite(&(g_share_memory->sleep),1,1,fp);
 	fclose(fp);
 	printfLog(MISC_PROCESS"set interface is %d\n",g_share_memory->send_by_wifi);
 }
