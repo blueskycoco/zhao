@@ -278,7 +278,8 @@ int ping_server()
 	char cmd[256]={0};
 	char ret[256]={0};
 	FILE *fp;
-	sprintf(cmd,"ping -W 1 -c 1 123.57.26.24");
+	//sprintf(cmd,"ping -W 1 -c 1 123.57.26.24");
+	sprintf(cmd,"ping -W 1 -c 1 www.baidu.com");
 	if((fp=popen(cmd,"r"))!=NULL)
 	{
 		memset(ret,0,256);
