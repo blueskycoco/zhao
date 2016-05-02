@@ -16,15 +16,16 @@ void set_upload_flag(int a)
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
 {
-	memset(history[*cnt].data,'\0',10);
+	printfLog(CAP_PROCESS"set_upload_data id %s,cnt %d,data %s,date %s\n",id,*cnt,data,date);
+	memset(history->data,'\0',10);
 	if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-		sprintf(history[*cnt].data,"%04d",atoi(data));
+		sprintf(history->data,"%04d",atoi(data));
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
-		sprintf(history[*cnt].data,"%03d",atoi(data));
+		sprintf(history->data,"%03d",atoi(data));
 	else				
-		strcpy(history[*cnt].data,data);	
-	memset(history[*cnt].time,'\0',20);
-	strcpy(history[*cnt].time,date);							
+		strcpy(history->data,data);	
+	memset(history->time,'\0',20);
+	strcpy(history->time,date);							
 	free(data);
 	(*cnt)++;
 }
@@ -415,12 +416,12 @@ char *build_message(char *cmd,int len,char *message)
 	int i=0;
 	char sensor_error[]={0x65,0x72,0x72,0x6f,0x72};
 	char id[32]={0},data[32]={0},date[32]={0},error[32]={0};
-	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
+//	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
 	int message_type=(cmd[2]<<8)|cmd[3];
 	sprintf(id,"%d",message_type);
 	//printfLog(CAP_PROCESS"crc 0x%04X,message_type %d,len %d \n",crc,message_type,len);
-	if(crc==CRC_check((unsigned char *)cmd,len-2))
-	{
+	//if(crc==CRC_check((unsigned char *)cmd,len-2))
+	//{
 		i=0;
 		switch(message_type)
 		{
@@ -689,13 +690,14 @@ char *build_message(char *cmd,int len,char *message)
 			}
 			break;
 		}
-	}
-	else
-	{
-		printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)cmd,len-2));
-		for(i=0;i<len;i++)
-			printfLog("0x%02x ",cmd[i]);
-	}
+	//}
+	//else
+	//{
+	//	printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)cmd,len-2));
+	//	for(i=0;i<len;i++)
+	//		printfLog("0x%02x ",cmd[i]);
+	//	printfLog("\n");
+	//}
 	return message;
 }
 void return_zero_point(int co)
@@ -816,6 +818,9 @@ void show_cap_value(char *buf,int len)
 		case 260:
 			printfLog(CAP_PROCESS"[CAP][CO_PPM] ");
 			break;
+		case 261:
+			printfLog(CAP_PROCESS"[CAP][CO2_PPM] ");
+			break;	
 		case 262:
 			printfLog(CAP_PROCESS"[CAP][HCHO_PPM] ");
 			break;
@@ -859,10 +864,10 @@ void show_cap_value(char *buf,int len)
 void show_factory(int zero,char *cmd,int len)
 {	
 	char data[32]={0};
-	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
+//	unsigned int crc=(cmd[len-2]<<8)|cmd[len-1];
 	if(cmd[5]==0x65 && cmd[6]==0x72 && cmd[7]==0x72 && cmd[8]==0x6f && cmd[9]==0x72)
 		return ;
-	if(crc==CRC_check((unsigned char *)cmd,len-2))
+	//if(crc==CRC_check((unsigned char *)cmd,len-2))
 	{
 		sprintf(data,"%d",cmd[5]<<8|cmd[6]);						
 		if(cmd[7]!=0)
@@ -918,8 +923,8 @@ void show_factory(int zero,char *cmd,int len)
 			}
 		}
 	}
-	else
-		printfLog(CAP_PROCESS"CRC failed in zero mode\n");
+	//else
+	//	printfLog(CAP_PROCESS"CRC failed in zero mode\n");
 }
 void show_verify_point()
 {
@@ -958,9 +963,9 @@ int cap_board_mon()
 	char 	ch = 0;
 	char 	state=STATE_IDLE;
 	int 	message_len=0;
-	char 	message[256]={0};
+	char 	message[8192]={0};
 	int 	i=0;
-	char 	to_check[256]={0};
+	char 	to_check[8192]={0};
 	int 	crc=0;
 	int 	message_type=0;
 	while(1)
@@ -1028,10 +1033,17 @@ int cap_board_mon()
 					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 					to_check[5+message_len+1]=crc&0xff;
+					show_cap_value(to_check+2,message_len);
+					if(crc!=CRC_check((unsigned char *)to_check,message_len+5))
+					{
+						printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)to_check,message_len+5));
+						for(i=0;i<message_len+5;i++)
+							printfLog("0x%02x ",to_check[i]);
+						printfLog("\n");
+					}
 					char *cmd=(char *)malloc(message_len+7);
 					memset(cmd,'\0',message_len+7);
 					memcpy(cmd,to_check,message_len+7);
-					show_cap_value(to_check+2,message_len);
 					//printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
 					//	message_type);
 					if(g_share_memory->factory_mode==NORMAL_MODE)

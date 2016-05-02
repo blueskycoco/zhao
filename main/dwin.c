@@ -170,7 +170,7 @@ void show_history(char *id,int offset)
 	char tmp[4]={0};
 	if(strncmp(id,ID_CAP_PM_10,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"pm10_cnt %d\n",g_share_memory->cnt[SENSOR_PM10]);
 		if((g_share_memory->cnt[SENSOR_PM10]-offset-7)>0)
 		{
 			clear_buf(ADDR_PM10_DATA_0,6);
@@ -223,7 +223,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_QI_YA,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"press_cnt %d\n",g_share_memory->cnt[SENSOR_PRESS]);
 		if((g_share_memory->cnt[SENSOR_PRESS]-offset-7)>0)
 		{
 			clear_buf(ADDR_PRESS_DATA_0,6);
@@ -276,7 +276,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_TVOC,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"tvoc_cnt %d\n",g_share_memory->cnt[SENSOR_TVOC]);
 		if((g_share_memory->cnt[SENSOR_TVOC]-offset-7)>0)
 		{
 			clear_buf(ADDR_TVOC_DATA_0,6);
@@ -330,7 +330,7 @@ void show_history(char *id,int offset)
 	
 	if(strncmp(id,ID_CAP_CHOU_YANG,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"o3_cnt %d\n",g_share_memory->cnt[SENSOR_O3]);
 		if((g_share_memory->cnt[SENSOR_O3]-offset-7)>0)
 		{
 			clear_buf(ADDR_O3_DATA_0,6);
@@ -384,7 +384,7 @@ void show_history(char *id,int offset)
 
 	if(strncmp(id,ID_CAP_FENG_SU,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"wind_cnt %d\n",g_share_memory->cnt[SENSOR_WIND]);
 		if((g_share_memory->cnt[SENSOR_WIND]-offset-7)>0)
 		{
 			clear_buf(ADDR_WIND_DATA_0,6);
@@ -437,7 +437,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_BUZZY,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"noise_cnt %d\n",g_share_memory->cnt[SENSOR_NOISE]);
 		if((g_share_memory->cnt[SENSOR_NOISE]-offset-7)>0)
 		{
 			clear_buf(ADDR_NOISE_DATA_0,6);
@@ -490,7 +490,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_co_cnt);
+		printfLog(LCD_PROCESS"co_cnt %d\n",g_share_memory->cnt[SENSOR_CO]);
 		if((g_share_memory->cnt[SENSOR_CO]-offset-7)>0)
 		{
 			clear_buf(ADDR_CO_DATA_0,6);
@@ -543,7 +543,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co2_cnt %d\n",g_share_memory->cnt[SENSOR_CO2]);
+		printfLog(LCD_PROCESS"co2_cnt %d\n",g_share_memory->cnt[SENSOR_CO2]);
 		if((g_share_memory->cnt[SENSOR_CO2]-offset-7)>0)
 		{	
 			clear_buf(ADDR_CO2_DATA_0,6);
@@ -596,7 +596,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_co_cnt %d\n",*g_hcho_cnt);
+		printfLog(LCD_PROCESS"hcho_cnt %d\n",g_share_memory->cnt[SENSOR_HCHO]);
 		if((g_share_memory->cnt[SENSOR_HCHO]-offset-7)>0)
 		{
 			clear_buf(ADDR_HCHO_DATA_0,6);
@@ -649,7 +649,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_shidu_cnt %d\n",*g_shidu_cnt);
+		printfLog(LCD_PROCESS"shidu_cnt %d\n",g_share_memory->cnt[SENSOR_SHIDU]);
 		if((g_share_memory->cnt[SENSOR_SHIDU]-offset-7)>0)
 		{
 			clear_buf(ADDR_SHIDU_DATA_0,6);
@@ -702,7 +702,7 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_temp_cnt %d\n",*g_temp_cnt);
+		printfLog(LCD_PROCESS"temp_cnt %d\n",g_share_memory->cnt[SENSOR_TEMP]);
 		if((g_share_memory->cnt[SENSOR_TEMP]-offset-7)>0)
 		{	
 			clear_buf(ADDR_TEMP_DATA_0,6);
@@ -755,7 +755,9 @@ void show_history(char *id,int offset)
 	}
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
 	{
-//		printfLog(LCD_PROCESS"g_pm25_cnt %d\n",*g_pm25_cnt);
+		printfLog(LCD_PROCESS"pm25_cnt %d %s %s\n",g_share_memory->cnt[SENSOR_PM25],
+			sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time,
+			sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].data);
 		if((g_share_memory->cnt[SENSOR_PM25]-offset-7)>0)
 		{
 			sprintf(tmp,"%4d",offset/7 + 1);
@@ -3689,61 +3691,73 @@ unsigned short input_handle(char *input)
 			{
 				case CURVE_PAGE_CO:
 				{//co
+					switch_pic(CURVE_PAGE_CO);
 					show_curve(ID_CAP_CO,&curve_co);
 				}
 				break;
 				case CURVE_PAGE_NOISE:
 				{//co
+					switch_pic(CURVE_PAGE_NOISE);
 					show_curve(ID_CAP_BUZZY,&curve_noise);
 				}
 				break;
 				case CURVE_PAGE_WIND:
 				{//co
+					switch_pic(CURVE_PAGE_WIND);
 					show_curve(ID_CAP_FENG_SU,&curve_wind);
 				}
 				break;
 				case CURVE_PAGE_PM10:
 				{//co
+					switch_pic(CURVE_PAGE_PM10);
 					show_curve(ID_CAP_PM_10,&curve_pm10);
 				}
 				break;
 				case CURVE_PAGE_TVOC:
 				{//co
+					switch_pic(CURVE_PAGE_TVOC);
 					show_curve(ID_CAP_TVOC,&curve_tvoc);
 				}
 				break;
 				case CURVE_PAGE_PRESS:
 				{//co
+					switch_pic(CURVE_PAGE_PRESS);
 					show_curve(ID_CAP_QI_YA,&curve_press);
 				}
 				break;
 				case CURVE_PAGE_O3:
 				{//co
+					switch_pic(CURVE_PAGE_O3);
 					show_curve(ID_CAP_CHOU_YANG,&curve_o3);
 				}
 				break;
 				case CURVE_PAGE_CO2:
 				{//co2
+					switch_pic(CURVE_PAGE_CO2);
 					show_curve(ID_CAP_CO2,&curve_co2);
 				}
 				break;
 				case CURVE_PAGE_HCHO:
 				{//hcho
+					switch_pic(CURVE_PAGE_HCHO);
 					show_curve(ID_CAP_HCHO,&curve_hcho);
 				}
 				break;
 				case CURVE_PAGE_SHIDU:
 				{//shidu
+					switch_pic(CURVE_PAGE_SHIDU);
 					show_curve(ID_CAP_SHI_DU,&curve_shidu);
 				}
 				break;
 				case CURVE_PAGE_TEMP:
 				{//temp
+					switch_pic(CURVE_PAGE_TEMP);
 					show_curve(ID_CAP_TEMPERATURE,&curve_temp);
 				}
 				break;
 				case CURVE_PAGE_PM25:
 				{//pm25
+					switch_pic(CURVE_PAGE_PM25);
 					show_curve(ID_CAP_PM_25,&curve_pm25);
 				}
 				break;
