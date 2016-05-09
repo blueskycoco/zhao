@@ -243,7 +243,7 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_CO_HISTORY	0x003e
 #define	TOUCH_CO_RETURN	0x003f
 #define	ADDR_CURVE_CO_YEAR	0x0d3c
-#define	ADDR_CURVE_CO_MON	0x0c3d
+#define	ADDR_CURVE_CO_MON	0x0d3d
 #define	ADDR_CURVE_CO_DAY	0x0d3e
 		
 #define	TOUCH_CO2_HISTORY	0x0040

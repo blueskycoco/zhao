@@ -195,7 +195,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-offset-1].time+8,2);
 		write_data(ADDR_LIST_O3_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_O3]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_O3]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_O3_PAGE_N,offset/7 + 1);
 			write_data(ADDR_O3_PAGE_ALL,g_share_memory->cnt[SENSOR_O3]/7);
@@ -249,11 +249,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_O3_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_O3_PAGE_ALL,0);
-			write_data(ADDR_O3_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_TVOC,strlen(id))==0)
 	{
@@ -268,7 +263,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-offset-1].time+8,2);
 		write_data(ADDR_LIST_TVOC_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_TVOC]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_TVOC]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_TVOC_PAGE_N,offset/7 + 1);
 			write_data(ADDR_TVOC_PAGE_ALL,g_share_memory->cnt[SENSOR_TVOC]/7);
@@ -322,11 +317,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_TVOC_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_TVOC_PAGE_ALL,0);
-			write_data(ADDR_TVOC_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_QI_YA,strlen(id))==0)
 	{
@@ -341,7 +331,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-offset-1].time+8,2);
 		write_data(ADDR_LIST_PRESS_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_PRESS]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_PRESS]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_PRESS_PAGE_N,offset/7 + 1);
 			write_data(ADDR_PRESS_PAGE_ALL,g_share_memory->cnt[SENSOR_PRESS]/7);
@@ -395,11 +385,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_PRESS_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_PRESS_PAGE_ALL,0);
-			write_data(ADDR_PRESS_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_BUZZY,strlen(id))==0)
 	{
@@ -414,7 +399,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-offset-1].time+8,2);
 		write_data(ADDR_LIST_NOISE_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_NOISE]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_NOISE]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_NOISE_PAGE_N,offset/7 + 1);
 			write_data(ADDR_NOISE_PAGE_ALL,g_share_memory->cnt[SENSOR_NOISE]/7);
@@ -468,11 +453,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_NOISE_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_NOISE_PAGE_ALL,0);
-			write_data(ADDR_NOISE_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_FENG_SU,strlen(id))==0)
 	{
@@ -487,7 +467,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-offset-1].time+8,2);
 		write_data(ADDR_LIST_WIND_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_WIND]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_WIND]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_WIND_PAGE_N,offset/7 + 1);
 			write_data(ADDR_WIND_PAGE_ALL,g_share_memory->cnt[SENSOR_WIND]/7);
@@ -541,11 +521,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_WIND_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_WIND_PAGE_ALL,0);
-			write_data(ADDR_WIND_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_SHI_DU,strlen(id))==0)
 	{
@@ -560,7 +535,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-offset-1].time+8,2);
 		write_data(ADDR_LIST_SHIDU_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_SHIDU]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_SHIDU]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_SHIDU_PAGE_N,offset/7 + 1);
 			write_data(ADDR_SHIDU_PAGE_ALL,g_share_memory->cnt[SENSOR_SHIDU]/7);
@@ -614,11 +589,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_SHIDU_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_SHIDU_PAGE_ALL,0);
-			write_data(ADDR_SHIDU_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_TEMPERATURE,strlen(id))==0)
 	{
@@ -633,7 +603,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time+8,2);
 		write_data(ADDR_LIST_TEMP_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_TEMP]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_TEMP]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_TEMP_PAGE_N,offset/7 + 1);
 			write_data(ADDR_TEMP_PAGE_ALL,g_share_memory->cnt[SENSOR_TEMP]/7);
@@ -687,11 +657,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_TEMP_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_TEMP_PAGE_ALL,0);
-			write_data(ADDR_TEMP_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
 	{
@@ -706,7 +671,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-offset-1].time+8,2);
 		write_data(ADDR_LIST_CO2_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_CO2]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_CO2]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_CO2_PAGE_N,offset/7 + 1);
 			write_data(ADDR_CO2_PAGE_ALL,g_share_memory->cnt[SENSOR_CO2]/7);
@@ -760,11 +725,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_CO2_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_CO2_PAGE_ALL,0);
-			write_data(ADDR_CO2_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_CO,strlen(id))==0)
 	{
@@ -779,7 +739,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-offset-1].time+8,2);
 		write_data(ADDR_LIST_CO_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_CO]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_CO]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_CO_PAGE_N,offset/7 + 1);
 			write_data(ADDR_CO_PAGE_ALL,g_share_memory->cnt[SENSOR_CO]/7);
@@ -833,11 +793,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_CO_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_CO_PAGE_ALL,0);
-			write_data(ADDR_CO_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_PM_25,strlen(id))==0)
 	{
@@ -852,7 +807,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-offset-1].time+8,2);
 		write_data(ADDR_LIST_PM25_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_PM25]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_PM25]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_PM25_PAGE_N,offset/7 + 1);
 			write_data(ADDR_PM25_PAGE_ALL,g_share_memory->cnt[SENSOR_PM25]/7);
@@ -906,11 +861,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_PM25_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_PM25_PAGE_ALL,0);
-			write_data(ADDR_PM25_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_PM_10,strlen(id))==0)
 	{
@@ -925,7 +875,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-offset-1].time+8,2);
 		write_data(ADDR_LIST_PM10_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_PM10]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_PM10]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_PM10_PAGE_N,offset/7 + 1);
 			write_data(ADDR_PM10_PAGE_ALL,g_share_memory->cnt[SENSOR_PM10]/7);
@@ -979,11 +929,6 @@ void show_history(char *id,int offset)
 			write_data(ADDR_PM10_DATA_6,atoi(out));
 			free(out);
 		}
-		else
-		{
-			write_data(ADDR_PM10_PAGE_ALL,0);
-			write_data(ADDR_PM10_PAGE_N,0);
-		}
 	}
 	if(strncmp(id,ID_CAP_HCHO,strlen(id))==0)
 	{
@@ -998,7 +943,7 @@ void show_history(char *id,int offset)
 		memcpy(tmp,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-1].time+8,2);
 		write_data(ADDR_LIST_HCHO_DAY,atoi(tmp));
 
-		if((g_share_memory->cnt[SENSOR_HCHO]-offset-7)>0)
+		if((g_share_memory->cnt[SENSOR_HCHO]-offset-7)>=0)
 		{//6:2
 			write_data(ADDR_HCHO_PAGE_N,offset/7 + 1);
 			write_data(ADDR_HCHO_PAGE_ALL,g_share_memory->cnt[SENSOR_HCHO]/7);
@@ -1051,11 +996,6 @@ void show_history(char *id,int offset)
 			out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-offset-7].data);
 			write_data(ADDR_HCHO_DATA_6,atoi(out));
 			free(out);
-		}
-		else
-		{
-			write_data(ADDR_HCHO_PAGE_ALL,0);
-			write_data(ADDR_HCHO_PAGE_N,0);
 		}
 	}
 	
@@ -1131,10 +1071,11 @@ void wifi_handle()
 
 void show_curve(char *id,int* offset)
 {
+	int buf1[8192]={0};
 	int buf[24]={0};
 	char temp[10]={0},temp2[10]={0};
 	char hour1[3]={0},hour2[3]={0};
-	int i=0,j=0,m=0;
+	int i=0,j=0,m=0,tmp=0;
 	clear_curve();	
 	if(strncmp(id,ID_CAP_PM_10,strlen(id))==0)
 	{
@@ -1739,7 +1680,34 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_PM25_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_PM25]-*offset)>0)
-		{			
+		{	
+			memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
+			strcpy(hour1,"24");
+			while(1)
+			{
+				memcpy(temp2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time,10);	
+				if(strncmp(temp,temp2,10)==0)
+				{
+					memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time+11,2);
+					buf[atoi(hour2)*3+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					j=j+1;
+					if(j==3)
+						j=0;
+					i++;
+				}
+				else
+					break;
+			}/*
+			for(i=0;i<24;i++)
+			{
+				for(j=0;j<6;j++)
+					tmp=tmp+buf1[i*6+j];
+				buf[i]=tmp/6;
+				tmp=0;
+				printfLog("%d==>%d\n",i,buf[i]);
+			}*/
+			j=72;
+			#if 0
 			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
 			memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
 			strcpy(hour1,"24");
@@ -1779,7 +1747,7 @@ void show_curve(char *id,int* offset)
 			//*offset+=i;
 			if(*offset>=g_share_memory->cnt[SENSOR_PM25])
 				*offset=0;
-
+			#endif
 		}
 		else
 			*offset=0;
