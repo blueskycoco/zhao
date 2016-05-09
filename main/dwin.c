@@ -1090,51 +1090,28 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_PM10_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_PM10]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								if(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data[2]=='0')
-									buf[j++]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+3)*4;
-								else
-									buf[j++]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+2)*4;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					if(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data[2]=='0')
+						buf[atoi(hour2)*5+j]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+3)*4;
+					else
+						buf[atoi(hour2)*5+j]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+2)*4;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_PM10])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1151,48 +1128,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_CO_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_CO]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-i-1].data)*4;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-*offset-i-1].data)*4;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_CO])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1209,50 +1163,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_CO2_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_CO2]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=(atoi(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data)*2)/5;
-								printfLog(LCD_PROCESS"j %d %s==>%d %d %s\n",j,
-									sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].time,buf[j-1],
-									atoi(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data+3)*2,
-									sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data)*2)/5;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_CO2])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1269,48 +1198,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_TEMP_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_TEMP]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].data)*23;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].data)*23;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_TEMP])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1327,48 +1233,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_SHIDU_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_SHIDU]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].data)*10;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].data)*10;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_SHIDU])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1385,49 +1268,26 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_WIND_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_WIND]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=(atoi(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].data)*100+
-									atoi(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].data+2))*3;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].data)*100+
+									atoi(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-*offset-i-1].data+2))*3;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_WIND])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1444,48 +1304,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_NOISE_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_NOISE]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].data)*7;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].data)*7;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_NOISE])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1502,51 +1339,28 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_PRESS_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_PRESS]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								if(atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data)>=400)
-									buf[j++]=atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data)-400;
-								else
-									buf[j++]=atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data);
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					if(atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data)>=400)
+						buf[atoi(hour2)*5+j]=atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data)-400;
+					else
+						buf[atoi(hour2)*5+j]=atoi(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-*offset-i-1].data);
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_PRESS])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1563,48 +1377,25 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_TVOC_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_TVOC]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=(atoi(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-i-1].data+2)*2)/3;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-*offset-i-1].data+2)*2)/3;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_TVOC])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
 	}	
@@ -1621,49 +1412,26 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_O3_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_O3]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=((atoi(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].data)*1000+
-									atoi(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].data+2)*10)*2)/3;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].time+11,2);
+					//buf[atoi(hour2)*5+j]=atoi(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].data+2)*10;
+					buf[atoi(hour2)*5+j]=((atoi(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].data)*1000+
+									atoi(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-*offset-i-1].data+2)*10)*2)/3;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_O3])
-				*offset=0;
-
-		}
+		}							
 		else
 			*offset=0;
 	}	
@@ -1682,72 +1450,21 @@ void show_curve(char *id,int* offset)
 		if((g_share_memory->cnt[SENSOR_PM25]-*offset)>0)
 		{	
 			memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
-			strcpy(hour1,"24");
 			while(1)
 			{
 				memcpy(temp2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
 				{
 					memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time+11,2);
-					buf[atoi(hour2)*3+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
 					j=j+1;
-					if(j==3)
+					if(j==5)
 						j=0;
 					i++;
 				}
 				else
 					break;
-			}/*
-			for(i=0;i<24;i++)
-			{
-				for(j=0;j<6;j++)
-					tmp=tmp+buf1[i*6+j];
-				buf[i]=tmp/6;
-				tmp=0;
-				printfLog("%d==>%d\n",i,buf[i]);
-			}*/
-			j=72;
-			#if 0
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
-			memcpy(temp,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-1].time+11,2);
-			while(1)
-			{
-				memcpy(temp2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time,10);	
-				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
-					memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time+11,2);
-				}
-				else
-					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_PM25])
-				*offset=0;
-			#endif
 		}
 		else
 			*offset=0;
@@ -1765,51 +1482,29 @@ void show_curve(char *id,int* offset)
 		memcpy(temp,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time+8,2);
 		write_data(ADDR_CURVE_HCHO_DAY,atoi(temp));
 		if((g_share_memory->cnt[SENSOR_HCHO]-*offset)>0)
-		{			
-			//write_string(ADDR_CURVE_DATE, sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
+		{	
 			memcpy(temp,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time,10);
-			strcpy(hour1,"24");
-			memcpy(hour2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-1].time+11,2);
 			while(1)
 			{
 				memcpy(temp2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].time,10);	
 				if(strncmp(temp,temp2,10)==0)
-				{				
-					if(strncmp(hour1,hour2,2)!=0)
-					{	
-						printfLog(LCD_PROCESS"hour1 %s,hour2 %s\n",hour1,hour2);
-						for(m=atoi(hour1);m>atoi(hour2);m--)
-						{
-							if(j<24)
-							{
-								buf[j++]=atoi(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].data+2)*10;
-								printfLog(LCD_PROCESS"j %d %s==>%d\n",j,
-									sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].time,buf[j-1]);							
-							}
-						}					
-						memcpy(hour1,hour2,2);
-					}
-					i++;
+				{
 					memcpy(hour2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].time+11,2);
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].data+2)*10;
+					j=j+1;
+					if(j==5)
+						j=0;
+					i++;
 				}
 				else
 					break;
 			}
-			printfLog(LCD_PROCESS"j is %d\n",j);
-			if(j!=24)
-			{
-				for(m=j;m<24;m++)
-					buf[m]=buf[j-1];
-				j=24;
-			}
-			//*offset+=i;
-			if(*offset>=g_share_memory->cnt[SENSOR_HCHO])
-				*offset=0;
-
-		}
+		}		
 		else
 			*offset=0;
-	}		
+	}	
+	
+	j=120;
 	draw_curve(buf,j);
 }
 int read_dgus(int addr,char len,char *out)
