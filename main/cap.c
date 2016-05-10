@@ -3,9 +3,19 @@
 #include "dwin.h"
 #include "netlib.h"
 #include "xfer.h"
+#include <sys/msg.h>
+
 #define CAP_PROCESS "[CAP_PROCESS] "
 int g_upload=0;
+int msgid=0;
 char *post_message=NULL,*warnning_msg=NULL;
+struct msg_st  
+{  
+	long int msg_type;
+	int len;
+	char text[512];  
+}; 
+
 //set g_upload flag to make 10 mins upload once.
 void set_upload_flag(int a)
 {
@@ -954,6 +964,25 @@ void show_verify_point()
 	write_string(ADDR_VP_7,cmd,strlen(cmd));
 	clear_point();
 }
+int send_msg(int msgid,unsigned char msg_type,unsigned char *text,int len)
+{
+	struct msg_st data;
+	data.msg_type = msg_type;
+	data.len=len;
+	memset(data.text,'\0',512);
+	printfLog(CAP_PROCESS"send msg\n");
+	printfLog(CAP_PROCESS"MSG_TYPE %d\n",msg_type);
+	printfLog(CAP_PROCESS"MSG_ID %d\n",id);
+	if(text!=NULL)
+	{
+		memcpy(data.text,text,len);
+	}
+	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)  
+	{  
+		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
+	}
+	printfLog(CAP_PROCESS"send msg done\n");
+}
 
 /*
   *get cmd from lv's cap board
@@ -1041,68 +1070,8 @@ int cap_board_mon()
 							printfLog("0x%02x ",to_check[i]);
 						printfLog("\n");
 					}
-					char *cmd=(char *)malloc(message_len+7);
-					memset(cmd,'\0',message_len+7);
-					memcpy(cmd,to_check,message_len+7);
-					//printfLog(CAP_PROCESS"factory_mode %d,message_type %d\n",g_share_memory->factory_mode,
-					//	message_type);
-					if(g_share_memory->factory_mode==NORMAL_MODE)
-					{
-						if(message_type == 0x0004)
-						{
-							for(i=0;i<message_len;i=i+2)
-							{
-								g_share_memory->sensor_interface_mem[i/2]=(message[i]<<8)|message[i+1];
-								printfLog(CAP_PROCESS"sensor_interface[%d] = %4x\n",i/2,g_share_memory->sensor_interface_mem[i/2]);
-							}
-						}
-						else
-							post_message=build_message(cmd,message_len+7,post_message);
-					}
-					else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
-					{
-						if(message_type!=0x0001)
-						show_factory(1,cmd,message_len+7);
-					}
 					else
-					{
-						if(message_type == 0x0003)
-						{							
-							g_share_memory->y=message[message_len-1];
-							printfLog(CAP_PROCESS". = %d\n",message[message_len-1]);
-							for(i=0;i<16;i=i+2)
-							{
-								g_share_memory->p[i/2]=(message[i]<<8)|message[i+1];
-								if(g_share_memory->y!=0)
-								{
-									int m=1,j=0;
-									for(j=0;j<g_share_memory->y;j++)
-										m=m*10;
-									g_share_memory->p[i/2]=g_share_memory->p[i/2]/m;	
-								}
-								printfLog(CAP_PROCESS"verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
-							}
-							for(i=16;i<32;i=i+2)
-							{
-								g_share_memory->x[(i-16)/2]=(message[i]<<8)|message[i+1];
-								if(g_share_memory->y!=0)
-								{
-									int m=1,j=0;
-									for(j=0;j<g_share_memory->y;j++)
-										m=m*10;
-									g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/m;	
-								}
-								printfLog(CAP_PROCESS"xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
-							}
-							show_verify_point();
-						}
-						else
-						{
-							if(message_type!=0x0001)
-								show_factory(0,cmd,message_len+7);
-						}
-					}
-					free(cmd);
+						send_msg(msgid,0x33,to_check,message_len+7);
 					return 0;											
 				}
 				default:
@@ -1115,6 +1084,98 @@ int cap_board_mon()
 	}
 	return 0;
 }
+void cap_data_handle()
+{
+	struct msg_st data;
+	int 	message_type=0;
+	int 	message_len=0;
+	int 	i=0;
+	unsigned char *message=NULL;
+	printfLog(CAP_PROCESS"Enter cap_data_handle\n");
+	if(msgrcv(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
+	{
+		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		char *cmd=(char *)malloc(data.len);
+		memset(cmd,'\0',data.len);
+		memcpy(cmd,data.text,data.len);
+		char *message=(char *)malloc(data.len-7);
+		memset(message,'\0',data.len-7);
+		memcpy(message,data.text+5,data.len-7);
+
+		message_type=((cmd[2]<<8)|cmd[3]);
+		message_len=data.len-7;
+		if(g_share_memory->factory_mode==NORMAL_MODE)
+		{
+			if(message_type == 0x0004)
+			{
+				for(i=0;i<message_len;i=i+2)
+				{
+					g_share_memory->sensor_interface_mem[i/2]=(message[i]<<8)|message[i+1];
+					printfLog(CAP_PROCESS"sensor_interface[%d] = %4x\n",i/2,g_share_memory->sensor_interface_mem[i/2]);
+				}
+			}
+			else
+				post_message=build_message(cmd,message_len+7,post_message);
+		}
+		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
+		{
+			if(message_type!=0x0001)
+			show_factory(1,cmd,message_len+7);
+		}
+		else
+		{
+			if(message_type == 0x0003)
+			{							
+				g_share_memory->y=message[message_len-1];
+				printfLog(CAP_PROCESS". = %d\n",message[message_len-1]);
+				for(i=0;i<16;i=i+2)
+				{
+					g_share_memory->p[i/2]=(message[i]<<8)|message[i+1];
+					if(g_share_memory->y!=0)
+					{
+						int m=1,j=0;
+						for(j=0;j<g_share_memory->y;j++)
+							m=m*10;
+						g_share_memory->p[i/2]=g_share_memory->p[i/2]/m;	
+					}
+					printfLog(CAP_PROCESS"verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
+				}
+				for(i=16;i<32;i=i+2)
+				{
+					g_share_memory->x[(i-16)/2]=(message[i]<<8)|message[i+1];
+					if(g_share_memory->y!=0)
+					{
+						int m=1,j=0;
+						for(j=0;j<g_share_memory->y;j++)
+							m=m*10;
+						g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/m;	
+					}
+					printfLog(CAP_PROCESS"xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
+				}
+				show_verify_point();
+			}
+			else
+			{
+				if(message_type!=0x0001)
+					show_factory(0,cmd,message_len+7);
+			}
+		}
+		free(cmd);
+		free(message);
+	}
+	else
+	{
+		msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+		if(msgid == -1)  
+		{  
+			printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);
+		}
+		else
+		printfLog(CAP_PROCESS"msgid %d\n",msgid);			
+		sleep(1);
+	}
+	
+}
 /*
  * open com port
  * create a thread to mon cap board
@@ -1122,11 +1183,23 @@ int cap_board_mon()
 int cap_init()
 {
 	int fpid = 0;
-	/*if((shmid_history = shmget(IPC_PRIVATE, sizeof(struct history)*100000, PERM)) == -1 )
+	msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+	if(msgid == -1)  
+	{  
+		printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);  
+		exit(-1);  
+	}
+	else
+		printfLog(CAP_PROCESS"msgid %d\n",msgid);
+	fpid=fork();
+	if(fpid==0)
 	{
-        printfLog(CAP_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
-        exit(1);
-    }*/
+		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
+		while(1)
+			cap_board_mon();
+	}
+	else
+		printfLog(CAP_PROCESS"[PID]%d cap process read data\n",fpid);
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -1143,13 +1216,12 @@ int cap_init()
 		sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
-
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)
-			cap_board_mon();
+			cap_data_handle();
 	}
 	else
-		printfLog(CAP_PROCESS"[PID]%d cap process\n",fpid);
+		printfLog(CAP_PROCESS"[PID]%d cap process handle data\n",fpid);
 	return 0;
 }
