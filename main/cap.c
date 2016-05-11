@@ -288,8 +288,8 @@ char *count_sensor_value(char cmd,char *json,int value)
 		if(*times==MAX_COUNT_TIMES && !(*alarm))
 		{	
 			//need send server alarm
-			if(cmd==atoi(ID_CAP_CO))
-				co_flash_alarm();
+			//if(cmd==atoi(ID_CAP_CO))
+			//	co_flash_alarm();
 			json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 			json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
 			json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);
@@ -964,15 +964,14 @@ void show_verify_point()
 	write_string(ADDR_VP_7,cmd,strlen(cmd));
 	clear_point();
 }
-int send_msg(int msgid,unsigned char msg_type,unsigned char *text,int len)
+int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
 	struct msg_st data;
 	data.msg_type = msg_type;
 	data.len=len;
 	memset(data.text,'\0',512);
-	printfLog(CAP_PROCESS"send msg\n");
-	printfLog(CAP_PROCESS"MSG_TYPE %d\n",msg_type);
-	printfLog(CAP_PROCESS"MSG_ID %d\n",id);
+	//printfLog(CAP_PROCESS"send msg\n");
+	//printfLog(CAP_PROCESS"MSG_TYPE %d\n",msg_type);
 	if(text!=NULL)
 	{
 		memcpy(data.text,text,len);
@@ -981,7 +980,8 @@ int send_msg(int msgid,unsigned char msg_type,unsigned char *text,int len)
 	{  
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
 	}
-	printfLog(CAP_PROCESS"send msg done\n");
+	//printfLog(CAP_PROCESS"send msg done\n");
+	return 0;
 }
 
 /*
@@ -1090,11 +1090,11 @@ void cap_data_handle()
 	int 	message_type=0;
 	int 	message_len=0;
 	int 	i=0;
-	unsigned char *message=NULL;
-	printfLog(CAP_PROCESS"Enter cap_data_handle\n");
+	//unsigned char *message=NULL;
+	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
 	if(msgrcv(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
-		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
 		char *cmd=(char *)malloc(data.len);
 		memset(cmd,'\0',data.len);
 		memcpy(cmd,data.text,data.len);

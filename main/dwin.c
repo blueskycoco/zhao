@@ -1071,11 +1071,10 @@ void wifi_handle()
 
 void show_curve(char *id,int* offset)
 {
-	int buf1[8192]={0};
-	int buf[24]={0};
+	int buf[144]={0};
 	char temp[10]={0},temp2[10]={0};
-	char hour1[3]={0},hour2[3]={0};
-	int i=0,j=0,m=0,tmp=0;
+	char hour2[3]={0};
+	int i=0,j=0;
 	clear_curve();	
 	if(strncmp(id,ID_CAP_PM_10,strlen(id))==0)
 	{
@@ -2080,8 +2079,8 @@ void set_interface()
 	cmd[sizeof(cmd)-2]=(crc&0xff00)>>8;cmd[sizeof(cmd)-1]=crc&0x00ff; 	
 	printfLog(LCD_PROCESS"going to set_interface begin\n");
 	for(i=0;i<sizeof(cmd);i++)
-		printfLog(LCD_PROCESS"%02x ",cmd[i]);
-	printfLog(LCD_PROCESS"\ngoing to set_interface end\n");
+		printfLog("%02x ",cmd[i]);
+	printfLog("\ngoing to set_interface end\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 }
 void ctl_fan(int on)
