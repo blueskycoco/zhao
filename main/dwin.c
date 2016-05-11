@@ -1099,9 +1099,9 @@ void show_curve(char *id,int* offset)
 					memcpy(hour2,sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].time+11,2);
 					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
 					if(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data[2]=='0')
-						buf[atoi(hour2)*5+j]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+3)*4;
+						buf[atoi(hour2)*5+j]=(atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+3)*11)/3;
 					else
-						buf[atoi(hour2)*5+j]=atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+2)*4;
+						buf[atoi(hour2)*5+j]=(atoi(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-*offset-i-1].data+2)*11)/3;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1171,7 +1171,7 @@ void show_curve(char *id,int* offset)
 				{
 					memcpy(hour2,sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].time+11,2);
 					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
-					buf[atoi(hour2)*5+j]=(atoi(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data)*2)/5;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-*offset-i-1].data)*7)/20;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1206,7 +1206,7 @@ void show_curve(char *id,int* offset)
 				{
 					memcpy(hour2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].time+11,2);
 					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
-					buf[atoi(hour2)*5+j]=atoi(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].data)*23;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-*offset-i-1].data)*21;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1241,7 +1241,7 @@ void show_curve(char *id,int* offset)
 				{
 					memcpy(hour2,sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].time+11,2);
 					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
-					buf[atoi(hour2)*5+j]=atoi(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].data)*10;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-*offset-i-1].data)*9;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1312,7 +1312,7 @@ void show_curve(char *id,int* offset)
 				{
 					memcpy(hour2,sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].time+11,2);
 					//buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
-					buf[atoi(hour2)*5+j]=atoi(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].data)*7;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-*offset-i-1].data)*11)/2;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1455,7 +1455,7 @@ void show_curve(char *id,int* offset)
 				if(strncmp(temp,temp2,10)==0)
 				{
 					memcpy(hour2,sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].time+11,2);
-					buf[atoi(hour2)*5+j]=atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*4;
+					buf[atoi(hour2)*5+j]=(atoi(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-*offset-i-1].data)*11)/3;
 					j=j+1;
 					if(j==5)
 						j=0;
@@ -1489,7 +1489,7 @@ void show_curve(char *id,int* offset)
 				if(strncmp(temp,temp2,10)==0)
 				{
 					memcpy(hour2,sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].time+11,2);
-					buf[atoi(hour2)*5+j]=atoi(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].data+2)*10;
+					buf[atoi(hour2)*5+j]=atoi(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-*offset-i-1].data+2)*7;
 					j=j+1;
 					if(j==5)
 						j=0;
