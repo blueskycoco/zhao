@@ -1064,7 +1064,7 @@ void co_flash_alarm()
 		sleep(3);
 		buzzer(0x30);
 		cut_pic(0);
-		return ;
+		exit(0);
 	}
 	else
 		printfLog(MISC_PROCESS"[PID]%d co flash process\n",fpid);
