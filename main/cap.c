@@ -288,8 +288,8 @@ char *count_sensor_value(char cmd,char *json,int value)
 		if(*times==MAX_COUNT_TIMES && !(*alarm))
 		{	
 			//need send server alarm
-			//if(cmd==atoi(ID_CAP_CO))
-			//	co_flash_alarm();
+			if(cmd==atoi(ID_CAP_CO))
+				co_flash_alarm();
 			json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 			json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
 			json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);

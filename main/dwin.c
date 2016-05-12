@@ -1949,7 +1949,7 @@ void show_point(int index,char sensor)
 	char off7[]={0x5a,0xa5,0x15,0x82,0x0b,0x98,0x00,0x06,0x00,0x01,0x00,0x28,
 				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe3,0x02,0x03};
 	char cmd[64]={0};
-	sprintf(cmd,"%f",g_share_memory->x[index]);
+	sprintf(cmd,"%3f",g_share_memory->x[index]);
 	write_string(ADDR_XIUZHENG,cmd,strlen(cmd));
 	//send_return(fd,sensor,index);
 	switch(index)
@@ -3618,6 +3618,7 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_LOGIN_RETURN&& (TOUCH_LOGIN_RETURN+0x100)==data)
 	{
 			switch_pic(last_g_index);
+			g_index=last_g_index;
 	}
 	else if(addr==TOUCH_LOGIN_OK&& (TOUCH_LOGIN_OK+0x100)==data)
 	{//Login if didn't 
