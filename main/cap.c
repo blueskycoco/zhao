@@ -173,8 +173,9 @@ char *count_sensor_value(char cmd,char *json,int value)
 		max=MAX_CO;
 		alarm=&(g_share_memory->alarm[SENSOR_CO]);
 		strcpy(id,ID_CAP_CO);
+		printfLog(CAP_PROCESS"CO is %d,min %d,max %d,times %d\n",value,min,max,*times);
 	}
-	else if(cmd==atoi(ID_CAP_CO))
+	else if(cmd==atoi(ID_CAP_HCHO))
 	{
 		times=&(g_share_memory->times[SENSOR_HCHO]);
 		sent=&(g_share_memory->sent[SENSOR_HCHO]);
@@ -288,8 +289,6 @@ char *count_sensor_value(char cmd,char *json,int value)
 		if(*times==MAX_COUNT_TIMES && !(*alarm))
 		{	
 			//need send server alarm
-			if(cmd==atoi(ID_CAP_CO))
-				co_flash_alarm();
 			json=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_WARNING);
 			json=add_item(json,ID_DEVICE_UID,g_share_memory->uuid);
 			json=add_item(json,ID_DEVICE_IP_ADDR,g_share_memory->ip);
@@ -306,6 +305,10 @@ char *count_sensor_value(char cmd,char *json,int value)
 			}
 			save_sensor_alarm_info();	
 			*sent=0;
+		}
+		if(*times==MAX_COUNT_TIMES && cmd==atoi(ID_CAP_CO))
+		{
+			co_flash_alarm();
 		}
 	}
 	//printfLog(CAP_PROCESS"count_sensor_value <== %s\n",json);
@@ -923,6 +926,46 @@ void show_factory(int zero,char *cmd,int len)
 				g_share_memory->cur_ch2o=(cmd[5]<<8)|cmd[6];
 				//return_zero_point(0);
 			}
+			if(cmd[3]==atoi(ID_CAP_TVOC))
+			{	
+				printfLog(CAP_PROCESS"In tun zero mode TVOC %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(ADDR_TUN_ZERO_TVOC,6);
+				write_string(ADDR_TUN_ZERO_TVOC,data,strlen(data));
+				g_share_memory->cur_tvoc=(cmd[5]<<8)|cmd[6];
+				//return_zero_point(0);
+			}
+			if(cmd[3]==atoi(ID_CAP_NO))
+			{	
+				printfLog(CAP_PROCESS"In tun zero mode NO %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(ADDR_TUN_ZERO_NO,6);
+				write_string(ADDR_TUN_ZERO_NO,data,strlen(data));
+				g_share_memory->cur_no=(cmd[5]<<8)|cmd[6];
+				//return_zero_point(0);
+			}
+			if(cmd[3]==atoi(ID_CAP_NO2))
+			{	
+				printfLog(CAP_PROCESS"In tun zero mode NO2 %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(ADDR_TUN_ZERO_NO2,6);
+				write_string(ADDR_TUN_ZERO_NO2,data,strlen(data));
+				g_share_memory->cur_no2=(cmd[5]<<8)|cmd[6];
+				//return_zero_point(0);
+			}
+			if(cmd[3]==atoi(ID_CAP_AN_QI))
+			{	
+				printfLog(CAP_PROCESS"In tun zero mode NH3 %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(ADDR_TUN_ZERO_NH3,6);
+				write_string(ADDR_TUN_ZERO_NH3,data,strlen(data));
+				g_share_memory->cur_nh3=(cmd[5]<<8)|cmd[6];
+				//return_zero_point(0);
+			}
+			if(cmd[3]==atoi(ID_CAP_CHOU_YANG))
+			{	
+				printfLog(CAP_PROCESS"In tun zero mode O3 %d %d %d %s\n",cmd[5],cmd[6],cmd[7],data);
+				clear_buf(ADDR_TUN_ZERO_O3,6);
+				write_string(ADDR_TUN_ZERO_O3,data,strlen(data));
+				g_share_memory->cur_o3=(cmd[5]<<8)|cmd[6];
+				//return_zero_point(0);
+			}			
 		}
 		else
 		{

@@ -88,7 +88,13 @@ struct share_memory{
 	char	factory_mode;
 	int 	jiaozhun_sensor;	
 	int 	cur_ch2o;
-	int 	cur_co;	
+	int 	cur_co;
+	int 	cur_o3;
+	int 	cur_no;	
+	int 	cur_nh3;
+	int 	cur_eto;
+	int 	cur_no2;
+	int 	cur_tvoc;	
 	float 	p[8];
 	float 	x[8];
 	char 	y;
@@ -760,6 +766,12 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_TUN_ZERO_RETURN	0x00ac
 #define	ADDR_TUN_ZERO_CO	0x098f
 #define	ADDR_TUN_ZERO_HCHO	0x0995
+#define	ADDR_TUN_ZERO_O3	0x0d57
+#define	ADDR_TUN_ZERO_NO	0x0d5d
+#define	ADDR_TUN_ZERO_NH3	0x0d63
+#define	ADDR_TUN_ZERO_ETO	0x0d69
+#define	ADDR_TUN_ZERO_NO2	0x0d6f
+#define	ADDR_TUN_ZERO_TVOC	0x0d75
 		
 #define	TOUCH_LOGIN_OK	0x00ad
 #define	TOUCH_LOGIN_RETURN	0x00ae

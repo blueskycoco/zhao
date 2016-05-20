@@ -4,7 +4,7 @@
 #include "netlib.h"
 #include "xfer.h"
 int lcd_state=1;
-char logged=0,g_index=0,interface_select=0,last_g_index=0;
+char logged=0,g_index=0,interface_select=0,last_g_index=0,cur_index=0;
 extern char g_uuid[256];
 extern char ip[20];
 
@@ -25,12 +25,17 @@ void switch_pic(unsigned char Index)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x04,0x00};
 	cmd[5]=Index;
+	cur_index=Index;
 	write(g_share_memory->fd_lcd,cmd,6);
 }
 void lcd_off(int a)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
-	if(g_share_memory->sleep!=0)
+	if(g_share_memory->sleep!=0 && 
+		cur_index!=VERIFY_PAGE &&
+		cur_index!=XFER_SETTING_PAGE &&
+		cur_index!=TIME_SETTING_PAGE &&
+		cur_index!=LOGIN_PAGE)
 	{
 		write(g_share_memory->fd_lcd,cmd,6);
 		switch_pic(OFF_PAGE);
@@ -2283,6 +2288,8 @@ unsigned short input_handle(char *input)
 		(addr==TOUCH_XFER_RETURN && (TOUCH_XFER_RETURN+0x100)==data)||
 		(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data))
 	{
+		if(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data)
+			ctl_fan(1);
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 	}
