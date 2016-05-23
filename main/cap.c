@@ -316,76 +316,25 @@ char *count_sensor_value(char cmd,char *json,int value)
 }
 void update_dwin_real_value(char *id,int value)
 {
-	if(g_share_memory->ppm)
+	if(!g_share_memory->ppm)
 	{
 		if(strncmp(id,ID_CAP_CO_EXT,strlen(ID_CAP_CO_EXT))==0)
 		{
-			write_data(ADDR_CO_REAL_2,value);
+			write_data(ADDR_CO_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0)
 		{						
-			write_data(ADDR_CO2_REAL_2,value);
+			write_data(ADDR_CO2_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_HCHO_EXT,strlen(ID_CAP_HCHO_EXT))==0)
 		{
-			write_data(ADDR_HCHO_REAL_2,value);
+			write_data(ADDR_HCHO_REAL_1,value);
 		}
 		else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0)
 		{						
-			write_data(ADDR_TVOC_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
-		{
-			write_data(ADDR_O3_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
-		{
-			write_data(ADDR_TEMP_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
-		{
-			write_data(ADDR_SHIDU_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
-		{
-			write_data(ADDR_PM25_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
-		{
-			write_data(ADDR_PM10_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
-		{
-			write_data(ADDR_WIND_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
-		{
-			write_data(ADDR_PRESS_REAL_2,value);
-		}
-		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
-		{
-			write_data(ADDR_NOISE_REAL_2,value);
-		}
-	}
-	else
-	{
-		if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
-		{
-			write_data(ADDR_CO_REAL_1,value);
-		}
-		else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-		{						
-			write_data(ADDR_CO2_REAL_1,value);
-		}
-		else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
-		{
-			write_data(ADDR_HCHO_REAL_1,value);
-		}
-		else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0)
-		{						
 			write_data(ADDR_TVOC_REAL_1,value);
 		}
-		else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0)
+		else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
 		{
 			write_data(ADDR_O3_REAL_1,value);
 		}
@@ -416,6 +365,57 @@ void update_dwin_real_value(char *id,int value)
 		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
 		{
 			write_data(ADDR_NOISE_REAL_1,value);
+		}
+	}
+	else
+	{
+		if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
+		{
+			write_data(ADDR_CO_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
+		{						
+			write_data(ADDR_CO2_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
+		{
+			write_data(ADDR_HCHO_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0)
+		{						
+			write_data(ADDR_TVOC_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0)
+		{
+			write_data(ADDR_O3_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
+		{
+			write_data(ADDR_TEMP_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
+		{
+			write_data(ADDR_SHIDU_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
+		{
+			write_data(ADDR_PM25_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
+		{
+			write_data(ADDR_PM10_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
+		{
+			write_data(ADDR_WIND_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
+		{
+			write_data(ADDR_PRESS_REAL_2,value);
+		}
+		else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
+		{
+			write_data(ADDR_NOISE_REAL_2,value);
 		}
 	}
 }
