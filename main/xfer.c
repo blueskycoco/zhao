@@ -51,7 +51,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 			{
 				if(read(g_share_memory->fd_gprs, &ch, 1)==1)
 				{
-					printfLog(UPLOAD_PROCESS"%c",ch);
+					//printfLog(UPLOAD_PROCESS"%c",ch);
 					if(ch=='}')
 					{
 						rcv[i++]=ch;
