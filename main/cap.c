@@ -29,7 +29,7 @@ void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *da
 	printfLog(CAP_PROCESS"set_upload_data id %s,cnt %d,data %s,date %s\n",id,*cnt,data,date);
 	memset(history->data,'\0',10);
 	if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
-		sprintf(history->data,"%04d",atoi(data+2));
+		sprintf(history->data,"%04d",atoi(data));
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
 		sprintf(history->data,"%03d",atoi(data));
 	else				
