@@ -9,7 +9,7 @@ void set_data(char *line,char *type,struct nano *history,long *cnt)
 	{
 		memset(history->data,'\0',10);
 		if(strncmp(ID_CAP_CO2,type,strlen(ID_CAP_CO2))==0)
-			sprintf(history->data,"%04d",atoi(data+2));
+			sprintf(history->data,"%04d",atoi(data));
 		else if(strncmp(ID_CAP_PM_25,type,strlen(ID_CAP_PM_25))==0)
 			sprintf(history->data,"%03d",atoi(data));
 		else
