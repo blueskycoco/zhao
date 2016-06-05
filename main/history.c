@@ -136,11 +136,11 @@ void load_history(const char *name)
 			if((cnt%2)!=0)
 			{
 				//get co,co2,hcho,pm25,shidu,temp
-				set_data(line,ID_CAP_CO,		&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),	
+				set_data(line,ID_CAP_CO_EXT,		&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),	
 												&(g_share_memory->cnt[SENSOR_CO]));
 				set_data(line,ID_CAP_CO2,		&(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]]),	
 												&(g_share_memory->cnt[SENSOR_CO2]));
-				set_data(line,ID_CAP_HCHO,		&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),	
+				set_data(line,ID_CAP_HCHO_EXT,		&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),	
 												&(g_share_memory->cnt[SENSOR_HCHO]));
 				set_data(line,ID_CAP_SHI_DU,	&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),	
 												&(g_share_memory->cnt[SENSOR_SHIDU]));
@@ -155,9 +155,9 @@ void load_history(const char *name)
 												&(g_share_memory->cnt[SENSOR_PRESS]));
 				set_data(line,ID_CAP_BUZZY,		&(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]]),	
 												&(g_share_memory->cnt[SENSOR_NOISE]));
-				set_data(line,ID_CAP_TVOC,	&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),	
+				set_data(line,ID_CAP_TVOC_EXT,	&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),	
 												&(g_share_memory->cnt[SENSOR_TVOC]));
-				set_data(line,ID_CAP_CHOU_YANG,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
+				set_data(line,ID_CAP_CHOU_YANG_EXT,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
 												&(g_share_memory->cnt[SENSOR_O3]));
 				set_data(line,ID_CAP_PM_10,		&(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]]),	
 												&(g_share_memory->cnt[SENSOR_PM10]));

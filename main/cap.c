@@ -49,9 +49,9 @@ void send_server_save_local(char *date,char *message,char save)
 	if(save)
 	{
 		save_to_file(date,message);
-		char *data=doit_data(message,ID_CAP_CO);
+		char *data=doit_data(message,ID_CAP_CO_EXT);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CO,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),
+			set_upload_data(ID_CAP_CO_EXT,&(sensor_history.co[g_share_memory->cnt[SENSOR_CO]]),
 			&(g_share_memory->cnt[SENSOR_CO]),data,date);
 		
 		data=doit_data(message,ID_CAP_CO2);
@@ -64,9 +64,9 @@ void send_server_save_local(char *date,char *message,char save)
 			set_upload_data(ID_CAP_SHI_DU,&(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]]),
 			&(g_share_memory->cnt[SENSOR_SHIDU]),data,date);
 		
-		data=doit_data(message,ID_CAP_HCHO);
+		data=doit_data(message,ID_CAP_HCHO_EXT);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_HCHO,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),
+			set_upload_data(ID_CAP_HCHO_EXT,&(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]]),
 			&(g_share_memory->cnt[SENSOR_HCHO]),data,date);
 		
 		data=doit_data(message,ID_CAP_TEMPERATURE);
@@ -89,9 +89,9 @@ void send_server_save_local(char *date,char *message,char save)
 			set_upload_data(ID_CAP_FENG_SU,&(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]]),
 			&(g_share_memory->cnt[SENSOR_WIND]),data,date);
 		
-		data=doit_data(message,ID_CAP_CHOU_YANG);
+		data=doit_data(message,ID_CAP_CHOU_YANG_EXT);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_CHOU_YANG,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),
+			set_upload_data(ID_CAP_CHOU_YANG_EXT,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),
 			&(g_share_memory->cnt[SENSOR_O3]),data,date);
 		
 		data=doit_data(message,ID_CAP_QI_YA);
@@ -99,9 +99,9 @@ void send_server_save_local(char *date,char *message,char save)
 			set_upload_data(ID_CAP_QI_YA,&(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]]),
 			&(g_share_memory->cnt[SENSOR_PRESS]),data,date);
 		
-		data=doit_data(message,ID_CAP_TVOC);
+		data=doit_data(message,ID_CAP_TVOC_EXT);
 		if(data!=NULL)
-			set_upload_data(ID_CAP_TVOC,&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),
+			set_upload_data(ID_CAP_TVOC_EXT,&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),
 			&(g_share_memory->cnt[SENSOR_TVOC]),data,date);
 		
 		data=doit_data(message,ID_CAP_PM_10);
