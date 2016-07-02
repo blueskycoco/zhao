@@ -2106,6 +2106,19 @@ void ctl_fan(int on)
 	//printfLog("\n");
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 }
+void tun_zero_return()
+{
+	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x07,0x01,0x00,0x00,0x00};	
+	int crc = 0;
+	int i =0;
+	printfLog(LCD_PROCESS"Stop Co,ch2o tun zero\n");
+	crc=CRC_check((unsigned char *)cmd_request_verify,6);
+	cmd_request_verify[6]=(crc&0xff00)>>8;cmd_request_verify[7]=crc&0x00ff;		
+	for(i=0;i<sizeof(cmd_request_verify);i++)
+		printfLog("%02X ",cmd_request_verify[i]);
+	printfLog("\n");
+	write(g_share_memory->fd_com,cmd_request_verify,sizeof(cmd_request_verify));
+}
 void tun_zero(int on)
 {
 	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x07,0x01,0x00,0x00,0x00};	
@@ -3301,6 +3314,9 @@ unsigned short input_handle(char *input)
 	{//tun zero point stop
 		if(g_share_memory->factory_mode == TUN_ZERO_MODE)
 		{
+			if(addr==TOUCH_TUN_ZERO_RETURN && (TOUCH_TUN_ZERO_RETURN+0x100)==data)
+			tun_zero_return();
+			else
 			tun_zero(0);
 			g_share_memory->factory_mode=NORMAL_MODE;
 		}
