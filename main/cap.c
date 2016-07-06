@@ -889,7 +889,7 @@ void return_zero_point(int co)
 	for(i=0;i<sizeof(cmd_return_point);i++)
 		printfLog("%02X ",cmd_return_point[i]);
 	printfLog("\n");
-	write(g_share_memory->fd_com,cmd_return_point,sizeof(cmd_return_point));
+	send_cmd_to_cap(cmd_return_point,sizeof(cmd_return_point));
 }
 void show_cap_value(char *buf,int len)
 {
@@ -1169,7 +1169,24 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	//printfLog(CAP_PROCESS"send msg done\n");
 	return 0;
 }
-
+void	send_cmd_to_cap(char *cmd,int len)
+{
+	int i=0;
+	g_share_memory->cap_board_ack=0;
+	write(g_share_memory->fd_com,cmd,len);
+	while(1)
+	{
+		if(i>20)
+			break;
+		sleep(1);
+		printfLog(MISC_PROCESS"cap_board_ack %d\n",g_share_memory->cap_board_ack);
+		if(g_share_memory->cap_board_ack)
+			break;
+		else
+			write(g_share_memory->fd_com,cmd,sizeof(cmd));
+		i++;			
+	}
+}
 /*
   *get cmd from lv's cap board
 */
@@ -1305,7 +1322,7 @@ void cap_data_handle()
 		}
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
 		{
-			if(message_type!=0x0001)
+			if(message_type!=0x0001 && message_type!=0x0005)
 			show_factory(1,cmd,message_len+7);
 		}
 		else
@@ -1340,9 +1357,13 @@ void cap_data_handle()
 				}
 				show_verify_point();
 			}
+			else if(message_type==0x0005)
+			{
+				g_share_memory->cap_board_ack=1;
+			}
 			else
 			{
-				if(message_type!=0x0001)
+				if(message_type!=0x0001 && message_type!=0x0005)
 					show_factory(0,cmd,message_len+7);
 			}
 		}

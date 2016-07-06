@@ -874,7 +874,7 @@ void sync_server(int resend,int set_local)
 				g_share_memory->server_time[9]=atoi(minute);g_share_memory->server_time[10]=atoi(second);
 				crc=CRC_check((unsigned char *)g_share_memory->server_time,11);
 				g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
-				write(g_share_memory->fd_com,g_share_memory->server_time,13);
+				send_cmd_to_cap(g_share_memory->server_time,13);
 				printfLog(MISC_PROCESS"SERVER TIME %s\r\n",starttime);
 				//tmp=doit_data(rcv+4,(char *)"211");
 				//printf(SYNC_PREFX"211 %s\r\n",doit_data(rcv,"211"));

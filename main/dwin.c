@@ -1783,7 +1783,7 @@ void manul_set_time()
 			g_share_memory->server_time[9]=atoi(min);g_share_memory->server_time[10]=atoi(second);
 			int crc=CRC_check((unsigned char *)g_share_memory->server_time,11);
 			g_share_memory->server_time[11]=(crc&0xff00)>>8;g_share_memory->server_time[12]=crc&0x00ff;
-			write(g_share_memory->fd_com,g_share_memory->server_time,13);
+			send_cmd_to_cap(g_share_memory->server_time,13);
 			int week=CaculateWeekDay(g_share_memory->server_time[5],g_share_memory->server_time[6],g_share_memory->server_time[7]);
 			char rtc_time[7];
 			rtc_time[0]=(g_share_memory->server_time[5]/10)*16+(g_share_memory->server_time[5]%10);
@@ -1816,7 +1816,7 @@ void jiaozhun(int on,char sensor,char jp)
 			for(i=0;i<sizeof(cmd_verify);i++)
 				printfLog("%02X ",cmd_verify[i]);
 			printfLog("\n");
-			write(g_share_memory->fd_com,cmd_verify,sizeof(cmd_verify));
+			send_cmd_to_cap(cmd_verify,sizeof(cmd_verify));
 		}
 	}
 	else
@@ -1876,7 +1876,7 @@ void send_return(char sensor,char jp)
 	for(i=0;i<sizeof(cmd_return);i++)
 		printfLog(LCD_PROCESS"%02X ",cmd_return[i]);
 	printfLog(LCD_PROCESS"\n");
-	write(g_share_memory->fd_com,cmd_return,sizeof(cmd_return));
+	send_cmd_to_cap(cmd_return,sizeof(cmd_return));
 }
 char *Get_Type(int index)
 {
@@ -2086,7 +2086,7 @@ void set_interface()
 	for(i=0;i<sizeof(cmd);i++)
 		printfLog("%02x ",cmd[i]);
 	printfLog("\ngoing to set_interface end\n");
-	write(g_share_memory->fd_com,cmd,sizeof(cmd));
+	send_cmd_to_cap(cmd,sizeof(cmd));
 }
 void ctl_fan(int on)
 {
@@ -2104,7 +2104,7 @@ void ctl_fan(int on)
 	//for(i=0;i<sizeof(cmd);i++)
 	//	printfLog("%02X ",cmd[i]);
 	//printfLog("\n");
-	write(g_share_memory->fd_com,cmd,sizeof(cmd));
+	send_cmd_to_cap(cmd,sizeof(cmd));
 }
 void tun_zero_return()
 {
@@ -2117,7 +2117,7 @@ void tun_zero_return()
 	for(i=0;i<sizeof(cmd_request_verify);i++)
 		printfLog("%02X ",cmd_request_verify[i]);
 	printfLog("\n");
-	write(g_share_memory->fd_com,cmd_request_verify,sizeof(cmd_request_verify));
+	send_cmd_to_cap(cmd_request_verify,sizeof(cmd_request_verify));
 }
 void tun_zero(int on)
 {
@@ -2187,7 +2187,7 @@ void tun_zero(int on)
 	for(i=0;i<sizeof(cmd_request_verify);i++)
 		printfLog("%02X ",cmd_request_verify[i]);
 	printfLog("\n");
-	write(g_share_memory->fd_com,cmd_request_verify,sizeof(cmd_request_verify));
+	send_cmd_to_cap(cmd_request_verify,sizeof(cmd_request_verify));
 	//sleep(1);
 	//for(i=0;i<11;i++)
 	//	if(sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
