@@ -149,13 +149,176 @@ char *update_alarm(char *json,char *data,char *alarm,char *sent)
 	}
 	return json;
 }
-char *count_sensor_value(char cmd,char *json,int value)
+char *get_pj(float *buf,int len)
+{	
+	int i, j;
+	float temp;
+	char *rt=NULL;
+	for (i = 0; i < len - 1; i++)
+		for (j = 0; j < len - 1 - i; j++)
+			if (buf[j] > buf[j + 1]) {
+				temp = buf[j];
+				buf[j] = buf[j + 1];
+				buf[j + 1] = temp;
+			}
+	temp=0;
+	for(i=1;i<len-1;i++)
+		temp+=buf[i];
+	temp=temp/(len-2);
+	rt=(char *)malloc(10);
+	memset(rt,'\0',10);
+	sprintf(rt,"%f",temp);
+	printfLog("pj %s\n",rt);
+	return rt;
+}
+char *count_pj(char *message)
+{
+	char *temp;
+	if(g_share_memory.pj_cnt[SENSOR_CO]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_CO],g_share_memory.pj_cnt[SENSOR_CO]);
+		message=add_item(message,ID_CAP_CO_EXT,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_CO2]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_CO2],g_share_memory.pj_cnt[SENSOR_CO2]);
+		message=add_item(message,ID_CAP_CO2,temp);
+		free(temp);
+	}	
+	if(g_share_memory.pj_cnt[SENSOR_HCHO]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_HCHO],g_share_memory.pj_cnt[SENSOR_HCHO]);
+		message=add_item(message,ID_CAP_HCHO_EXT,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_SHIDU]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_SHIDU],g_share_memory.pj_cnt[SENSOR_SHIDU]);
+		message=add_item(message,ID_CAP_SHI_DU,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_TEMP]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_TEMP],g_share_memory.pj_cnt[SENSOR_TEMP]);
+		message=add_item(message,ID_CAP_TEMPERATURE,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_PM25]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_PM25],g_share_memory.pj_cnt[SENSOR_PM25]);
+		message=add_item(message,ID_CAP_PM_25,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_WIND]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_WIND],g_share_memory.pj_cnt[SENSOR_WIND]);
+		message=add_item(message,ID_CAP_FENG_SU,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_PRESS]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_PRESS],g_share_memory.pj_cnt[SENSOR_PRESS]);
+		message=add_item(message,ID_CAP_QI_YA,temp);
+		free(temp);
+	}	
+	if(g_share_memory.pj_cnt[SENSOR_NOISE]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_NOISE],g_share_memory.pj_cnt[SENSOR_NOISE]);
+		message=add_item(message,ID_CAP_BUZZY,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_TVOC]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_TVOC],g_share_memory.pj_cnt[SENSOR_TVOC]);
+		message=add_item(message,ID_CAP_TVOC,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_O3]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_O3],g_share_memory.pj_cnt[SENSOR_O3]);
+		message=add_item(message,ID_CAP_CHOU_YANG,temp);
+		free(temp);
+	}
+	if(g_share_memory.pj_cnt[SENSOR_PM10]!=0)
+	{
+		temp=get_pj(g_share_memory.pj[SENSOR_PM10],g_share_memory.pj_cnt[SENSOR_PM10]);
+		message=add_item(message,ID_CAP_PM_10,temp);
+		free(temp);
+	}
+	g_share_memory.pj_cnt[SENSOR_CO]=0;
+	g_share_memory.pj_cnt[SENSOR_CO2]=0;
+	g_share_memory.pj_cnt[SENSOR_HCHO]=0;
+	g_share_memory.pj_cnt[SENSOR_SHIDU]=0;
+	g_share_memory.pj_cnt[SENSOR_TEMP]=0;
+	g_share_memory.pj_cnt[SENSOR_PM25]=0;
+	g_share_memory.pj_cnt[SENSOR_WIND]=0;
+	g_share_memory.pj_cnt[SENSOR_PRESS]=0;
+	g_share_memory.pj_cnt[SENSOR_NOISE]=0;
+	g_share_memory.pj_cnt[SENSOR_TVOC]=0;
+	g_share_memory.pj_cnt[SENSOR_O3]=0;
+	g_share_memory.pj_cnt[SENSOR_PM10]=0;
+	return message;
+}
+void save_pj(char cmd,float value)
+{
+	if(cmd==atoi(ID_CAP_CO_EXT))
+	{
+		g_share_memory.pj[SENSOR_CO][g_share_memory.pj_cnt[SENSOR_CO]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_CO2))
+	{
+		g_share_memory.pj[SENSOR_CO2][g_share_memory.pj_cnt[SENSOR_CO2]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_HCHO_EXT))
+	{
+		g_share_memory.pj[SENSOR_HCHO][g_share_memory.pj_cnt[SENSOR_HCHO]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_SHI_DU))
+	{
+		g_share_memory.pj[SENSOR_SHIDU][g_share_memory.pj_cnt[SENSOR_SHIDU]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_TEMPERATURE))
+	{
+		g_share_memory.pj[SENSOR_TEMP][g_share_memory.pj_cnt[SENSOR_TEMP]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_PM_25))
+	{
+		g_share_memory.pj[SENSOR_PM25][g_share_memory.pj_cnt[SENSOR_PM25]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_FENG_SU))
+	{
+		g_share_memory.pj[SENSOR_WIND][g_share_memory.pj_cnt[SENSOR_WIND]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_QI_YA))
+	{
+		g_share_memory.pj[SENSOR_PRESS][g_share_memory.pj_cnt[SENSOR_PRESS]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_BUZZY))
+	{
+		g_share_memory.pj[SENSOR_NOISE][g_share_memory.pj_cnt[SENSOR_NOISE]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_TVOC_EXT))
+	{
+		g_share_memory.pj[SENSOR_TVOC][g_share_memory.pj_cnt[SENSOR_TVOC]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_CHOU_YANG_EXT))
+	{
+		g_share_memory.pj[SENSOR_O3][g_share_memory.pj_cnt[SENSOR_O3]++]=value;
+	}
+	else if(cmd==atoi(ID_CAP_PM_10))
+	{
+		g_share_memory.pj[SENSOR_PM10][g_share_memory.pj_cnt[SENSOR_PM10]++]=value;
+	}
+}
+char *count_sensor_value(char cmd,char *json,float value)
 {
 	char *times=NULL;
 	char *sent;
-	int min,max;
+	float min,max;
 	char *alarm;
 	char id[256]={0};
+	save_pj(cmd,value);
 	if(cmd==atoi(ID_CAP_CO2))
 	{
 		times=&(g_share_memory->times[SENSOR_CO2]);
@@ -173,7 +336,7 @@ char *count_sensor_value(char cmd,char *json,int value)
 		max=MAX_CO;
 		alarm=&(g_share_memory->alarm[SENSOR_CO]);
 		strcpy(id,ID_CAP_CO);
-		printfLog(CAP_PROCESS"CO is %d,min %d,max %d,times %d\n",value,min,max,*times);
+		printfLog(CAP_PROCESS"CO is %f,min %d,max %d,times %d\n",value,min,max,*times);
 	}
 	else if(cmd==atoi(ID_CAP_HCHO))
 	{
@@ -450,6 +613,7 @@ char *build_message(char *cmd,int len,char *message)
 				{
 					g_upload=0;
 					printfLog(CAP_PROCESS"Upload data msg :\n");
+					message=count_pj(message);
 					send_server_save_local(date,message,1);
 				}
 				free(message);
@@ -548,7 +712,7 @@ char *build_message(char *cmd,int len,char *message)
 				}
 				else
 				{	//normal data or beyond Min & Max data
-					int value=0;
+					float value=0.0;
 					//clear the uninsert alarm
 					if(cmd[3]==atoi(ID_CAP_CO2) && (g_share_memory->alarm[SENSOR_CO2]&ALARM_UNINSERT))
 					{					
@@ -657,11 +821,11 @@ char *build_message(char *cmd,int len,char *message)
 						int temp=1;
 						for(i=0;i<cmd[7];i++)
 							temp*=10;
-						value=((cmd[5]<<8|cmd[6]))/temp;
+						value=((float)((cmd[5]<<8|cmd[6])))/(float)temp;
 					}	
 					else
 					{
-							value=(cmd[5]<<8|cmd[6]);
+							value=(float)(cmd[5]<<8|cmd[6]);
 					}
 					//printfLog(CAP_PROCESS"1 Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
@@ -669,6 +833,12 @@ char *build_message(char *cmd,int len,char *message)
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
 					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
+					if( cmd!=atoi(ID_CAP_CO_EXT) &&cmd!=atoi(ID_CAP_CO2) &&
+						cmd!=atoi(ID_CAP_HCHO_EXT) &&cmd!=atoi(ID_CAP_SHI_DU) &&
+						cmd!=atoi(ID_CAP_TEMPERATURE) &&cmd!=atoi(ID_CAP_PM_25) &&
+						cmd!=atoi(ID_CAP_FENG_SU) &&cmd!=atoi(ID_CAP_QI_YA) &&
+						cmd!=atoi(ID_CAP_BUZZY) &&cmd!=atoi(ID_CAP_TVOC) &&
+						cmd!=atoi(ID_CAP_CHOU_YANG) &&cmd!=atoi(ID_CAP_PM_10))
 					message=add_item(message,id,data);
 					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
@@ -1231,7 +1401,19 @@ int cap_init()
 		sensor_history.tvoc= (struct nano *)shmat(shmid_history_tvoc,0, 0);
 		sensor_history.o3= (struct nano *)shmat(shmid_history_o3,0, 0);
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
-		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);	
+		g_share_memory = (struct share_memory *)shmat(shmid_share_memory,0, 0);		
+		g_share_memory.pj_cnt[SENSOR_CO]=0;
+		g_share_memory.pj_cnt[SENSOR_CO2]=0;
+		g_share_memory.pj_cnt[SENSOR_HCHO]=0;
+		g_share_memory.pj_cnt[SENSOR_SHIDU]=0;
+		g_share_memory.pj_cnt[SENSOR_TEMP]=0;
+		g_share_memory.pj_cnt[SENSOR_PM25]=0;
+		g_share_memory.pj_cnt[SENSOR_WIND]=0;
+		g_share_memory.pj_cnt[SENSOR_PRESS]=0;
+		g_share_memory.pj_cnt[SENSOR_NOISE]=0;
+		g_share_memory.pj_cnt[SENSOR_TVOC]=0;
+		g_share_memory.pj_cnt[SENSOR_O3]=0;
+		g_share_memory.pj_cnt[SENSOR_PM10]=0;
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)

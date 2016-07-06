@@ -104,6 +104,8 @@ struct share_memory{
 	char 	ip[20];	
 	char 	uuid[256];
 	char 	ppm;
+	float 	pj[SENSOR_NO][200];
+	int		pj_cnt[SENSOR_NO];
 };
 extern struct history sensor_history;
 extern struct share_memory *g_share_memory;
