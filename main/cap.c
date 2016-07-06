@@ -1172,18 +1172,18 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 void	send_cmd_to_cap(char *cmd,int len)
 {
 	int i=0;
-	g_share_memory->cap_board_ack=0;
+	g_share_memory->cap_board_ack=1;
 	write(g_share_memory->fd_com,cmd,len);
 	while(1)
 	{
 		if(i>20)
 			break;
-		sleep(1);
 		printfLog(MISC_PROCESS"cap_board_ack %d\n",g_share_memory->cap_board_ack);
 		if(g_share_memory->cap_board_ack)
 			break;
 		else
 			write(g_share_memory->fd_com,cmd,sizeof(cmd));
+		sleep(1);
 		i++;			
 	}
 }
