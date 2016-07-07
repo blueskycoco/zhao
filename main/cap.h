@@ -1491,7 +1491,7 @@ extern key_t  shmid_history_pm10;
 #define STATE_MESSAGE_LEN 4
 #define STATE_MESSAGE 5
 #define STATE_CRC 6
-
+void	send_cmd_to_cap(char *cmd,int len);
 int cap_init();
 void return_zero_point(int co);
 
