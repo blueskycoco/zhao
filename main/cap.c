@@ -154,6 +154,7 @@ char *get_pj(int id,float *buf,int len)
 	int i, j;
 	float temp;
 	char *rt=NULL;
+	printfLog("Enter get_pj\n");
 	for (i = 0; i < len - 1; i++)
 		for (j = 0; j < len - 1 - i; j++)
 			if (buf[j] > buf[j + 1]) {
@@ -208,12 +209,13 @@ char *get_pj(int id,float *buf,int len)
 		default:
 			break;
 	}
-	printfLog("pj %s\n",rt);
+	printfLog("Leave pj %s\n",rt);
 	return rt;
 }
 char *count_pj(char *message)
 {
 	char *temp;
+	printfLog("Enter count_pj\n");
 	if(g_share_memory->pj_cnt[SENSOR_CO]!=0)
 	{
 		temp=get_pj(SENSOR_CO,g_share_memory->pj[SENSOR_CO],g_share_memory->pj_cnt[SENSOR_CO]);
@@ -298,10 +300,12 @@ char *count_pj(char *message)
 	g_share_memory->pj_cnt[SENSOR_TVOC]=0;
 	g_share_memory->pj_cnt[SENSOR_O3]=0;
 	g_share_memory->pj_cnt[SENSOR_PM10]=0;
+	printfLog("Leave count_pj\n");
 	return message;
 }
 void save_pj(char cmd,float value)
 {
+	printfLog("Enter save_pj\n");
 	if(cmd==atoi(ID_CAP_CO_EXT))
 	{
 		g_share_memory->pj[SENSOR_CO][g_share_memory->pj_cnt[SENSOR_CO]++]=value;
@@ -313,7 +317,10 @@ void save_pj(char cmd,float value)
 	else if(cmd==atoi(ID_CAP_HCHO_EXT))
 	{
 		g_share_memory->pj[SENSOR_HCHO][g_share_memory->pj_cnt[SENSOR_HCHO]++]=value;
-	}/*
+	}
+	printfLog("Leave save_pj\n");
+
+	/*
 	else if(cmd==atoi(ID_CAP_SHI_DU))
 	{
 		g_share_memory->pj[SENSOR_SHIDU][g_share_memory->pj_cnt[SENSOR_SHIDU]++]=value;
@@ -1353,6 +1360,9 @@ void cap_data_handle()
 		{
 			g_share_memory->cap_board_ack=1;
 			printfLog(CAP_PROCESS"Got Ack from cap board\n");
+			free(cmd);
+			free(message);
+			return ;
 		}
 		if(g_share_memory->factory_mode==NORMAL_MODE)
 		{
