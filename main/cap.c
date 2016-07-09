@@ -231,7 +231,7 @@ char *count_pj(char *message)
 		temp=get_pj(SENSOR_HCHO,g_share_memory->pj[SENSOR_HCHO],g_share_memory->pj_cnt[SENSOR_HCHO]);
 		message=add_item(message,ID_CAP_HCHO_EXT,temp);
 		free(temp);
-	}
+	}/*
 	if(g_share_memory->pj_cnt[SENSOR_SHIDU]!=0)
 	{
 		temp=get_pj(SENSOR_SHIDU,g_share_memory->pj[SENSOR_SHIDU],g_share_memory->pj_cnt[SENSOR_SHIDU]);
@@ -285,7 +285,7 @@ char *count_pj(char *message)
 		temp=get_pj(SENSOR_PM10,g_share_memory->pj[SENSOR_PM10],g_share_memory->pj_cnt[SENSOR_PM10]);
 		message=add_item(message,ID_CAP_PM_10,temp);
 		free(temp);
-	}
+	}*/
 	g_share_memory->pj_cnt[SENSOR_CO]=0;
 	g_share_memory->pj_cnt[SENSOR_CO2]=0;
 	g_share_memory->pj_cnt[SENSOR_HCHO]=0;
@@ -313,7 +313,7 @@ void save_pj(char cmd,float value)
 	else if(cmd==atoi(ID_CAP_HCHO_EXT))
 	{
 		g_share_memory->pj[SENSOR_HCHO][g_share_memory->pj_cnt[SENSOR_HCHO]++]=value;
-	}
+	}/*
 	else if(cmd==atoi(ID_CAP_SHI_DU))
 	{
 		g_share_memory->pj[SENSOR_SHIDU][g_share_memory->pj_cnt[SENSOR_SHIDU]++]=value;
@@ -349,7 +349,7 @@ void save_pj(char cmd,float value)
 	else if(cmd==atoi(ID_CAP_PM_10))
 	{
 		g_share_memory->pj[SENSOR_PM10][g_share_memory->pj_cnt[SENSOR_PM10]++]=value;
-	}
+	}*/
 }
 char *count_sensor_value(char cmd,char *json,float value)
 {
@@ -874,11 +874,7 @@ char *build_message(char *cmd,int len,char *message)
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
 					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
-						cmd[3]!=atoi(ID_CAP_HCHO_EXT) &&cmd[3]!=atoi(ID_CAP_SHI_DU) &&
-						cmd[3]!=atoi(ID_CAP_TEMPERATURE) &&cmd[3]!=atoi(ID_CAP_PM_25) &&
-						cmd[3]!=atoi(ID_CAP_FENG_SU) &&cmd[3]!=atoi(ID_CAP_QI_YA) &&
-						cmd[3]!=atoi(ID_CAP_BUZZY) &&cmd[3]!=atoi(ID_CAP_TVOC) &&
-						cmd[3]!=atoi(ID_CAP_CHOU_YANG) &&cmd[3]!=atoi(ID_CAP_PM_10))
+						cmd[3]!=atoi(ID_CAP_HCHO_EXT))
 					message=add_item(message,id,data);
 					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
@@ -1189,6 +1185,7 @@ void show_verify_point()
 	sprintf(cmd,"%3.3f",g_share_memory->p[7]);
 	write_string(ADDR_VP_7,cmd,strlen(cmd));
 	clear_point();
+	switch_pic(VERIFY_PAGE);
 }
 int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
@@ -1212,12 +1209,15 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 void	send_cmd_to_cap(char *cmd,int len)
 {
 	int i=0;
-	g_share_memory->cap_board_ack=1;
+	g_share_memory->cap_board_ack=0;
 	write(g_share_memory->fd_com,cmd,len);
 	while(1)
 	{
 		if(i>20)
+		{
+			printfLog(CAP_PROCESS"wait for cap_board ack timeout\n");
 			break;
+		}
 		printfLog(CAP_PROCESS"cap_board_ack %d\n",g_share_memory->cap_board_ack);
 		if(g_share_memory->cap_board_ack)
 			break;
@@ -1347,6 +1347,11 @@ void cap_data_handle()
 
 		message_type=((cmd[2]<<8)|cmd[3]);
 		message_len=data.len-7;
+		if(message_type==0x0005)
+		{
+			g_share_memory->cap_board_ack=1;
+			printfLog(CAP_PROCESS"Got Ack from cap board\n");
+		}
 		if(g_share_memory->factory_mode==NORMAL_MODE)
 		{
 			if(message_type == 0x0004)
@@ -1396,10 +1401,6 @@ void cap_data_handle()
 					printfLog(CAP_PROCESS"xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
 				}
 				show_verify_point();
-			}
-			else if(message_type==0x0005)
-			{
-				g_share_memory->cap_board_ack=1;
 			}
 			else
 			{

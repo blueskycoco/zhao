@@ -1804,7 +1804,7 @@ void jiaozhun(int on,char sensor,char jp)
 	int i;
 	if(on)
 	{
-		switch_pic(VERIFY_PAGE);
+		switch_pic(100);
 		g_index=VERIFY_PAGE;
 		if(g_share_memory->factory_mode!=SENSOR_VERIFY_MODE)
 		{
@@ -1955,6 +1955,7 @@ void show_point(int index,char sensor)
 				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe3,0x02,0x03};
 	char cmd[64]={0};
 	sprintf(cmd,"%3.3f",g_share_memory->x[index]);
+	clear_buf(ADDR_XIUZHENG,10);
 	write_string(ADDR_XIUZHENG,cmd,strlen(cmd));
 	//send_return(fd,sensor,index);
 	switch(index)
