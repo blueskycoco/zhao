@@ -1223,7 +1223,7 @@ void	send_cmd_to_cap(char *cmd,int len)
 		if(g_share_memory->cap_board_ack)
 			break;
 		else
-			write(g_share_memory->fd_com,cmd,sizeof(cmd));
+			write(g_share_memory->fd_com,cmd,len);
 		sleep(1);
 		i++;			
 	}
