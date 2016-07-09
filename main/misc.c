@@ -959,6 +959,7 @@ void ask_interface()
 	printfLog(MISC_PROCESS"going to ask_interface begin\n");
 	for(i=0;i<7;i++)
 		printfLog("%02x ",cmd[i]);
+	pthread_mutex_lock(&(g_share_memory->mutex));
 	write(g_share_memory->fd_com,cmd,sizeof(cmd));
 	i=0;
 	while(1)
@@ -975,6 +976,7 @@ void ask_interface()
 			
 	}
 	printfLog(MISC_PROCESS"\ngoing to ask_interface end\n");
+	pthread_mutex_unlock(&(g_share_memory->mutex));
 }
 void buzzer(int data)
 {

@@ -107,6 +107,7 @@ struct share_memory{
 	float 	pj[SENSOR_NO][200];
 	int		pj_cnt[SENSOR_NO];
 	char	cap_board_ack;
+	pthread_mutex_t mutex;
 };
 extern struct history sensor_history;
 extern struct share_memory *g_share_memory;

@@ -1209,6 +1209,7 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 void	send_cmd_to_cap(char *cmd,int len)
 {
 	int i=0;
+	pthread_mutex_lock(&(g_share_memory->mutex));
 	g_share_memory->cap_board_ack=0;
 	write(g_share_memory->fd_com,cmd,len);
 	while(1)
@@ -1226,6 +1227,7 @@ void	send_cmd_to_cap(char *cmd,int len)
 		sleep(1);
 		i++;			
 	}
+	pthread_mutex_unlock(&(g_share_memory->mutex));
 }
 /*
   *get cmd from lv's cap board
