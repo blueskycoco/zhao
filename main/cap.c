@@ -1396,7 +1396,7 @@ void cap_data_handle()
 						int m=1,j=0;
 						for(j=0;j<g_share_memory->y;j++)
 							m=m*10;
-						g_share_memory->p[i/2]=g_share_memory->p[i/2]/m;	
+						g_share_memory->p[i/2]=g_share_memory->p[i/2]/(float)m;	
 					}
 					printfLog(CAP_PROCESS"verify_point[%d] = %d\n",i/2,(message[i]<<8)|message[i+1]);
 				}
@@ -1408,7 +1408,7 @@ void cap_data_handle()
 						int m=1,j=0;
 						for(j=0;j<g_share_memory->y;j++)
 							m=m*10;
-						g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/m;	
+						g_share_memory->x[(i-16)/2]=g_share_memory->x[(i-16)/2]/(float)m;	
 					}
 					printfLog(CAP_PROCESS"xiuzhen[%d] = %d\n",(i-16)/2,(message[i]<<8)|message[i+1]);
 				}

@@ -1867,6 +1867,15 @@ void send_return(char sensor,char jp)
 	int i;
 	char cmd_return[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x00,0x00,0x00,0x00,0x00};
 	int xz=getxiuzhen();
+	if(g_share_memory->y!=0)
+	{
+		int m=1,j=0;
+		for(j=0;j<g_share_memory->y-1;j++)
+			m=m*10;
+		g_share_memory->x[(int)jp]=(float)xz/(float)m;	
+	}
+	else
+		g_share_memory->x[(int)jp]=xz;	
 	cmd_return[5]=sensor+1;
 	cmd_return[6]=jp+1;
 	cmd_return[7]=(xz>>8)&0xff;
