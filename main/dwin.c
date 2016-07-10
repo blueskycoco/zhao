@@ -1853,7 +1853,12 @@ int getxiuzhen()
 				if(g_share_memory->y==y-1)
 					break;
 			}
-					
+			/*printfLog("y is %d\n",y);
+			if(y<g_share_memory->y+1)
+			{
+				for(i=0;i<g_share_memory->y-y+1;i++)
+					data2[y+i+1]='0';		
+			}*/
 			d=atoi(data2);
 		}
 		else
@@ -1870,12 +1875,13 @@ void send_return(char sensor,char jp)
 	if(g_share_memory->y!=0)
 	{
 		int m=1,j=0;
-		for(j=0;j<g_share_memory->y-1;j++)
+		for(j=0;j<g_share_memory->y;j++)
 			m=m*10;
 		g_share_memory->x[(int)jp]=(float)xz/(float)m;	
 	}
 	else
-		g_share_memory->x[(int)jp]=xz;	
+		g_share_memory->x[(int)jp]=xz;		
+	printfLog("getxiuzhen %d,y %d, x %3.6f\n",xz,g_share_memory->y,g_share_memory->x[(int)jp]);
 	cmd_return[5]=sensor+1;
 	cmd_return[6]=jp+1;
 	cmd_return[7]=(xz>>8)&0xff;
@@ -1963,7 +1969,7 @@ void show_point(int index,char sensor)
 	char off7[]={0x5a,0xa5,0x15,0x82,0x0b,0x98,0x00,0x06,0x00,0x01,0x00,0x28,
 				0x00,0xe7,0x02,0x21,0x00,0xea,0x02,0x2c,0x00,0xe3,0x02,0x03};
 	char cmd[64]={0};
-	sprintf(cmd,"%3.3f",g_share_memory->x[index]);
+	sprintf(cmd,"%6.6f",g_share_memory->x[index]);
 	clear_buf(ADDR_XIUZHENG,10);
 	write_string(ADDR_XIUZHENG,cmd,strlen(cmd));
 	//send_return(fd,sensor,index);

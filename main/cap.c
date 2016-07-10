@@ -1168,28 +1168,28 @@ void show_factory(int zero,char *cmd,int len)
 void show_verify_point()
 {
 	char cmd[64]={0};
-	sprintf(cmd,"%3.3f",g_share_memory->p[0]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[0]);
 	write_string(ADDR_VP_0,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[1]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[1]);
 	write_string(ADDR_VP_1,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[2]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[2]);
 	write_string(ADDR_VP_2,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[3]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[3]);
 	write_string(ADDR_VP_3,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[4]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[4]);
 	write_string(ADDR_VP_4,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[5]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[5]);
 	write_string(ADDR_VP_5,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[6]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[6]);
 	write_string(ADDR_VP_6,cmd,strlen(cmd));
 	memset(cmd,'\0',64);
-	sprintf(cmd,"%3.3f",g_share_memory->p[7]);
+	sprintf(cmd,"%6.6f",g_share_memory->p[7]);
 	write_string(ADDR_VP_7,cmd,strlen(cmd));
 	clear_point();
 	switch_pic(VERIFY_PAGE);
