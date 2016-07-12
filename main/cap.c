@@ -366,14 +366,15 @@ char *count_sensor_value(char cmd,char *json,float value)
 	char *alarm;
 	char id[256]={0};
 	save_pj(cmd,value);
-	if(cmd==atoi(ID_CAP_CO2_EXT))
+	if(cmd==atoi(ID_CAP_CO2))
 	{
 		times=&(g_share_memory->times[SENSOR_CO2]);
 		sent=&(g_share_memory->sent[SENSOR_CO2]);
 		min=MIN_CO2;
 		max=MAX_CO2;
+		value=value*10000;
 		alarm=&(g_share_memory->alarm[SENSOR_CO2]);
-		strcpy(id,ID_CAP_CO2_EXT);
+		strcpy(id,ID_CAP_CO2);
 	}
 	else if(cmd==atoi(ID_CAP_CO))
 	{
@@ -628,7 +629,7 @@ char *build_message(char *cmd,int len,char *message)
 				message=add_item(message,ID_DEVICE_CAP_TIME,date);
 				if(warnning_msg!=NULL)
 				{	//have alarm msg upload
-					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO2_EXT,
+					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO2,
 									&(g_share_memory->alarm[SENSOR_CO2]),&(g_share_memory->sent[SENSOR_CO2]));
 					warnning_msg=update_alarm(warnning_msg,ID_CAP_CO,
 									&(g_share_memory->alarm[SENSOR_CO]),&(g_share_memory->sent[SENSOR_CO]));
@@ -684,7 +685,7 @@ char *build_message(char *cmd,int len,char *message)
 				if(memcmp(cmd+5,sensor_error,5)==0)
 				{	
 					//error got from cap board,check uninsert msg
-					if(cmd[3]==atoi(ID_CAP_CO2_EXT) && !(g_share_memory->alarm[SENSOR_CO2] & ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO2) && !(g_share_memory->alarm[SENSOR_CO2] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_CO2]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_CO2]=0;
@@ -761,9 +762,9 @@ char *build_message(char *cmd,int len,char *message)
 				{	//normal data or beyond Min & Max data
 					float value=0.0;
 					//clear the uninsert alarm
-					if(cmd[3]==atoi(ID_CAP_CO2_EXT) && (g_share_memory->alarm[SENSOR_CO2]&ALARM_UNINSERT))
+					if(cmd[3]==atoi(ID_CAP_CO2) && (g_share_memory->alarm[SENSOR_CO2]&ALARM_UNINSERT))
 					{					
-						clear_alarm(ID_CAP_CO2_EXT,ID_ALERT_UNINSERT);						
+						clear_alarm(ID_CAP_CO2,ID_ALERT_UNINSERT);						
 						g_share_memory->alarm[SENSOR_CO2]&=~ALARM_UNINSERT;	
 						save_sensor_alarm_info();
 					}
