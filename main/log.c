@@ -19,6 +19,9 @@ void printfLog(const char *fmt, ...)
 {
 	FILE *fp;
 	char file_path[PATH_BUF_SIZE]={0};
+#ifdef NO_LOG
+	return;
+#endif
 	if(strlen(log_name)==0)
 		return;
 	pthread_mutex_lock(&mutex_log);
@@ -53,6 +56,9 @@ void printfLog(const char *fmt, ...)
 }
 void init_log(const char *time)
 {
+#ifdef NO_LOG
+	return ;
+#endif
 	pthread_mutex_init(&mutex_log, NULL);  
 	//system("rm /mnt/cdrom/log.log");
 	strcpy(log_name,LOG_PATH);

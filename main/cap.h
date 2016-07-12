@@ -1287,9 +1287,9 @@ extern key_t  shmid_history_pm10;
 #define MAX_PM25	1000
 #define MIN_PM25	0
 #define MIN_NOISE	0
-#define MAX_NOISE	100
+#define MAX_NOISE	300
 #define	MIN_PRESS	0
-#define MAX_PRESS	100
+#define MAX_PRESS	10000
 #define MIN_TVOC	0
 #define MAX_TVOC	100
 #define MIN_WIND	0
