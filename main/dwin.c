@@ -2372,7 +2372,7 @@ unsigned short input_handle(char *input)
 	else if((addr==TOUCH_CO_REAL_1 && (TOUCH_CO_REAL_1+0x100)==data)||
 		(addr==TOUCH_CO_REAL_2 && (TOUCH_CO_REAL_2+0x100)==data))
 	{//show history CO the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2387,7 +2387,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_CO;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2397,12 +2397,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_CO;
 			else
 				g_index=LIST_PAGE_CO;
-		}
+		}*/
 	}
 	else if((addr==TOUCH_PRESS_REAL_1 && (TOUCH_PRESS_REAL_1+0x100)==data)||
 		(addr==TOUCH_PRESS_REAL_2 && (TOUCH_PRESS_REAL_2+0x100)==data))
 	{//show history QIYA the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2417,7 +2417,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_PRESS;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2427,12 +2427,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_PRESS;
 			else
 				g_index=LIST_PAGE_PRESS;
-		}
+		}*/
 	}
 	else if((addr==TOUCH_TVOC_REAL_1 && (TOUCH_TVOC_REAL_1+0x100)==data)||
 		(addr==TOUCH_TVOC_REAL_2 && (TOUCH_TVOC_REAL_2+0x100)==data))
 	{//show history TVOC the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2447,7 +2447,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_TVOC;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2457,12 +2457,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_TVOC;
 			else
 				g_index=LIST_PAGE_TVOC;
-		}
+		}*/
 	}
 	else if((addr==TOUCH_PM10_REAL_1 && (TOUCH_PM10_REAL_1+0x100)==data)||
 		(addr==TOUCH_PM10_REAL_2 && (TOUCH_PM10_REAL_2+0x100)==data))
 	{//show history PM10 the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2477,7 +2477,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_PM10;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2487,12 +2487,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_PM10;
 			else
 				g_index=LIST_PAGE_PM10;
-		}		
+		}	*/	
 	}
 	else if((addr==TOUCH_O3_REAL_1 && (TOUCH_O3_REAL_1+0x100)==data)||
 		(addr==TOUCH_O3_REAL_2 && (TOUCH_O3_REAL_2+0x100)==data))
 	{//show history O3 the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2507,7 +2507,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_O3;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2517,12 +2517,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_O3;
 			else
 				g_index=LIST_PAGE_O3;
-		}		
+		}*/		
 	}
 	else if((addr==TOUCH_WIND_REAL_1 && (TOUCH_WIND_REAL_1+0x100)==data)||
 		(addr==TOUCH_WIND_REAL_2 && (TOUCH_WIND_REAL_2+0x100)==data))
 	{//show history WIND the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2537,7 +2537,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_WIND;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2547,12 +2547,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_WIND;
 			else
 				g_index=LIST_PAGE_WIND;
-		}		
+		}	*/	
 	}
 	else if((addr==TOUCH_NOISE_REAL_1 && (TOUCH_NOISE_REAL_1+0x100)==data)||
 		(addr==TOUCH_NOISE_REAL_2 && (TOUCH_NOISE_REAL_2+0x100)==data))
 	{//show history NOISE the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2567,7 +2567,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_NOISE;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2577,12 +2577,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_NOISE;
 			else
 				g_index=LIST_PAGE_NOISE;
-		}		
+		}	*/	
 	}
 	else if((addr==TOUCH_CO2_REAL_1 && (TOUCH_CO2_REAL_1+0x100)==data)||
 		(addr==TOUCH_CO2_REAL_2 && (TOUCH_CO2_REAL_2+0x100)==data))
 	{//show history CO2 the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2597,7 +2597,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_CO2;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2607,12 +2607,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_CO2;
 			else
 				g_index=LIST_PAGE_CO2;
-		}		
+		}*/		
 	}	
 	else if((addr==TOUCH_HCHO_REAL_1 && (TOUCH_HCHO_REAL_1+0x100)==data)||
 		(addr==TOUCH_HCHO_REAL_2 && (TOUCH_HCHO_REAL_2+0x100)==data))
 	{//show history HCHO the first page	
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2627,7 +2627,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_HCHO;
 			}
 		}
-		else
+		/*else
 		{		
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2637,12 +2637,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_HCHO;
 			else
 				g_index=LIST_PAGE_HCHO;
-		}		
+		}	*/	
 	}	
 	else if((addr==TOUCH_SHIDU_REAL_1 && (TOUCH_SHIDU_REAL_1+0x100)==data)||
 		(addr==TOUCH_SHIDU_REAL_2 && (TOUCH_SHIDU_REAL_2+0x100)==data))
 	{//show history SHIDU the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2657,7 +2657,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_SHIDU;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2667,12 +2667,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_SHIDU;
 			else
 				g_index=LIST_PAGE_SHIDU;
-		}				
+		}	*/			
 	}	
 	else if((addr==TOUCH_TEMP_REAL_1 && (TOUCH_TEMP_REAL_1+0x100)==data)||
 		(addr==TOUCH_TEMP_REAL_2 && (TOUCH_TEMP_REAL_2+0x100)==data))
 	{//show history TEMPERATURE the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2687,7 +2687,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_TEMP;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2697,12 +2697,12 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_TEMP;
 			else
 				g_index=LIST_PAGE_TEMP;
-		}				
+		}	*/			
 	}	
 	else if((addr==TOUCH_PM25_REAL_1&& (TOUCH_PM25_REAL_1+0x100)==data)||
 		(addr==TOUCH_PM25_REAL_2&& (TOUCH_PM25_REAL_2+0x100)==data))
 	{//show history PM25 the first page
-		if(logged)
+		//if(logged)
 		{
 			if(g_share_memory->history_done)
 			{
@@ -2717,7 +2717,7 @@ unsigned short input_handle(char *input)
 				g_index=LIST_PAGE_PM25;
 			}
 		}
-		else
+		/*else
 		{
 			clear_buf(ADDR_LOGIN_USER_NAME,16);
 			clear_buf(ADDR_LOGIN_USER_KEY,16);
@@ -2727,7 +2727,7 @@ unsigned short input_handle(char *input)
 				g_index=CURVE_PAGE_PM25;
 			else
 				g_index=LIST_PAGE_PM25;
-		}		
+		}	*/	
 	}	
 	else if(addr==TOUCH_CO_UPDATE && (TOUCH_CO_UPDATE+0x100)==data)
 	{//show history CO the next page
