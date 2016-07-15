@@ -233,7 +233,7 @@ char *count_pj(char *message)
 		temp=get_pj(SENSOR_HCHO,g_share_memory->pj[SENSOR_HCHO],g_share_memory->pj_cnt[SENSOR_HCHO]);
 		message=add_item(message,ID_CAP_HCHO_EXT,temp);
 		free(temp);
-	}/*
+	}
 	if(g_share_memory->pj_cnt[SENSOR_SHIDU]!=0)
 	{
 		temp=get_pj(SENSOR_SHIDU,g_share_memory->pj[SENSOR_SHIDU],g_share_memory->pj_cnt[SENSOR_SHIDU]);
@@ -287,7 +287,7 @@ char *count_pj(char *message)
 		temp=get_pj(SENSOR_PM10,g_share_memory->pj[SENSOR_PM10],g_share_memory->pj_cnt[SENSOR_PM10]);
 		message=add_item(message,ID_CAP_PM_10,temp);
 		free(temp);
-	}*/
+	}
 	g_share_memory->pj_cnt[SENSOR_CO]=0;
 	g_share_memory->pj_cnt[SENSOR_CO2]=0;
 	g_share_memory->pj_cnt[SENSOR_HCHO]=0;
@@ -318,9 +318,6 @@ void save_pj(char cmd,float value)
 	{
 		g_share_memory->pj[SENSOR_HCHO][g_share_memory->pj_cnt[SENSOR_HCHO]++]=value;
 	}
-	printfLog("Leave save_pj\n");
-
-	/*
 	else if(cmd==atoi(ID_CAP_SHI_DU))
 	{
 		g_share_memory->pj[SENSOR_SHIDU][g_share_memory->pj_cnt[SENSOR_SHIDU]++]=value;
@@ -356,8 +353,10 @@ void save_pj(char cmd,float value)
 	else if(cmd==atoi(ID_CAP_PM_10))
 	{
 		g_share_memory->pj[SENSOR_PM10][g_share_memory->pj_cnt[SENSOR_PM10]++]=value;
-	}*/
-}
+	}
+	printfLog("Leave save_pj\n");
+
+	}
 char *count_sensor_value(char cmd,char *json,float value)
 {
 	char *times=NULL;
@@ -882,7 +881,11 @@ char *build_message(char *cmd,int len,char *message)
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
 					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
-						cmd[3]!=atoi(ID_CAP_HCHO_EXT))
+						cmd[3]!=atoi(ID_CAP_HCHO_EXT)&&cmd[3]!=atoi(ID_CAP_SHI_DU) &&
+						cmd[3]!=atoi(ID_CAP_TEMPERATURE) &&cmd[3]!=atoi(ID_CAP_PM_25) &&
+						cmd[3]!=atoi(ID_CAP_FENG_SU) &&cmd[3]!=atoi(ID_CAP_QI_YA) &&
+						cmd[3]!=atoi(ID_CAP_BUZZY) &&cmd[3]!=atoi(ID_CAP_TVOC) &&
+						cmd[3]!=atoi(ID_CAP_CHOU_YANG) &&cmd[3]!=atoi(ID_CAP_PM_10))
 					message=add_item(message,id,data);
 					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;

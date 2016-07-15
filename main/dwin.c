@@ -3547,7 +3547,9 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_PRODUCT_NAME,40);
 		clear_buf(ADDR_PRODUCT_MODEL,40);
 		clear_buf(ADDR_PRODUCT_ID,40);
+		clear_buf(ADDR_SW_VERSION,20);
 		write_string(ADDR_PRODUCT_ID,g_share_memory->uuid,strlen(g_share_memory->uuid));
+		write_string(ADDR_SW_VERSION,VERSION,strlen(VERSION));
 		switch_pic(PRODUCT_PAGE);
 		g_index=PRODUCT_PAGE;
 	}		

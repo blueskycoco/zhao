@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-
+#define VERSION	"V0.00-2016-07-15"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
@@ -841,7 +841,7 @@ extern key_t  shmid_history_pm10;
 #define	ADDR_INFO_CONTACTER	0x0b49
 		
 #define	TOUCH_WAKE_UP	0x00d2
-
+#define ADDR_SW_VERSION	0x0d7d
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
