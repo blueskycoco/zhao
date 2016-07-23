@@ -20,6 +20,14 @@ void write_data(unsigned int Index,int data)
 	//printf(LCD_PROCESS"\n");
 	write(g_share_memory->fd_lcd,cmd,8);
 }
+void write_data1(unsigned int Index,int data)
+{
+	//int i = 0;
+	char cmd[]={0x5a,0xa5,0x04,0x82,0x00,0x00,0x00};
+	cmd[4]=(Index&0xff00)>>8;cmd[5]=Index&0x00ff;
+	cmd[7]=data&0x00ff;
+	write(g_share_memory->fd_lcd,cmd,7);
+}
 
 void switch_pic(unsigned char Index)
 {

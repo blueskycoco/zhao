@@ -842,6 +842,7 @@ extern key_t  shmid_history_pm10;
 		
 #define	TOUCH_WAKE_UP	0x00d2
 #define ADDR_SW_VERSION	0x0d7d
+#define ADDR_O3_SHOW_PIC		0x0d7b
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8

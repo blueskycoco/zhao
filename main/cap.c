@@ -525,7 +525,8 @@ char *count_sensor_value(char cmd,char *json,float value)
 	return json;
 }
 void update_dwin_real_value(char *id,int value)
-{
+{	
+	//write_data1(ADDR_O3_SHOW_PIC,0x01);
 	if(strncmp(id,ID_CAP_CO_EXT,strlen(ID_CAP_CO_EXT))==0)
 	{
 		write_data(ADDR_CO_REAL_1,value);

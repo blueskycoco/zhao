@@ -6,6 +6,7 @@ void set_lcd_time(char *buf);
 void clear_buf(int addr,int len);
 void write_string(unsigned int addr,char *data,int len);
 void write_data(unsigned int Index,int data);
+void write_data1(unsigned int Index,int data);
 void clear_point();
 void switch_pic(unsigned char Index);
 void ctl_fan(int on);
