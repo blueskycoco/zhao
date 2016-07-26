@@ -17,7 +17,7 @@ void write_data(unsigned int Index,int data)
 	cmd[6]=(data&0xff00)>>8;cmd[7]=data&0x00ff;
 	//for(i = 0;i<sizeof(cmd);i++)
 	//	printfLog(LCD_PROCESS"%02x ",cmd[i]);
-	//printf(LCD_PROCESS"\n");
+	//printfLog(LCD_PROCESS"\n");
 	write(g_share_memory->fd_lcd,cmd,8);
 }
 void write_data1(unsigned int Index,int data)

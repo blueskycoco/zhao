@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-#define VERSION	"V0.00-2016-07-15"
+#define VERSION	"V0.01-2016-07-26"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
@@ -84,6 +84,7 @@ struct share_memory{
 	char 	alarm[SENSOR_NO];		//alarm state
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times
+	char 	sensor_has_data[SENSOR_NO];
 	int 	sensor_interface_mem[12];
 	char	factory_mode;
 	int 	jiaozhun_sensor;	
@@ -842,7 +843,30 @@ extern key_t  shmid_history_pm10;
 		
 #define	TOUCH_WAKE_UP	0x00d2
 #define ADDR_SW_VERSION	0x0d7d
-#define ADDR_O3_SHOW_PIC		0x0d7b
+#define ADDR_O3_SHOW_PIC			0x0d98
+#define ADDR_TVOC_SHOW_PIC			0x0d97
+#define ADDR_PRESS_SHOW_PIC			0x0d96
+#define ADDR_NOISE_SHOW_PIC			0x0d95
+#define ADDR_WIND_SHOW_PIC			0x0d94
+#define ADDR_SHIDU_SHOW_PIC			0x0d93
+#define ADDR_TEMP_SHOW_PIC			0x0d92
+#define ADDR_CO2_SHOW_PIC			0x0d91
+#define ADDR_CO_SHOW_PIC			0x0d90
+#define ADDR_PM25_SHOW_PIC			0x0d8f
+#define ADDR_PM10_SHOW_PIC			0x0d8e
+#define ADDR_HCHO_SHOW_PIC			0x0d8d
+#define ADDR_O3_SHOW_PIC_PPM		0x0da4
+#define ADDR_TVOC_SHOW_PIC_PPM		0x0da3
+#define ADDR_PRESS_SHOW_PIC_PPM		0x0da2
+#define ADDR_NOISE_SHOW_PIC_PPM		0x0da1
+#define ADDR_WIND_SHOW_PIC_PPM		0x0da0
+#define ADDR_SHIDU_SHOW_PIC_PPM		0x0d9f
+#define ADDR_TEMP_SHOW_PIC_PPM		0x0d9e
+#define ADDR_CO2_SHOW_PIC_PPM		0x0d9d
+#define ADDR_CO_SHOW_PIC_PPM		0x0d9c
+#define ADDR_PM25_SHOW_PIC_PPM		0x0d9b
+#define ADDR_PM10_SHOW_PIC_PPM		0x0d9a
+#define ADDR_HCHO_SHOW_PIC_PPM		0x0d99
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8

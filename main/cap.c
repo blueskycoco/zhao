@@ -526,80 +526,182 @@ char *count_sensor_value(char cmd,char *json,float value)
 }
 void update_dwin_real_value(char *id,int value)
 {	
-	write_data(ADDR_O3_SHOW_PIC,0x0001);
+	
 	if(strncmp(id,ID_CAP_CO_EXT,strlen(ID_CAP_CO_EXT))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_CO]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO]=1;
+			write_data(ADDR_CO_SHOW_PIC,0x0000);
+			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_CO_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0)
-	{						
+	{			
+		if(g_share_memory->sensor_has_data[SENSOR_CO2]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO2]=1;
+			write_data(ADDR_CO2_SHOW_PIC,0x0000);
+			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_CO2_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_HCHO_EXT,strlen(ID_CAP_HCHO_EXT))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_HCHO]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_HCHO]=1;
+			write_data(ADDR_HCHO_SHOW_PIC,0x0000);
+			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_HCHO_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0)
 	{						
+		if(g_share_memory->sensor_has_data[SENSOR_TVOC]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_TVOC]=1;
+			write_data(ADDR_TVOC_SHOW_PIC,0x0000);
+			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_TVOC_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_O3]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_O3]=1;
+			write_data(ADDR_O3_SHOW_PIC,0x0000);
+			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_O3_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_TEMP]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_TEMP]=1;
+			write_data(ADDR_TEMP_SHOW_PIC,0x0000);
+			write_data(ADDR_TEMP_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_TEMP_REAL_1,value);
 		write_data(ADDR_TEMP_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_SHIDU]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_SHIDU]=1;
+			write_data(ADDR_SHIDU_SHOW_PIC,0x0000);
+			write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_SHIDU_REAL_1,value);
 		write_data(ADDR_SHIDU_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_PM25]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_PM25]=1;
+			write_data(ADDR_PM25_SHOW_PIC,0x0000);
+			write_data(ADDR_PM25_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_PM25_REAL_1,value);
 		write_data(ADDR_PM25_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_PM10]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_PM10]=1;
+			write_data(ADDR_PM10_SHOW_PIC,0x0000);
+			write_data(ADDR_PM10_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_PM10_REAL_1,value);
 		write_data(ADDR_PM10_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_WIND]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_WIND]=1;
+			write_data(ADDR_WIND_SHOW_PIC,0x0000);
+			write_data(ADDR_WIND_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_WIND_REAL_1,value);
 		write_data(ADDR_WIND_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_PRESS]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_PRESS]=1;
+			write_data(ADDR_PRESS_SHOW_PIC,0x0000);
+			write_data(ADDR_PRESS_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_PRESS_REAL_1,value);
 		write_data(ADDR_PRESS_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_NOISE]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_NOISE]=1;
+			write_data(ADDR_NOISE_SHOW_PIC,0x0000);
+			write_data(ADDR_NOISE_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_NOISE_REAL_1,value);
 		write_data(ADDR_NOISE_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_CO]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO]=1;
+			write_data(ADDR_CO_SHOW_PIC,0x0000);
+			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_CO_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
 	{						
+		if(g_share_memory->sensor_has_data[SENSOR_CO2]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO2]=1;
+			write_data(ADDR_CO2_SHOW_PIC,0x0000);
+			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_CO2_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_HCHO]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_HCHO]=1;
+			write_data(ADDR_HCHO_SHOW_PIC,0x0000);
+			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_HCHO_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0)
-	{						
+	{				
+		if(g_share_memory->sensor_has_data[SENSOR_TVOC]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_TVOC]=1;
+			write_data(ADDR_TVOC_SHOW_PIC,0x0000);
+			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_TVOC_REAL_2,value);
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0)
 	{
+		if(g_share_memory->sensor_has_data[SENSOR_O3]==0)
+		{
+			g_share_memory->sensor_has_data[SENSOR_O3]=1;
+			write_data(ADDR_O3_SHOW_PIC,0x0000);
+			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
+		}
 		write_data(ADDR_O3_REAL_2,value);
 	}
 }
@@ -1468,6 +1570,7 @@ int cap_init()
 	fpid=fork();
 	if(fpid==0)
 	{
+		int i=0;
 		sensor_history.co= (struct nano *)shmat(shmid_history_co,0, 0);
 		sensor_history.co2 = (struct nano *)shmat(shmid_history_co2,0, 0);
 		sensor_history.hcho= (struct nano *)shmat(shmid_history_hcho,0, 0);
@@ -1493,6 +1596,32 @@ int cap_init()
 		g_share_memory->pj_cnt[SENSOR_TVOC]=0;
 		g_share_memory->pj_cnt[SENSOR_O3]=0;
 		g_share_memory->pj_cnt[SENSOR_PM10]=0;
+		for(i=0;i<SENSOR_NO;i++)
+		g_share_memory->sensor_has_data[i]=1;
+		write_data(ADDR_O3_SHOW_PIC,0x01);
+		write_data(ADDR_TVOC_SHOW_PIC,0x01);
+		write_data(ADDR_PRESS_SHOW_PIC,0x01);
+		write_data(ADDR_NOISE_SHOW_PIC,0x01);
+		write_data(ADDR_WIND_SHOW_PIC,0x01);
+		write_data(ADDR_SHIDU_SHOW_PIC,0x01);
+		write_data(ADDR_TEMP_SHOW_PIC,0x01);
+		write_data(ADDR_CO2_SHOW_PIC,0x01);
+		write_data(ADDR_CO_SHOW_PIC,0x01);
+		write_data(ADDR_PM25_SHOW_PIC,0x01);
+		write_data(ADDR_PM10_SHOW_PIC,0x01);
+		write_data(ADDR_HCHO_SHOW_PIC,0x01);
+		write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_TVOC_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_PRESS_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_NOISE_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_WIND_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_TEMP_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_CO2_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_CO_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_PM25_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
+		write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);
 		signal(SIGALRM, set_upload_flag);
 		alarm(600);
 		while(1)
