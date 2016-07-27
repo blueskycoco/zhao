@@ -1597,7 +1597,7 @@ int cap_init()
 		g_share_memory->pj_cnt[SENSOR_O3]=0;
 		g_share_memory->pj_cnt[SENSOR_PM10]=0;
 		for(i=0;i<SENSOR_NO;i++)
-		g_share_memory->sensor_has_data[i]=1;
+		g_share_memory->sensor_has_data[i]=0;
 		write_data(ADDR_O3_SHOW_PIC,0x01);
 		write_data(ADDR_TVOC_SHOW_PIC,0x01);
 		write_data(ADDR_PRESS_SHOW_PIC,0x01);

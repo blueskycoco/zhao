@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-#define VERSION	"V0.01-2016-07-26"
+#define VERSION	"V0.01-2016-07-27"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
@@ -84,7 +84,7 @@ struct share_memory{
 	char 	alarm[SENSOR_NO];		//alarm state
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times
-	char 	sensor_has_data[SENSOR_NO];
+	char 	sensor_has_data[SENSOR_NO];//sensor[] is exist in slot ?
 	int 	sensor_interface_mem[12];
 	char	factory_mode;
 	int 	jiaozhun_sensor;	
