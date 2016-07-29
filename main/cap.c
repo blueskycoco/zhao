@@ -790,62 +790,98 @@ char *build_message(char *cmd,int len,char *message)
 					if(cmd[3]==atoi(ID_CAP_CO2) && !(g_share_memory->alarm[SENSOR_CO2] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_CO2]|=ALARM_UNINSERT;
-						g_share_memory->sent[SENSOR_CO2]=0;
+						g_share_memory->sent[SENSOR_CO2]=0;						
+						g_share_memory->sensor_has_data[SENSOR_CO2]=0;
+						write_data(ADDR_CO2_SHOW_PIC,0x01);
+						write_data(ADDR_CO2_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_CO) && !(g_share_memory->alarm[SENSOR_CO] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_CO]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_CO]=0;
+						g_share_memory->sensor_has_data[SENSOR_CO]=0;
+						write_data(ADDR_CO_SHOW_PIC,0x01);
+						write_data(ADDR_CO_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_HCHO) && !(g_share_memory->alarm[SENSOR_HCHO] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_HCHO]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_HCHO]=0;
+						g_share_memory->sensor_has_data[SENSOR_HCHO]=0;
+						write_data(ADDR_HCHO_SHOW_PIC,0x01);
+						write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);						
 					}
 					else if(cmd[3]==atoi(ID_CAP_SHI_DU) && !(g_share_memory->alarm[SENSOR_SHIDU] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_SHIDU]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_SHIDU]=0;
+						g_share_memory->sensor_has_data[SENSOR_SHIDU]=0;
+						write_data(ADDR_SHIDU_SHOW_PIC,0x01);
+						write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_TEMPERATURE)&& !(g_share_memory->alarm[SENSOR_TEMP] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_TEMP]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_TEMP]=0;
+						g_share_memory->sensor_has_data[SENSOR_TEMP]=0;
+						write_data(ADDR_TEMP_SHOW_PIC,0x01);
+						write_data(ADDR_TEMP_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_PM_25)&& !(g_share_memory->alarm[SENSOR_PM25] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_PM25]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_PM25]=0;
+						g_share_memory->sensor_has_data[SENSOR_PM25]=0;
+						write_data(ADDR_PM25_SHOW_PIC,0x01);
+						write_data(ADDR_PM25_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_TVOC) && !(g_share_memory->alarm[SENSOR_TVOC] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_TVOC]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_TVOC]=0;
+						g_share_memory->sensor_has_data[SENSOR_TVOC]=0;
+						write_data(ADDR_TVOC_SHOW_PIC,0x01);
+						write_data(ADDR_TVOC_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_QI_YA) && !(g_share_memory->alarm[SENSOR_PRESS] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_PRESS]|=ALARM_UNINSERT;
-						g_share_memory->sent[SENSOR_PRESS]=0;
+						g_share_memory->sent[SENSOR_PRESS]=0;						
+						g_share_memory->sensor_has_data[SENSOR_PRESS]=0;
+						write_data(ADDR_PRESS_SHOW_PIC,0x01);
+						write_data(ADDR_PRESS_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_FENG_SU) && !(g_share_memory->alarm[SENSOR_WIND] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_WIND]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_WIND]=0;
+						g_share_memory->sensor_has_data[SENSOR_WIND]=0;
+						write_data(ADDR_WIND_SHOW_PIC,0x01);
+						write_data(ADDR_WIND_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_CHOU_YANG) && !(g_share_memory->alarm[SENSOR_O3] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_O3]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_O3]=0;
+						g_share_memory->sensor_has_data[SENSOR_O3]=0;
+						write_data(ADDR_O3_SHOW_PIC,0x01);
+						write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_BUZZY)&& !(g_share_memory->alarm[SENSOR_NOISE] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_NOISE]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_NOISE]=0;
+						g_share_memory->sensor_has_data[SENSOR_NOISE]=0;
+						write_data(ADDR_NOISE_SHOW_PIC,0x01);
+						write_data(ADDR_NOISE_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_PM_10)&& !(g_share_memory->alarm[SENSOR_PM10] & ALARM_UNINSERT))
 					{
 						g_share_memory->alarm[SENSOR_PM10]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_PM10]=0;
+						g_share_memory->sensor_has_data[SENSOR_PM10]=0;
+						write_data(ADDR_PM10_SHOW_PIC,0x01);
+						write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
 					}
 					
 					else 
