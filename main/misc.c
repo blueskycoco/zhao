@@ -898,11 +898,11 @@ void sync_server(int resend,int set_local)
 				char *user_phone=doit_data(rcv,"202");
 				char *user_contraceer=doit_data(rcv,"201");				
 				char cmd[256]={0};
-				clear_buf(ADDR_INFO_USER_NAME,40);
-				clear_buf(ADDR_INFO_INSTALL_PLACE,60);
-				clear_buf(ADDR_INFO_ADDR,40);
-				clear_buf(ADDR_INFO_PHONE,40);
-				clear_buf(ADDR_INFO_CONTACTER,40);
+				clear_buf(ADDR_INFO_USER_NAME,42);
+				clear_buf(ADDR_INFO_INSTALL_PLACE,42);
+				clear_buf(ADDR_INFO_ADDR,42);
+				clear_buf(ADDR_INFO_PHONE,16);
+				clear_buf(ADDR_INFO_CONTACTER,16);
 				if(user_name && strlen(user_name)>0)
 				{
 					code_convert("utf-8","gbk",user_name,strlen(user_name),cmd,256);
