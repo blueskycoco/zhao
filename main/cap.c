@@ -342,11 +342,11 @@ void save_pj(char cmd,float value)
 	{
 		g_share_memory->pj[SENSOR_NOISE][g_share_memory->pj_cnt[SENSOR_NOISE]++]=value;
 	}
-	else if(cmd==atoi(ID_CAP_TVOC_EXT))
+	else if(cmd==atoi(ID_CAP_TVOC))
 	{
 		g_share_memory->pj[SENSOR_TVOC][g_share_memory->pj_cnt[SENSOR_TVOC]++]=value;
 	}
-	else if(cmd==atoi(ID_CAP_CHOU_YANG_EXT))
+	else if(cmd==atoi(ID_CAP_CHOU_YANG))
 	{
 		g_share_memory->pj[SENSOR_O3][g_share_memory->pj_cnt[SENSOR_O3]++]=value;
 	}
@@ -1523,10 +1523,20 @@ void cap_data_handle()
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
 		{
 			if(message_type!=0x0001 && message_type!=0x0005)
-			show_factory(1,cmd,message_len+7);
+				show_factory(1,cmd,message_len+7);
+			if(post_message!=NULL)
+			{
+				free(post_message);
+				post_message=NULL;
+			}
 		}
 		else
 		{
+			if(post_message!=NULL)
+			{
+				free(post_message);
+				post_message=NULL;
+			}
 			if(message_type == 0x0003)
 			{							
 				g_share_memory->y=message[message_len-1];
