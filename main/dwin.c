@@ -2130,6 +2130,25 @@ void ctl_fan(int on)
 	//printfLog("\n");
 	send_cmd_to_cap(cmd,sizeof(cmd));
 }
+void ctl_audio(int on)
+{
+	//int i =0;
+	char cmd[]=	{0x6c,ARM_TO_CAP,0x00,0x0a,0x01,0x00,0x00,0x00};
+	if(on)
+	{
+		cmd[5]=0x01;
+		printfLog("open audio\n");
+	}
+	else
+		printfLog("close audio\n");
+	int crc=CRC_check((unsigned char *)cmd,6);
+	cmd[6]=(crc&0xff00)>>8;cmd[7]=crc&0x00ff;		
+	//for(i=0;i<sizeof(cmd);i++)
+	//	printfLog("%02X ",cmd[i]);
+	//printfLog("\n");
+	send_cmd_to_cap(cmd,sizeof(cmd));
+}
+
 void tun_zero_return()
 {
 	char cmd_request_verify[]=	{0x6c,ARM_TO_CAP,0x00,0x07,0x01,0x00,0x00,0x00};	
@@ -3846,6 +3865,26 @@ unsigned short input_handle(char *input)
 			if(g_index==SENSOR_SETTING_PAGE)
 				switch_pic(g_index);
 		}
+	}
+	else if((addr==TOUCH_FAN_1&& (TOUCH_FAN_1+0x100)==data) ||
+		(addr==TOUCH_FAN_2&& (TOUCH_FAN_2+0x100)==data))
+	{
+		if(g_share_memory->fan_state==0)
+			g_share_memory->fan_state=1;
+		else
+			g_share_memory->fan_state=0;
+		show_fan(g_share_memory->fan_state);
+		ctl_fan(g_share_memory->fan_state);
+	}
+	else if((addr==TOUCH_AUDIO_1&& (TOUCH_AUDIO_1+0x100)==data)||
+		(addr==TOUCH_AUDIO_2&& (TOUCH_AUDIO_2+0x100)==data))
+	{
+		if(g_share_memory->audio_state==0)
+			g_share_memory->audio_state=1;
+		else
+			g_share_memory->audio_state=0;
+		show_audio(g_share_memory->audio_state);
+		ctl_audio(g_share_memory->audio_state);
 	}
 	return 0;
 }

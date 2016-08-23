@@ -22,4 +22,6 @@ void read_curr_time(char *out);
 int ping_server_by_gprs();
 void gprs_state(int state,int pic);
 int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char *outbuf,int outlen);
+void show_fan(int on);
+void show_audio(int on);
 #endif

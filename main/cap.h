@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-#define VERSION	"V0.03-2016-08-01"
+#define VERSION	"V0.03-2016-08-23"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
@@ -108,6 +108,8 @@ struct share_memory{
 	float 	pj[SENSOR_NO][200];
 	int		pj_cnt[SENSOR_NO];
 	char	cap_board_ack;
+	char	fan_state;
+	char	audio_state;
 	pthread_mutex_t mutex;
 };
 extern struct history sensor_history;
@@ -867,6 +869,16 @@ extern key_t  shmid_history_pm10;
 #define ADDR_PM25_SHOW_PIC_PPM		0x0d9b
 #define ADDR_PM10_SHOW_PIC_PPM		0x0d9a
 #define ADDR_HCHO_SHOW_PIC_PPM		0x0d99
+
+#define ADDR_GRAPHIC_FAN_1			0x0da9
+#define ADDR_GRAPHIC_AUDIO_1		0x0db2
+#define ADDR_GRAPHIC_FAN_2			0x0dbb
+#define ADDR_GRAPHIC_AUDIO_2		0x0dc4
+#define TOUCH_FAN_1					0x0da5
+#define TOUCH_AUDIO_1				0x0da6
+#define TOUCH_FAN_2					0x0da7
+#define TOUCH_AUDIO_2				0x0da8
+
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
