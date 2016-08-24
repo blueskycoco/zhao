@@ -191,10 +191,13 @@ char *remove_p(char *buf)
 	printfLog(LCD_PROCESS"out is %s\n",out);
 	return out;
 }
-void show_history(char *id,int offset)
+int show_history(char *id,int offset)
 {	
 	char tmp[4]={0};
 	char *out=NULL;
+	int offs = 0;
+	char time1[255]={0};
+	char time2[255]={0};
 	if(strncmp(id,ID_CAP_CHOU_YANG,strlen(id))==0)
 	{
 		printfLog(LCD_PROCESS"O3_cnt %d\n",g_share_memory->cnt[SENSOR_O3]);
@@ -627,48 +630,80 @@ void show_history(char *id,int offset)
 			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].data);
 			write_data(ADDR_TEMP_DATA_0,atoi(out));
 			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+11,2);
-			write_data(ADDR_TEMP_TIME_1,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+14,2);
-			write_data(ADDR_TEMP_TIME_1_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].data);
-			write_data(ADDR_TEMP_DATA_1,atoi(out));
-			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+11,2);
-			write_data(ADDR_TEMP_TIME_2,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+14,2);
-			write_data(ADDR_TEMP_TIME_2_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].data);
-			write_data(ADDR_TEMP_DATA_2,atoi(out));
-			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+11,2);
-			write_data(ADDR_TEMP_TIME_3,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+14,2);
-			write_data(ADDR_TEMP_TIME_3_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].data);
-			write_data(ADDR_TEMP_DATA_3,atoi(out));
-			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+11,2);
-			write_data(ADDR_TEMP_TIME_4,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+14,2);
-			write_data(ADDR_TEMP_TIME_4_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].data);
-			write_data(ADDR_TEMP_DATA_4,atoi(out));
-			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+11,2);
-			write_data(ADDR_TEMP_TIME_5,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+14,2);
-			write_data(ADDR_TEMP_TIME_5_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].data);
-			write_data(ADDR_TEMP_DATA_5,atoi(out));
-			free(out);
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+11,2);
-			write_data(ADDR_TEMP_TIME_6,atoi(tmp));
-			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+14,2);
-			write_data(ADDR_TEMP_TIME_6_1,atoi(tmp));
-			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].data);
-			write_data(ADDR_TEMP_DATA_6,atoi(out));
-			free(out);
+			offs++;
+			strcpy(time1,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time);
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+11,2);
+				write_data(ADDR_TEMP_TIME_1,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+14,2);
+				write_data(ADDR_TEMP_TIME_1_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].data);
+				write_data(ADDR_TEMP_DATA_1,atoi(out));
+				free(out);
+				offs++;
+			}
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+11,2);
+				write_data(ADDR_TEMP_TIME_2,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+14,2);
+				write_data(ADDR_TEMP_TIME_2_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].data);
+				write_data(ADDR_TEMP_DATA_2,atoi(out));
+				free(out);
+				offs++;
+			}
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+11,2);
+				write_data(ADDR_TEMP_TIME_3,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+14,2);
+				write_data(ADDR_TEMP_TIME_3_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].data);
+				write_data(ADDR_TEMP_DATA_3,atoi(out));
+				free(out);
+				offs++;
+			}
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+11,2);
+				write_data(ADDR_TEMP_TIME_4,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+14,2);
+				write_data(ADDR_TEMP_TIME_4_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].data);
+				write_data(ADDR_TEMP_DATA_4,atoi(out));
+				free(out);
+				offs++;
+			}
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+11,2);
+				write_data(ADDR_TEMP_TIME_5,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+14,2);
+				write_data(ADDR_TEMP_TIME_5_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].data);
+				write_data(ADDR_TEMP_DATA_5,atoi(out));
+				free(out);
+				offs++;
+			}
+			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time);
+			if(strncmp(time1,time2,11)==0)
+			{
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+11,2);
+				write_data(ADDR_TEMP_TIME_6,atoi(tmp));
+				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+14,2);
+				write_data(ADDR_TEMP_TIME_6_1,atoi(tmp));
+				out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].data);
+				write_data(ADDR_TEMP_DATA_6,atoi(out));
+				free(out);
+				offs++;
+			}
 		}
 	}
 	if(strncmp(id,ID_CAP_CO2,strlen(id))==0)
@@ -1011,7 +1046,7 @@ void show_history(char *id,int offset)
 			free(out);
 		}
 	}
-	
+	return offs;
 }
 void wifi_handle()
 {
@@ -2955,7 +2990,7 @@ unsigned short input_handle(char *input)
 		if(begin_temp>=7)
 		{
 			begin_temp-=7;
-			show_history(ID_CAP_TEMPERATURE,begin_temp);
+			begin_temp=begin_temp+7-show_history(ID_CAP_TEMPERATURE,begin_temp);
 		}
 	}
 	else if(addr==TOUCH_TEMP_NEXT_PAGE && (TOUCH_TEMP_NEXT_PAGE+0x100)==data)
@@ -2963,7 +2998,7 @@ unsigned short input_handle(char *input)
 		if(begin_temp+7<g_share_memory->cnt[SENSOR_TEMP])
 		{
 			begin_temp+=7;
-			show_history(ID_CAP_TEMPERATURE,begin_temp);
+			begin_temp=begin_temp-7+show_history(ID_CAP_TEMPERATURE,begin_temp);
 		}
 	}
 	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
