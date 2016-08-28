@@ -879,6 +879,23 @@ extern key_t  shmid_history_pm10;
 #define TOUCH_FAN_2					0x0da7
 #define TOUCH_AUDIO_2				0x0da8
 
+#define ADDR_HISTORY_TEMP_1_1		0x0dcd
+#define ADDR_HISTORY_TEMP_2_1		0x0dce
+#define ADDR_HISTORY_TEMP_3_1		0x0dcf
+#define ADDR_HISTORY_TEMP_4_1		0x0dd0
+#define ADDR_HISTORY_TEMP_5_1		0x0dd1
+#define ADDR_HISTORY_TEMP_6_1		0x0dd2
+#define ADDR_HISTORY_TEMP_1_2		0x0dd3
+#define ADDR_HISTORY_TEMP_2_2		0x0dd4
+#define ADDR_HISTORY_TEMP_3_2		0x0dd5
+#define ADDR_HISTORY_TEMP_4_2		0x0dd6
+#define ADDR_HISTORY_TEMP_5_2		0x0dd7
+#define ADDR_HISTORY_TEMP_6_2		0x0dd8
+
+
+
+
+
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8

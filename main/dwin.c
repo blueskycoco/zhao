@@ -635,6 +635,8 @@ int show_history(char *id,int offset)
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_1_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_1_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+11,2);
 				write_data(ADDR_TEMP_TIME_1,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-2].time+14,2);
@@ -644,9 +646,16 @@ int show_history(char *id,int offset)
 				free(out);
 				offs++;
 			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_1_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_1_2,0x01);
+			}
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_2_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_2_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+11,2);
 				write_data(ADDR_TEMP_TIME_2,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-3].time+14,2);
@@ -656,9 +665,16 @@ int show_history(char *id,int offset)
 				free(out);
 				offs++;
 			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_2_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_2_2,0x01);
+			}
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_3_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_3_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+11,2);
 				write_data(ADDR_TEMP_TIME_3,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-4].time+14,2);
@@ -668,9 +684,16 @@ int show_history(char *id,int offset)
 				free(out);
 				offs++;
 			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_3_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_3_2,0x01);
+			}
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_4_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_4_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+11,2);
 				write_data(ADDR_TEMP_TIME_4,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-5].time+14,2);
@@ -680,9 +703,16 @@ int show_history(char *id,int offset)
 				free(out);
 				offs++;
 			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_4_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_4_2,0x01);
+			}
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_5_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_5_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+11,2);
 				write_data(ADDR_TEMP_TIME_5,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-6].time+14,2);
@@ -692,9 +722,16 @@ int show_history(char *id,int offset)
 				free(out);
 				offs++;
 			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_5_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_5_2,0x01);
+			}
 			strcpy(time2,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time);
 			if(strncmp(time1,time2,11)==0)
 			{
+				write_data(ADDR_HISTORY_TEMP_6_1,0x00);
+				write_data(ADDR_HISTORY_TEMP_6_2,0x00);
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+11,2);
 				write_data(ADDR_TEMP_TIME_6,atoi(tmp));
 				memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-7].time+14,2);
@@ -703,6 +740,11 @@ int show_history(char *id,int offset)
 				write_data(ADDR_TEMP_DATA_6,atoi(out));
 				free(out);
 				offs++;
+			}
+			else
+			{
+				write_data(ADDR_HISTORY_TEMP_6_1,0x01);
+				write_data(ADDR_HISTORY_TEMP_6_2,0x01);
 			}
 		}
 	}
@@ -3919,7 +3961,7 @@ unsigned short input_handle(char *input)
 		else
 			g_share_memory->audio_state=0;
 		show_audio(g_share_memory->audio_state);
-		ctl_audio(g_share_memory->audio_state);
+		//ctl_audio(g_share_memory->audio_state);
 	}
 	return 0;
 }

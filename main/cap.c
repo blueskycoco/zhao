@@ -215,7 +215,7 @@ char *get_pj(int id,float *buf,int len)
 char *count_pj(char *message)
 {
 	char *temp;
-	printfLog("Enter count_pj\n");
+	//printfLog("Enter count_pj\n");
 	if(g_share_memory->pj_cnt[SENSOR_CO]!=0)
 	{
 		temp=get_pj(SENSOR_CO,g_share_memory->pj[SENSOR_CO],g_share_memory->pj_cnt[SENSOR_CO]);
@@ -300,12 +300,12 @@ char *count_pj(char *message)
 	g_share_memory->pj_cnt[SENSOR_TVOC]=0;
 	g_share_memory->pj_cnt[SENSOR_O3]=0;
 	g_share_memory->pj_cnt[SENSOR_PM10]=0;
-	printfLog("Leave count_pj\n");
+	//printfLog("Leave count_pj\n");
 	return message;
 }
 void save_pj(char cmd,float value)
 {
-	printfLog("Enter save_pj\n");
+	//printfLog("Enter save_pj\n");
 	if(cmd==atoi(ID_CAP_CO_EXT))
 	{
 		g_share_memory->pj[SENSOR_CO][g_share_memory->pj_cnt[SENSOR_CO]++]=value;
@@ -354,7 +354,7 @@ void save_pj(char cmd,float value)
 	{
 		g_share_memory->pj[SENSOR_PM10][g_share_memory->pj_cnt[SENSOR_PM10]++]=value;
 	}
-	printfLog("Leave save_pj\n");
+	//printfLog("Leave save_pj\n");
 
 	}
 char *count_sensor_value(char cmd,char *json,float value)
@@ -383,7 +383,7 @@ char *count_sensor_value(char cmd,char *json,float value)
 		max=MAX_CO;
 		alarm=&(g_share_memory->alarm[SENSOR_CO]);
 		strcpy(id,ID_CAP_CO);
-		printfLog(CAP_PROCESS"CO is %f,min %d,max %d,times %d\n",value,min,max,*times);
+		//printfLog(CAP_PROCESS"CO is %f,min %d,max %d,times %d\n",value,min,max,*times);
 	}
 	else if(cmd==atoi(ID_CAP_HCHO))
 	{
