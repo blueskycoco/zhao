@@ -2412,6 +2412,23 @@ unsigned short input_handle(char *input)
 			switch_pic(MAIN_PAGE);
 			g_index=MAIN_PAGE;
 		}
+		if((addr==TOUCH_HCHO_HISTORY_RETURN && (TOUCH_HCHO_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_CO_HISTORY_RETURN && (TOUCH_CO_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_CO2_HISTORY_RETURN && (TOUCH_CO2_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_O3_HISTORY_RETURN && (TOUCH_O3_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_TVOC_HISTORY_RETURN && (TOUCH_TVOC_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PM10_HISTORY_RETURN && (TOUCH_PM10_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PM25_HISTORY_RETURN && (TOUCH_PM25_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_TEMP_HISTORY_RETURN && (TOUCH_TEMP_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_SHIDU_HISTORY_RETURN && (TOUCH_SHIDU_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_NOISE_HISTORY_RETURN && (TOUCH_NOISE_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_PRESS_HISTORY_RETURN && (TOUCH_PRESS_HISTORY_RETURN+0x100)==data)||
+		(addr==TOUCH_WIND_HISTORY_RETURN && (TOUCH_WIND_HISTORY_RETURN+0x100)==data))
+		{
+			begin_co=0;begin_co2=0;begin_hcho=0;begin_noise=0;begin_o3=0;
+			begin_pm10=0;begin_pm25=0;begin_press=0;begin_shidu=0;begin_temp=0;
+			begin_tvoc=0;begin_wind=0;
+		}
 	}
 	else if((addr==TOUCH_TIME_RETURN && (TOUCH_TIME_RETURN+0x100)==data)||
 		(addr==TOUCH_GPRS_OK && (TOUCH_GPRS_OK+0x100)==data)||
@@ -2787,7 +2804,7 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_TEMP);
-				show_history(ID_CAP_TEMPERATURE,begin_temp);
+				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
 				g_index=LIST_PAGE_TEMP;
 			}
 		}
@@ -3025,7 +3042,7 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_TEMP_UPDATE && (TOUCH_TEMP_UPDATE+0x100)==data)
 	{//show history TEMPERATURE the next page
 		begin_temp=0;
-		show_history(ID_CAP_TEMPERATURE,begin_temp);
+		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
 	}
 	else if(addr==TOUCH_TEMP_LAST_PAGE && (TOUCH_TEMP_LAST_PAGE+0x100)==data)
 	{//show history TEMP the next page
