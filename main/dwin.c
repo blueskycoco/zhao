@@ -2805,6 +2805,7 @@ unsigned short input_handle(char *input)
 			{
 				switch_pic(LIST_PAGE_TEMP);
 				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
+				printfLog(LCD_PROCESS"begin_temp in main is %d\n",begin_temp);
 				g_index=LIST_PAGE_TEMP;
 			}
 		}
@@ -3043,6 +3044,7 @@ unsigned short input_handle(char *input)
 	{//show history TEMPERATURE the next page
 		begin_temp=0;
 		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
+		printfLog(LCD_PROCESS"begin_temp in update is %d\n",begin_temp);
 	}
 	else if(addr==TOUCH_TEMP_LAST_PAGE && (TOUCH_TEMP_LAST_PAGE+0x100)==data)
 	{//show history TEMP the next page
@@ -3050,6 +3052,7 @@ unsigned short input_handle(char *input)
 		{
 			begin_temp-=7;
 			begin_temp=begin_temp+7-show_history(ID_CAP_TEMPERATURE,begin_temp);
+			printfLog(LCD_PROCESS"begin_temp in last page is %d\n",begin_temp);			
 		}
 	}
 	else if(addr==TOUCH_TEMP_NEXT_PAGE && (TOUCH_TEMP_NEXT_PAGE+0x100)==data)
@@ -3058,6 +3061,7 @@ unsigned short input_handle(char *input)
 		{
 			begin_temp+=7;
 			begin_temp=begin_temp-7+show_history(ID_CAP_TEMPERATURE,begin_temp);
+			printfLog(LCD_PROCESS"begin_temp in next page is %d\n",begin_temp);
 		}
 	}
 	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
@@ -3762,7 +3766,8 @@ unsigned short input_handle(char *input)
 			case CURVE_PAGE_TEMP:
 			{//temp
 				switch_pic(LIST_PAGE_TEMP);
-				show_history(ID_CAP_TEMPERATURE,begin_temp);
+				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
+				printfLog(LCD_PROCESS"begin_temp in curve is %d\n",begin_temp);
 				//begin_temp=0;
 			}
 			break;
