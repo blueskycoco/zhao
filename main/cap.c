@@ -1457,7 +1457,7 @@ int cap_board_mon()
 					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 					to_check[5+message_len+1]=crc&0xff;
-					show_cap_value(to_check+2,message_len);
+					//show_cap_value(to_check+2,message_len);
 					if(crc!=CRC_check((unsigned char *)to_check,message_len+5))
 					{
 						printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)to_check,message_len+5));

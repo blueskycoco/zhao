@@ -7,7 +7,8 @@ int lcd_state=1;
 char logged=0,g_index=0,interface_select=0,last_g_index=0,cur_index=0;
 extern char g_uuid[256];
 extern char ip[20];
-
+char g_history_log[SENSOR_NO][1024];
+int g_history_index[SENSOR_NO]={0};
 #define LCD_PROCESS	"[LCD_PROCESS] "
 void write_data(unsigned int Index,int data)
 {
@@ -2322,7 +2323,6 @@ void tun_zero(int on)
 	//printf("\n");
 	//write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 }
-
 unsigned short input_handle(char *input)
 {
 	int addr=0,data=0;
@@ -2804,7 +2804,14 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_TEMP);
+				begin_temp=0;
+				memset(g_history_log[SENSOR_TEMP],0,1024);
+				g_history_index[SENSOR_TEMP]=0;
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
+				(g_history_index[SENSOR_TEMP])++;
 				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
+				(g_history_index[SENSOR_TEMP])++;
 				printfLog(LCD_PROCESS"begin_temp in main is %d\n",begin_temp);
 				g_index=LIST_PAGE_TEMP;
 			}
@@ -3043,25 +3050,37 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_TEMP_UPDATE && (TOUCH_TEMP_UPDATE+0x100)==data)
 	{//show history TEMPERATURE the next page
 		begin_temp=0;
+		memset(g_history_log[SENSOR_TEMP],0,1024);
+		g_history_index[SENSOR_TEMP]=0;
+		g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
+		(g_history_index[SENSOR_TEMP])++;
 		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
-		printfLog(LCD_PROCESS"begin_temp in update is %d\n",begin_temp);
+		g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
+		(g_history_index[SENSOR_TEMP])++;
+		printfLog(LCD_PROCESS"begin_temp in update is %d log %d\n",begin_temp,g_history_index[SENSOR_TEMP]);
 	}
 	else if(addr==TOUCH_TEMP_LAST_PAGE && (TOUCH_TEMP_LAST_PAGE+0x100)==data)
 	{//show history TEMP the next page
-		if(begin_temp>=7)
+		if(g_history_index[SENSOR_TEMP]>1)
 		{
-			begin_temp-=7;
-			begin_temp=begin_temp+7-show_history(ID_CAP_TEMPERATURE,begin_temp);
-			printfLog(LCD_PROCESS"begin_temp in last page is %d\n",begin_temp);			
+			//begin_temp-=get_last_page_cnt(ID_CAP_TEMPERATURE,begin_temp-1);
+			g_history_index[SENSOR_TEMP]-=2;
+			begin_temp=g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]-1];
+			show_history(ID_CAP_TEMPERATURE,begin_temp);
+			printfLog(LCD_PROCESS"begin_temp in last page is %d log %d , %d\n",begin_temp,g_history_index[SENSOR_TEMP],
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]);			
 		}
 	}
 	else if(addr==TOUCH_TEMP_NEXT_PAGE && (TOUCH_TEMP_NEXT_PAGE+0x100)==data)
 	{//show history TEMP the next page
-		if(begin_temp+7<g_share_memory->cnt[SENSOR_TEMP])
+		if(begin_temp<g_share_memory->cnt[SENSOR_TEMP])
 		{
-			begin_temp+=7;
-			begin_temp=begin_temp-7+show_history(ID_CAP_TEMPERATURE,begin_temp);
-			printfLog(LCD_PROCESS"begin_temp in next page is %d\n",begin_temp);
+			begin_temp+=
+				show_history(ID_CAP_TEMPERATURE,begin_temp);
+			g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
+			g_history_index[SENSOR_TEMP]++;
+			printfLog(LCD_PROCESS"begin_temp in next page is %d log %d , %d\n",begin_temp,g_history_index[SENSOR_TEMP],
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]-1]);
 		}
 	}
 	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
@@ -3766,8 +3785,15 @@ unsigned short input_handle(char *input)
 			case CURVE_PAGE_TEMP:
 			{//temp
 				switch_pic(LIST_PAGE_TEMP);
+				begin_temp=0;
+				memset(g_history_log[SENSOR_TEMP],0,1024);
+				g_history_index[SENSOR_TEMP]=0;
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
+				(g_history_index[SENSOR_TEMP])++;
 				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp);
-				printfLog(LCD_PROCESS"begin_temp in curve is %d\n",begin_temp);
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
+				(g_history_index[SENSOR_TEMP])++;
+				printfLog(LCD_PROCESS"begin_temp in curve is %d, log %d\n",begin_temp,g_history_index[SENSOR_TEMP]);
 				//begin_temp=0;
 			}
 			break;
@@ -4058,7 +4084,7 @@ void lcd_loop()
 
 int lcd_init()
 {
-	int fpid = 0;
+	int fpid = 0, i=0;
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -4081,11 +4107,12 @@ int lcd_init()
 			alarm(g_share_memory->sleep*60);
 		else
 			alarm(5*60);
+		for(i=0;i<SENSOR_NO;i++)
+			memset(g_history_log[i],0,1024);
 		while(1)
 			lcd_loop();
 	}
 	else
 		printfLog(LCD_PROCESS"[PID]%d lcd process\n",fpid);
 	return 0;
-
 }
