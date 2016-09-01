@@ -178,6 +178,30 @@ void show_sensor_network()
 	switch_pic(pic);
 	g_index=pic;
 }
+int count_all_pages(struct nano *item,int cnt)
+{
+	char time1[256]={0};
+	char time2[256]={0};
+	int i=0,j=0;
+	int pages=0;
+	for(i=0;i<cnt;)
+	{
+		strcpy(time1,item[i].time);
+		for(j=i+1;j<i+7;j++)
+		{
+			strcpy(time2,item[j].time);
+			//printfLog("time1 %s, time2 %s \n",time1,time2);
+			if(strncmp(time1,time2,11)!=0)
+			{
+				break;
+			}
+		}
+		pages++;
+		i=j;
+		//printfLog("pages %d, i %d \n",pages,i);
+	}
+	return pages;
+}
 char *remove_p(char *buf)
 {
 	int i=0,j=0;
@@ -623,7 +647,7 @@ int show_history(char *id,int offset,int page)
 		if((g_share_memory->cnt[SENSOR_TEMP]-offset-1)>=0)
 		{//6:2
 			write_data(ADDR_TEMP_PAGE_N,page+1);
-			write_data(ADDR_TEMP_PAGE_ALL,g_share_memory->cnt[SENSOR_TEMP]/7);
+			write_data(ADDR_TEMP_PAGE_ALL,count_all_pages(sensor_history.temp,g_share_memory->cnt[SENSOR_TEMP]));
 			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time+11,2);
 			write_data(ADDR_TEMP_TIME_0,atoi(tmp));
 			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time+14,2);
@@ -2821,7 +2845,7 @@ unsigned short input_handle(char *input)
 				g_history_index[SENSOR_TEMP]=0;
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
 				(g_history_index[SENSOR_TEMP])++;
-				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
+				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]-1);
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
 				printfLog(LCD_PROCESS"begin_temp in main is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
 					g_history_index[SENSOR_TEMP]);
@@ -3066,7 +3090,7 @@ unsigned short input_handle(char *input)
 		g_history_index[SENSOR_TEMP]=0;
 		g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
 		(g_history_index[SENSOR_TEMP])++;
-		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
+		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]-1);
 		g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
 		printfLog(LCD_PROCESS"begin_temp in update is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
 			g_history_index[SENSOR_TEMP]);
@@ -3802,7 +3826,7 @@ unsigned short input_handle(char *input)
 				g_history_index[SENSOR_TEMP]=0;
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=0;
 				(g_history_index[SENSOR_TEMP])++;
-				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
+				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]-1);
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
 				printfLog(LCD_PROCESS"begin_temp in curve is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
 					g_history_index[SENSOR_TEMP]);
