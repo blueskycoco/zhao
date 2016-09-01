@@ -622,7 +622,7 @@ int show_history(char *id,int offset,int page)
 
 		if((g_share_memory->cnt[SENSOR_TEMP]-offset-1)>=0)
 		{//6:2
-			write_data(ADDR_TEMP_PAGE_N,page);
+			write_data(ADDR_TEMP_PAGE_N,page+1);
 			write_data(ADDR_TEMP_PAGE_ALL,g_share_memory->cnt[SENSOR_TEMP]/7);
 			memcpy(tmp,sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-offset-1].time+11,2);
 			write_data(ADDR_TEMP_TIME_0,atoi(tmp));
@@ -2823,8 +2823,8 @@ unsigned short input_handle(char *input)
 				(g_history_index[SENSOR_TEMP])++;
 				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
-				(g_history_index[SENSOR_TEMP])++;
-				printfLog(LCD_PROCESS"begin_temp in main is %d\n",begin_temp);
+				printfLog(LCD_PROCESS"begin_temp in main is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
+					g_history_index[SENSOR_TEMP]);
 				g_index=LIST_PAGE_TEMP;
 			}
 		}
@@ -3068,43 +3068,31 @@ unsigned short input_handle(char *input)
 		(g_history_index[SENSOR_TEMP])++;
 		begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
 		g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
-		printfLog(LCD_PROCESS"begin_temp in update is %d log %d\n",begin_temp,g_history_index[SENSOR_TEMP]);
+		printfLog(LCD_PROCESS"begin_temp in update is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
+			g_history_index[SENSOR_TEMP]);
 	}
 	else if(addr==TOUCH_TEMP_LAST_PAGE && (TOUCH_TEMP_LAST_PAGE+0x100)==data)
 	{//show history TEMP the next page
 		if(g_history_index[SENSOR_TEMP]>1)
 		{
-			g_history_index[SENSOR_TEMP]-=1;
-			if(g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]!=0)
-			{
-				begin_temp=g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]-1];
-				show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
-			}
-			else
-			{
-				begin_temp=0;
-				show_history(ID_CAP_TEMPERATURE,begin_temp,1);
-			}
-			printfLog(LCD_PROCESS"begin_temp in last begin is %d page %d , index %d\n",begin_temp,g_history_index[SENSOR_TEMP],
-				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]);			
+			g_history_index[SENSOR_TEMP]-=2;
+			begin_temp=g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]];
+			begin_temp+=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
+			(g_history_index[SENSOR_TEMP])++;
+			g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
+			printfLog(LCD_PROCESS"begin_temp in last begin is %d page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]
+				,g_history_index[SENSOR_TEMP]);
 		}
 	}
 	else if(addr==TOUCH_TEMP_NEXT_PAGE && (TOUCH_TEMP_NEXT_PAGE+0x100)==data)
 	{//show history TEMP the next page
 		if(begin_temp<g_share_memory->cnt[SENSOR_TEMP])
 		{
-			if(begin_temp==0)
-			{
-				begin_temp=g_history_log[SENSOR_TEMP][1];
-				begin_temp+=
-				show_history(ID_CAP_TEMPERATURE,begin_temp,2);
-			}
-			else
-				begin_temp+=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]+1);
+			begin_temp+=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
 			(g_history_index[SENSOR_TEMP])++;
 			g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
-			printfLog(LCD_PROCESS"begin_temp in next begin is %d page %d ,index %d\n",begin_temp,g_history_index[SENSOR_TEMP],
-				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]);
+			printfLog(LCD_PROCESS"begin_temp in next begin is %d page %d \n",
+				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],g_history_index[SENSOR_TEMP]);
 		}
 	}
 	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
@@ -3816,8 +3804,8 @@ unsigned short input_handle(char *input)
 				(g_history_index[SENSOR_TEMP])++;
 				begin_temp=show_history(ID_CAP_TEMPERATURE,begin_temp,g_history_index[SENSOR_TEMP]);
 				g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]]=begin_temp;
-				printfLog(LCD_PROCESS"begin_temp in curve is %d, log %d\n",begin_temp,g_history_index[SENSOR_TEMP]);
-				//begin_temp=0;
+				printfLog(LCD_PROCESS"begin_temp in curve is %d,page %d\n",g_history_log[SENSOR_TEMP][g_history_index[SENSOR_TEMP]],
+					g_history_index[SENSOR_TEMP]);
 			}
 			break;
 			case CURVE_PAGE_PM25:
