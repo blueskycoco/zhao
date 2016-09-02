@@ -2540,7 +2540,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_CO);
-				show_history(ID_CAP_CO,begin_co,0);
+				begin_co=0;
+				memset(g_history_log[SENSOR_CO],0,1024);
+				g_history_index[SENSOR_CO]=0;
+				g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=0;
+				(g_history_index[SENSOR_CO])++;
+				begin_co=show_history(ID_CAP_CO,begin_co,g_history_index[SENSOR_CO]-1);
+				g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=begin_co;		
 				g_index=LIST_PAGE_CO;
 			}
 		}
@@ -2570,7 +2576,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_PRESS);
-				show_history(ID_CAP_QI_YA,begin_press,0);
+				begin_press=0;
+				memset(g_history_log[SENSOR_PRESS],0,1024);
+				g_history_index[SENSOR_PRESS]=0;
+				g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=0;
+				(g_history_index[SENSOR_PRESS])++;
+				begin_press=show_history(ID_CAP_QI_YA,begin_press,g_history_index[SENSOR_PRESS]-1);
+				g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=begin_press;		
 				g_index=LIST_PAGE_PRESS;
 			}
 		}
@@ -2600,7 +2612,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_TVOC);
-				show_history(ID_CAP_TVOC,begin_tvoc,0);
+				begin_tvoc=0;
+				memset(g_history_log[SENSOR_TVOC],0,1024);
+				g_history_index[SENSOR_TVOC]=0;
+				g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=0;
+				(g_history_index[SENSOR_TVOC])++;
+				begin_tvoc=show_history(ID_CAP_TVOC,begin_tvoc,g_history_index[SENSOR_TVOC]-1);
+				g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=begin_tvoc;		
 				g_index=LIST_PAGE_TVOC;
 			}
 		}
@@ -2630,7 +2648,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_PM10);
-				show_history(ID_CAP_PM_10,begin_pm10,0);
+				begin_pm10=0;
+				memset(g_history_log[SENSOR_PM10],0,1024);
+				g_history_index[SENSOR_PM10]=0;
+				g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=0;
+				(g_history_index[SENSOR_PM10])++;
+				begin_pm10=show_history(ID_CAP_PM_10,begin_pm10,g_history_index[SENSOR_PM10]-1);
+				g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=begin_pm10;		
 				g_index=LIST_PAGE_PM10;
 			}
 		}
@@ -2660,7 +2684,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_O3);
-				show_history(ID_CAP_CHOU_YANG,begin_o3,0);
+				begin_o3=0;
+				memset(g_history_log[SENSOR_O3],0,1024);
+				g_history_index[SENSOR_O3]=0;
+				g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=0;
+				(g_history_index[SENSOR_O3])++;
+				begin_o3=show_history(ID_CAP_CHOU_YANG,begin_o3,g_history_index[SENSOR_O3]-1);
+				g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=begin_o3;		
 				g_index=LIST_PAGE_O3;
 			}
 		}
@@ -2690,7 +2720,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_WIND);
-				show_history(ID_CAP_FENG_SU,begin_wind,0);
+				begin_wind=0;
+				memset(g_history_log[SENSOR_WIND],0,1024);
+				g_history_index[SENSOR_WIND]=0;
+				g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=0;
+				(g_history_index[SENSOR_WIND])++;
+				begin_wind=show_history(ID_CAP_FENG_SU,begin_wind,g_history_index[SENSOR_WIND]-1);
+				g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=begin_wind;		
 				g_index=LIST_PAGE_WIND;
 			}
 		}
@@ -2720,7 +2756,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_NOISE);
-				show_history(ID_CAP_BUZZY,begin_noise,0);
+				begin_noise=0;
+				memset(g_history_log[SENSOR_NOISE],0,1024);
+				g_history_index[SENSOR_NOISE]=0;
+				g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=0;
+				(g_history_index[SENSOR_NOISE])++;
+				begin_noise=show_history(ID_CAP_BUZZY,begin_noise,g_history_index[SENSOR_NOISE]-1);
+				g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=begin_noise;		
 				g_index=LIST_PAGE_NOISE;
 			}
 		}
@@ -2750,7 +2792,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_CO2);
-				show_history(ID_CAP_CO2,begin_co2,0);
+				begin_co2=0;
+				memset(g_history_log[SENSOR_CO2],0,1024);
+				g_history_index[SENSOR_CO2]=0;
+				g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=0;
+				(g_history_index[SENSOR_CO2])++;
+				begin_co2=show_history(ID_CAP_CO2,begin_co2,g_history_index[SENSOR_CO2]-1);
+				g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=begin_co2;		
 				g_index=LIST_PAGE_CO2;
 			}
 		}
@@ -2780,7 +2828,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_HCHO);
-				show_history(ID_CAP_HCHO,begin_hcho,0);
+				begin_hcho=0;
+				memset(g_history_log[SENSOR_HCHO],0,1024);
+				g_history_index[SENSOR_HCHO]=0;
+				g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=0;
+				(g_history_index[SENSOR_HCHO])++;
+				begin_hcho=show_history(ID_CAP_HCHO,begin_hcho,g_history_index[SENSOR_HCHO]-1);
+				g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=begin_hcho;		
 				g_index=LIST_PAGE_HCHO;
 			}
 		}
@@ -2810,7 +2864,13 @@ unsigned short input_handle(char *input)
 			else
 			{
 				switch_pic(LIST_PAGE_SHIDU);
-				show_history(ID_CAP_SHI_DU,begin_shidu,0);
+				begin_shidu=0;
+				memset(g_history_log[SENSOR_SHIDU],0,1024);
+				g_history_index[SENSOR_SHIDU]=0;
+				g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=0;
+				(g_history_index[SENSOR_SHIDU])++;
+				begin_shidu=show_history(ID_CAP_SHI_DU,begin_shidu,g_history_index[SENSOR_SHIDU]-1);
+				g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=begin_shidu; 
 				g_index=LIST_PAGE_SHIDU;
 			}
 		}
@@ -2877,8 +2937,15 @@ unsigned short input_handle(char *input)
 			}
 			else
 			{
-				switch_pic(LIST_PAGE_PM25);
-				show_history(ID_CAP_PM_25,begin_pm25,0);
+				switch_pic(LIST_PAGE_PM25);				
+				begin_pm25=0;
+				memset(g_history_log[SENSOR_PM25],0,1024);
+				g_history_index[SENSOR_PM25]=0;
+				g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=0;
+				(g_history_index[SENSOR_PM25])++;
+				begin_pm25=show_history(ID_CAP_PM_25,begin_pm25,g_history_index[SENSOR_PM25]-1);
+				g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=begin_pm25;
+				
 				g_index=LIST_PAGE_PM25;
 			}
 		}
@@ -2897,37 +2964,72 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_CO_UPDATE && (TOUCH_CO_UPDATE+0x100)==data)
 	{//show history CO the next page
 		begin_co=0;
-		show_history(ID_CAP_CO,begin_co,0);
+		memset(g_history_log[SENSOR_CO],0,1024);
+		g_history_index[SENSOR_CO]=0;
+		g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=0;
+		(g_history_index[SENSOR_CO])++;
+		begin_co=show_history(ID_CAP_CO,begin_co,g_history_index[SENSOR_CO]-1);
+		g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=begin_co;		
 	}
 	else if(addr==TOUCH_O3_UPDATE && (TOUCH_O3_UPDATE+0x100)==data)
 	{//show history O3 the next page
 		begin_o3=0;
-		show_history(ID_CAP_CHOU_YANG,begin_o3,0);
+		memset(g_history_log[SENSOR_O3],0,1024);
+		g_history_index[SENSOR_O3]=0;
+		g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=0;
+		(g_history_index[SENSOR_O3])++;
+		begin_o3=show_history(ID_CAP_CHOU_YANG,begin_o3,g_history_index[SENSOR_O3]-1);
+		g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=begin_o3;		
 	}
 	else if(addr==TOUCH_PRESS_UPDATE && (TOUCH_PRESS_UPDATE+0x100)==data)
 	{//show history PRESS the next page
 		begin_press=0;
-		show_history(ID_CAP_QI_YA,begin_press,0);
+		memset(g_history_log[SENSOR_PRESS],0,1024);
+		g_history_index[SENSOR_PRESS]=0;
+		g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=0;
+		(g_history_index[SENSOR_PRESS])++;
+		begin_press=show_history(ID_CAP_QI_YA,begin_press,g_history_index[SENSOR_PRESS]-1);
+		g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=begin_press; 	
 	}
 	else if(addr==TOUCH_TVOC_UPDATE && (TOUCH_TVOC_UPDATE+0x100)==data)
 	{//show history TVOC the next page
 		begin_tvoc=0;
-		show_history(ID_CAP_TVOC,begin_tvoc,0);
+		memset(g_history_log[SENSOR_TVOC],0,1024);
+		g_history_index[SENSOR_TVOC]=0;
+		g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=0;
+		(g_history_index[SENSOR_TVOC])++;
+		begin_tvoc=show_history(ID_CAP_TVOC,begin_tvoc,g_history_index[SENSOR_TVOC]-1);
+		g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=begin_tvoc;		
 	}
 	else if(addr==TOUCH_PM10_UPDATE && (TOUCH_PM10_UPDATE+0x100)==data)
 	{//show history PM10 the next page
 		begin_pm10=0;
-		show_history(ID_CAP_PM_10,begin_pm10,0);
+		memset(g_history_log[SENSOR_PM10],0,1024);
+		g_history_index[SENSOR_PM10]=0;
+		g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=0;
+		(g_history_index[SENSOR_PM10])++;
+		begin_pm10=show_history(ID_CAP_PM_10,begin_pm10,g_history_index[SENSOR_PM10]-1);
+		g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=begin_pm10;		
 	}
 	else if(addr==TOUCH_WIND_UPDATE && (TOUCH_WIND_UPDATE+0x100)==data)
 	{//show history WIND the next page
 		begin_wind=0;
-		show_history(ID_CAP_FENG_SU,begin_wind,0);
+		memset(g_history_log[SENSOR_WIND],0,1024);
+		g_history_index[SENSOR_WIND]=0;
+		g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=0;
+		(g_history_index[SENSOR_WIND])++;
+		begin_wind=show_history(ID_CAP_FENG_SU,begin_wind,g_history_index[SENSOR_WIND]-1);
+		g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=begin_wind;		
 	}
 	else if(addr==TOUCH_NOISE_UPDATE && (TOUCH_NOISE_UPDATE+0x100)==data)
 	{//show history NOISE the next page
 		begin_noise=0;
-		show_history(ID_CAP_BUZZY,begin_noise,0);
+		memset(g_history_log[SENSOR_NOISE],0,1024);
+		g_history_index[SENSOR_NOISE]=0;
+		g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=0;
+		(g_history_index[SENSOR_NOISE])++;
+		begin_noise=show_history(ID_CAP_BUZZY,begin_noise,g_history_index[SENSOR_NOISE]-1);
+		g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=begin_noise; 	
 	}
 	else if(addr==TOUCH_CO_LAST_PAGE && (TOUCH_CO_LAST_PAGE+0x100)==data)
 	{//show history CO the next page
@@ -3044,7 +3146,12 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_CO2_UPDATE && (TOUCH_CO2_UPDATE+0x100)==data)
 	{//show history CO2 the next page
 		begin_co2=0;
-		show_history(ID_CAP_CO2,begin_co2,0);
+		memset(g_history_log[SENSOR_CO2],0,1024);
+		g_history_index[SENSOR_CO2]=0;
+		g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=0;
+		(g_history_index[SENSOR_CO2])++;
+		begin_co2=show_history(ID_CAP_CO2,begin_co2,g_history_index[SENSOR_CO2]-1);
+		g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=begin_co2;		
 	}
 	else if(addr==TOUCH_CO2_LAST_PAGE && (TOUCH_CO2_LAST_PAGE+0x100)==data)
 	{//show history CO2 the next page
@@ -3065,7 +3172,12 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_HCHO_UPDATE && (TOUCH_HCHO_UPDATE+0x100)==data)
 	{//show history HCHO the next page
 		begin_hcho=0;
-		show_history(ID_CAP_HCHO,begin_hcho,0);
+		memset(g_history_log[SENSOR_HCHO],0,1024);
+		g_history_index[SENSOR_HCHO]=0;
+		g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=0;
+		(g_history_index[SENSOR_HCHO])++;
+		begin_hcho=show_history(ID_CAP_HCHO,begin_hcho,g_history_index[SENSOR_HCHO]-1);
+		g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=begin_hcho;		
 	}
 	else if(addr==TOUCH_HCHO_LAST_PAGE && (TOUCH_HCHO_LAST_PAGE+0x100)==data)
 	{//show history HCHO the next page
@@ -3122,7 +3234,12 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_SHIDU_UPDATE&& (TOUCH_SHIDU_UPDATE+0x100)==data)
 	{//show history SHIDU the next page
 		begin_shidu=0;
-		show_history(ID_CAP_SHI_DU,begin_shidu,0);
+		memset(g_history_log[SENSOR_SHIDU],0,1024);
+		g_history_index[SENSOR_SHIDU]=0;
+		g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=0;
+		(g_history_index[SENSOR_SHIDU])++;
+		begin_shidu=show_history(ID_CAP_SHI_DU,begin_shidu,g_history_index[SENSOR_SHIDU]-1);
+		g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=begin_shidu; 
 	}
 	else if(addr==TOUCH_SHIDU_LAST_PAGE && (TOUCH_SHIDU_LAST_PAGE+0x100)==data)
 	{//show history SHIDU the next page
@@ -3143,7 +3260,12 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_PM25_UPDATE && (TOUCH_PM25_UPDATE+0x100)==data)
 	{//show history PM25 the next page
 		begin_pm25=0;
-		show_history(ID_CAP_PM_25,begin_pm25,0);
+		memset(g_history_log[SENSOR_PM25],0,1024);
+		g_history_index[SENSOR_PM25]=0;
+		g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=0;
+		(g_history_index[SENSOR_PM25])++;
+		begin_pm25=show_history(ID_CAP_PM_25,begin_pm25,g_history_index[SENSOR_PM25]-1);
+		g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=begin_pm25;
 	}
 	else if(addr==TOUCH_PM25_LAST_PAGE && (TOUCH_PM25_LAST_PAGE+0x100)==data)
 	{//show history PM25 the next page
@@ -3751,71 +3873,121 @@ unsigned short input_handle(char *input)
 			case CURVE_PAGE_CO:
 			{//co
 				switch_pic(LIST_PAGE_CO);
-				show_history(ID_CAP_CO,begin_co,0);
-				//begin_co=0;
+				begin_co=0;
+				memset(g_history_log[SENSOR_CO],0,1024);
+				g_history_index[SENSOR_CO]=0;
+				g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=0;
+				(g_history_index[SENSOR_CO])++;
+				begin_co=show_history(ID_CAP_CO,begin_co,g_history_index[SENSOR_CO]-1);
+				g_history_log[SENSOR_CO][g_history_index[SENSOR_CO]]=begin_co;		
 			}
 			break;
 			case CURVE_PAGE_PRESS:
 			{//press
 				switch_pic(LIST_PAGE_PRESS);
-				show_history(ID_CAP_QI_YA,begin_press,0);
-				//begin_co=0;
+				begin_press=0;
+				memset(g_history_log[SENSOR_PRESS],0,1024);
+				g_history_index[SENSOR_PRESS]=0;
+				g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=0;
+				(g_history_index[SENSOR_PRESS])++;
+				begin_press=show_history(ID_CAP_QI_YA,begin_press,g_history_index[SENSOR_PRESS]-1);
+				g_history_log[SENSOR_PRESS][g_history_index[SENSOR_PRESS]]=begin_press;		
 			}
 			break;
 			case CURVE_PAGE_PM10:
 			{//pm10
 				switch_pic(LIST_PAGE_PM10);
-				show_history(ID_CAP_PM_10,begin_pm10,0);
-				//begin_co=0;
+				begin_pm10=0;
+				memset(g_history_log[SENSOR_PM10],0,1024);
+				g_history_index[SENSOR_PM10]=0;
+				g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=0;
+				(g_history_index[SENSOR_PM10])++;
+				begin_pm10=show_history(ID_CAP_PM_10,begin_pm10,g_history_index[SENSOR_PM10]-1);
+				g_history_log[SENSOR_PM10][g_history_index[SENSOR_PM10]]=begin_pm10;		
 			}
 			break;
 			case CURVE_PAGE_WIND:
 			{//wind
 				switch_pic(LIST_PAGE_WIND);
-				show_history(ID_CAP_FENG_SU,begin_wind,0);
-				//begin_co=0;
+				begin_wind=0;
+				memset(g_history_log[SENSOR_WIND],0,1024);
+				g_history_index[SENSOR_WIND]=0;
+				g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=0;
+				(g_history_index[SENSOR_WIND])++;
+				begin_wind=show_history(ID_CAP_FENG_SU,begin_wind,g_history_index[SENSOR_WIND]-1);
+				g_history_log[SENSOR_WIND][g_history_index[SENSOR_WIND]]=begin_wind;		
 			}
 			break;
 			case CURVE_PAGE_TVOC:
 			{//tvoc
 				switch_pic(LIST_PAGE_TVOC);
-				show_history(ID_CAP_TVOC,begin_tvoc,0);
-				//begin_co=0;
+				begin_tvoc=0;
+				memset(g_history_log[SENSOR_TVOC],0,1024);
+				g_history_index[SENSOR_TVOC]=0;
+				g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=0;
+				(g_history_index[SENSOR_TVOC])++;
+				begin_tvoc=show_history(ID_CAP_TVOC,begin_tvoc,g_history_index[SENSOR_TVOC]-1);
+				g_history_log[SENSOR_TVOC][g_history_index[SENSOR_TVOC]]=begin_tvoc;		
 			}
 			break;
 			case CURVE_PAGE_O3:
 			{//o3
 				switch_pic(LIST_PAGE_O3);
-				show_history(ID_CAP_CHOU_YANG,begin_o3,0);
-				//begin_co=0;
+				begin_o3=0;
+				memset(g_history_log[SENSOR_O3],0,1024);
+				g_history_index[SENSOR_O3]=0;
+				g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=0;
+				(g_history_index[SENSOR_O3])++;
+				begin_o3=show_history(ID_CAP_CHOU_YANG,begin_o3,g_history_index[SENSOR_O3]-1);
+				g_history_log[SENSOR_O3][g_history_index[SENSOR_O3]]=begin_o3;		
 			}
 			break;
 			case CURVE_PAGE_NOISE:
 			{//noise
 				switch_pic(LIST_PAGE_NOISE);
-				show_history(ID_CAP_BUZZY,begin_noise,0);
-				//begin_co=0;
+				begin_noise=0;
+				memset(g_history_log[SENSOR_NOISE],0,1024);
+				g_history_index[SENSOR_NOISE]=0;
+				g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=0;
+				(g_history_index[SENSOR_NOISE])++;
+				begin_noise=show_history(ID_CAP_BUZZY,begin_noise,g_history_index[SENSOR_NOISE]-1);
+				g_history_log[SENSOR_NOISE][g_history_index[SENSOR_NOISE]]=begin_noise;		
 			}
 			break;
 			case CURVE_PAGE_CO2:
 			{//co2
 				switch_pic(LIST_PAGE_CO2);
-				show_history(ID_CAP_CO2,begin_co2,0);
-				//begin_co2=0;
+				begin_co2=0;
+				memset(g_history_log[SENSOR_CO2],0,1024);
+				g_history_index[SENSOR_CO2]=0;
+				g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=0;
+				(g_history_index[SENSOR_CO2])++;
+				begin_co2=show_history(ID_CAP_CO2,begin_co2,g_history_index[SENSOR_CO2]-1);
+				g_history_log[SENSOR_CO2][g_history_index[SENSOR_CO2]]=begin_co2;		
 			}
 			break;
 			case CURVE_PAGE_HCHO:
 			{//hcho
 				switch_pic(LIST_PAGE_HCHO);
-				show_history(ID_CAP_HCHO,begin_hcho,0);
-				//begin_hcho=0;
+				begin_hcho=0;
+				memset(g_history_log[SENSOR_HCHO],0,1024);
+				g_history_index[SENSOR_HCHO]=0;
+				g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=0;
+				(g_history_index[SENSOR_HCHO])++;
+				begin_hcho=show_history(ID_CAP_HCHO,begin_hcho,g_history_index[SENSOR_HCHO]-1);
+				g_history_log[SENSOR_HCHO][g_history_index[SENSOR_HCHO]]=begin_hcho;		
 			}
 			break;
 			case CURVE_PAGE_SHIDU:
 			{//shidu
-				switch_pic(LIST_PAGE_SHIDU);
-				show_history(ID_CAP_SHI_DU,begin_shidu,0);
-				//begin_shidu=0;
+				switch_pic(LIST_PAGE_SHIDU);				
+				begin_shidu=0;
+				memset(g_history_log[SENSOR_SHIDU],0,1024);
+				g_history_index[SENSOR_SHIDU]=0;
+				g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=0;
+				(g_history_index[SENSOR_SHIDU])++;
+				begin_shidu=show_history(ID_CAP_SHI_DU,begin_shidu,g_history_index[SENSOR_SHIDU]-1);
+				g_history_log[SENSOR_SHIDU][g_history_index[SENSOR_SHIDU]]=begin_shidu;				
 			}
 			break;
 			case CURVE_PAGE_TEMP:
@@ -3835,8 +4007,13 @@ unsigned short input_handle(char *input)
 			case CURVE_PAGE_PM25:
 			{//pm25
 				switch_pic(LIST_PAGE_PM25);
-				show_history(ID_CAP_PM_25,begin_pm25,0);
-				//begin_pm25=0;
+				begin_pm25=0;
+				memset(g_history_log[SENSOR_PM25],0,1024);
+				g_history_index[SENSOR_PM25]=0;
+				g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=0;
+				(g_history_index[SENSOR_PM25])++;
+				begin_pm25=show_history(ID_CAP_PM_25,begin_pm25,g_history_index[SENSOR_PM25]-1);
+				g_history_log[SENSOR_PM25][g_history_index[SENSOR_PM25]]=begin_pm25;
 			}
 			break;
 			default:
