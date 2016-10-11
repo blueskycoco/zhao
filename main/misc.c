@@ -428,20 +428,44 @@ void save_to_file(char *date,char *message)
 	fwrite(data,strlen(data),1,fp);
 	fclose(fp);
 }
+long filesize(FILE*stream)
+{
+	long curpos,length;
+	curpos=ftell(stream);
+	fseek(stream,0L,SEEK_END);
+	length=ftell(stream);
+	fseek(stream,curpos,SEEK_SET);
+	return length;
+}
 
 void get_net_interface()
 {
 	FILE *fp=fopen("/home/user/interface.txt","r");
 	if(fp!=NULL)
 	{
-		if(fread(&(g_share_memory->send_by_wifi),1,1,fp)<0)
+		if(filesize(fp)==0)
+		{
+			printfLog(MISC_PROCESS"get interface size 0\n");
 			g_share_memory->send_by_wifi=1;
-		if(fread(&(g_share_memory->sleep),1,1,fp)<0)
 			g_share_memory->sleep=5;
-		fclose(fp);
+			fclose(fp);
+			set_net_interface();
+		}
+		else
+		{
+			if(fread(&(g_share_memory->send_by_wifi),1,1,fp)<0)
+				g_share_memory->send_by_wifi=1;
+			if(fread(&(g_share_memory->sleep),1,1,fp)<0)
+				g_share_memory->sleep=5;	
+			fclose(fp);
+		}
 	}
 	else
+	{
 		g_share_memory->send_by_wifi=1;
+		g_share_memory->sleep=5;
+	}
+	
 	printfLog(MISC_PROCESS"get interface is %d\n",g_share_memory->send_by_wifi);
 }
 
