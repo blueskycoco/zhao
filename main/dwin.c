@@ -3,6 +3,7 @@
 #include "misc.h"
 #include "netlib.h"
 #include "xfer.h"
+#include "history.h"
 int lcd_state=1;
 char logged=0,g_index=0,interface_select=0,last_g_index=0,cur_index=0;
 extern char g_uuid[256];
@@ -10,6 +11,14 @@ extern char ip[20];
 char g_history_log[SENSOR_NO][1024];
 int g_history_index[SENSOR_NO]={0};
 #define LCD_PROCESS	"[LCD_PROCESS] "
+struct data
+{
+    int wYear;
+    int wMonth;
+    int wDay;
+	int wHour;
+	int wMin;
+};
 void write_data(unsigned int Index,int data)
 {
 	//int i = 0;
@@ -5213,7 +5222,105 @@ unsigned short input_handle(char *input)
 		show_audio(g_share_memory->audio_state);
 		//ctl_audio(g_share_memory->audio_state);
 	}
+	else if((addr==TOUCH_MANUL_UPLOADING&& (TOUCH_MANUL_UPLOADING+0x100)==data)||
+		(addr==TOUCH_DONE_UPLOADING_WRONG&& (TOUCH_DONE_UPLOADING_WRONG+0x100)==data))
+	{
+		//manul uploading data		
+		g_index=UPLOADING_SETTING_PAGE;
+		switch_pic(g_index);
+	}	
+	else if((addr==TOUCH_RETURN_UPLOADING&& (TOUCH_RETURN_UPLOADING+0x100)==data)||
+		(addr==TOUCH_RETURN_UPLOADING_WRONG&& (TOUCH_RETURN_UPLOADING_WRONG+0x100)==data)||
+		(addr==TOUCH_DONE_UPLOADING&& (TOUCH_DONE_UPLOADING+0x100)==data))
+	{
+		//manul uploading data
+		g_index=SYSTEM_SETTING_PAGE;
+		switch_pic(g_index);
+	}
+	else if((addr==TOUCH_BEGIN_UPLOADING&& (TOUCH_BEGIN_UPLOADING+0x100)==data))
+	{
+		//manul uploading data
+		g_index=UPLOADING_WRONG_PAGE;
+		char b_year[5]={0};
+		char b_mon[3]={0};
+		char b_day[3]={0};
+		char b_hour[3]={0};
+		char b_min[3]={0};
+		char e_year[5]={0};
+		char e_mon[3]={0};
+		char e_day[3]={0};
+		char e_hour[3]={0};
+		char e_min[3]={0};
+		if(read_dgus(ADDR_BEGIN_YEAR,2,b_year) && read_dgus(ADDR_BEGIN_DAY,1,b_day)
+			&& read_dgus(ADDR_BEGIN_MON,1,b_mon) && read_dgus(ADDR_BEGIN_HOUR,1,b_hour)
+			&& read_dgus(ADDR_BEGIN_MIN,1,b_min) && read_dgus(ADDR_END_YEAR,2,e_year)
+			&& read_dgus(ADDR_END_DAY,1,e_day) && read_dgus(ADDR_END_MON,1,e_mon)
+			&& read_dgus(ADDR_END_HOUR,1,e_hour)&& read_dgus(ADDR_END_MIN,1,e_min))
+			{
+				if(atoi(b_year)>0 && atoi(b_mon)>0 && atoi(b_mon)<=12 && atoi(b_day)>0 && atoi(b_day)<=31
+					&& atoi(b_hour)>=0 && atoi(b_hour)<=23 && atoi(b_min)>=0 && atoi(b_min)<=59	&& atoi(e_year)>0 
+					&& atoi(e_mon)>0 && atoi(e_mon)<=12 && atoi(e_day)>0 && atoi(e_day)<=31 && atoi(e_hour)>=0 
+					&& atoi(e_hour)<=23 && atoi(e_min)>=0 && atoi(e_min)<=59)
+					{
+						data b,e;
+						b.wYear=atoi(b_year);b.wMonth=atoi(b_mon);b.wDay=atoi(b_day);
+						b.wHour=atoi(b_hour);b.wMin=atoi(b_min);
+						e.wYear=atoi(e_year);e.wMonth=atoi(e_mon);b.wDay=atoi(e_day);
+						e.wHour=atoi(e_hour);e.wMin=atoi(e_min);
+						if(dataD(b,e)>0)
+						{
+							g_index=UPLOADING_OK_PAGE;				
+							manul_reloading();
+						}
+					}
+			}
+		switch_pic(g_index);		
+	}	
 	return 0;
+}
+bool runnian(int mf)
+{
+    if (mf % 4 != 0 && (mf % 100 == 0 || mf % 400 != 0))
+        return false;
+    else
+        return true;
+}
+
+int dataD(data mf, data time)
+{
+    int sum = 0;
+    int yaerNum = time.wYear - mf.wYear;
+    for (int i = mf.wYear + 1; i<time.wYear; i++)
+    {
+        if (runnian(i))
+            sum++;
+    }
+    sum += yaerNum * 365;
+    bool flag = (time.wMonth - mf.wMonth)>0;
+    if (flag)
+    for (int i = mf.wMonth; i < time.wMonth; i++)
+    {
+        switch (i)
+        {
+        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum += 31; break;
+        case 2:if (runnian(mf.wYear)) sum++; sum += 28; break;
+        default:sum += 30;
+        }
+    }
+    else
+    for (int i = time.wMonth; i < mf.wMonth; i++)
+    {
+        switch (i)
+        {
+        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum -= 31; break;
+        case 2:if (runnian(time.wYear)) sum--; sum -= 28; break;
+        default:sum -= 30;
+        }
+    }
+    sum += (time.wDay - mf.wDay);
+	sum = sum*24 + time.wHour - mf.wHour;
+	sum = sum*60 + time.wMin - mf.wMin;
+    return sum;
 }
 
 void lcd_loop()

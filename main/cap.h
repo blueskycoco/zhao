@@ -81,6 +81,7 @@ struct share_memory{
 	char 	network_state;			//network state,ok or failed
 	char 	sensor_state[SENSOR_NO];//co/co2/ch20/pm25/temp/shidu state
 	char 	server_time[32];		//current time	
+	char 	current_time[5];
 	char 	alarm[SENSOR_NO];		//alarm state
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times
@@ -175,6 +176,9 @@ extern key_t  shmid_history_pm10;
 #define SENSOR_SEL_PAGE			47
 #define USER_INFO_PAGE			49
 #define OFF_PAGE				99
+#define UPLOADING_OK_PAGE		102
+#define UPLOADING_WRONG_PAGE	104
+#define UPLOADING_SETTING_PAGE	106
 #define	ADDR_HCHO_REAL_1	0x0000
 #define	ADDR_PM10_REAL_1	0x0001
 #define	ADDR_PM25_REAL_1	0x0002
@@ -1035,6 +1039,22 @@ extern key_t  shmid_history_pm10;
 #define ADDR_HISTORY_PRESS_5_2		0x0e2b
 #define ADDR_HISTORY_PRESS_6_2		0x0e2c
 
+#define TOUCH_MANUL_UPLOADING		0x0E5D
+#define TOUCH_DONE_UPLOADING		0x0E5E
+#define TOUCH_DONE_UPLOADING_WRONG	0x0E5F
+#define TOUCH_RETURN_UPLOADING_WRONG	0x0E60
+#define TOUCH_BEGIN_UPLOADING		0x0E61
+#define TOUCH_RETURN_UPLOADING		0x0E62
+#define ADDR_BEGIN_YEAR				0x0E63
+#define ADDR_BEGIN_MON				0x0E67
+#define ADDR_BEGIN_DAY				0x0E69
+#define ADDR_BEGIN_HOUR				0x0E6B
+#define ADDR_BEGIN_MIN				0x0E6D
+#define ADDR_END_YEAR				0x0E6F
+#define ADDR_END_MON				0x0E73
+#define ADDR_END_DAY				0x0E75
+#define ADDR_END_HOUR				0x0E77
+#define ADDR_END_MIN				0x0E79
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8

@@ -728,6 +728,11 @@ char *build_message(char *cmd,int len,char *message)
 			{	//TIME_BYTE got ,we can send to server now
 				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9]);
 				printfLog(CAP_PROCESS"date is %s\r\n",date);
+				g_share_memory->current_time[0]=cmd[5];
+				g_share_memory->current_time[1]=cmd[6];
+				g_share_memory->current_time[2]=cmd[7];
+				g_share_memory->current_time[3]=cmd[8];
+				g_share_memory->current_time[4]=cmd[9];
 				message=add_item(message,ID_DEVICE_CAP_TIME,date);
 				if(warnning_msg!=NULL)
 				{	//have alarm msg upload
