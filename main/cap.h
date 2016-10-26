@@ -81,7 +81,7 @@ struct share_memory{
 	char 	network_state;			//network state,ok or failed
 	char 	sensor_state[SENSOR_NO];//co/co2/ch20/pm25/temp/shidu state
 	char 	server_time[32];		//current time	
-	char 	current_time[5];
+	char 	current_time[5];		//0 year, 1 mon, 2 day, 3 hour, 4 min
 	char 	alarm[SENSOR_NO];		//alarm state
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times

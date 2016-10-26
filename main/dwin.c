@@ -11,14 +11,16 @@ extern char ip[20];
 char g_history_log[SENSOR_NO][1024];
 int g_history_index[SENSOR_NO]={0};
 #define LCD_PROCESS	"[LCD_PROCESS] "
-struct data
+typedef struct _data
 {
     int wYear;
     int wMonth;
     int wDay;
 	int wHour;
 	int wMin;
-};
+}date;
+//count dist from mf to time in minitutes
+long dataD(date mf, date time);
 void write_data(unsigned int Index,int data)
 {
 	//int i = 0;
@@ -5223,14 +5225,14 @@ unsigned short input_handle(char *input)
 		//ctl_audio(g_share_memory->audio_state);
 	}
 	else if((addr==TOUCH_MANUL_UPLOADING&& (TOUCH_MANUL_UPLOADING+0x100)==data)||
-		(addr==TOUCH_DONE_UPLOADING_WRONG&& (TOUCH_DONE_UPLOADING_WRONG+0x100)==data))
+		(addr==TOUCH_DONE_UPLOADING_WRONG&& (TOUCH_DONE_UPLOADING_WRONG+0x100)==data)||
+		(addr==TOUCH_RETURN_UPLOADING_WRONG&& (TOUCH_RETURN_UPLOADING_WRONG+0x100)==data))
 	{
 		//manul uploading data		
 		g_index=UPLOADING_SETTING_PAGE;
 		switch_pic(g_index);
 	}	
 	else if((addr==TOUCH_RETURN_UPLOADING&& (TOUCH_RETURN_UPLOADING+0x100)==data)||
-		(addr==TOUCH_RETURN_UPLOADING_WRONG&& (TOUCH_RETURN_UPLOADING_WRONG+0x100)==data)||
 		(addr==TOUCH_DONE_UPLOADING&& (TOUCH_DONE_UPLOADING+0x100)==data))
 	{
 		//manul uploading data
@@ -5241,85 +5243,127 @@ unsigned short input_handle(char *input)
 	{
 		//manul uploading data
 		g_index=UPLOADING_WRONG_PAGE;
-		char b_year[5]={0};
-		char b_mon[3]={0};
-		char b_day[3]={0};
-		char b_hour[3]={0};
-		char b_min[3]={0};
-		char e_year[5]={0};
-		char e_mon[3]={0};
-		char e_day[3]={0};
-		char e_hour[3]={0};
-		char e_min[3]={0};
-		if(read_dgus(ADDR_BEGIN_YEAR,2,b_year) && read_dgus(ADDR_BEGIN_DAY,1,b_day)
-			&& read_dgus(ADDR_BEGIN_MON,1,b_mon) && read_dgus(ADDR_BEGIN_HOUR,1,b_hour)
-			&& read_dgus(ADDR_BEGIN_MIN,1,b_min) && read_dgus(ADDR_END_YEAR,2,e_year)
-			&& read_dgus(ADDR_END_DAY,1,e_day) && read_dgus(ADDR_END_MON,1,e_mon)
+		char b_year[5]	={0};
+		char b_mon[3]	={0};
+		char b_day[3]	={0};
+		char b_hour[3]	={0};
+		char b_min[3]	={0};
+		char e_year[5]	={0};
+		char e_mon[3]	={0};
+		char e_day[3]	={0};
+		char e_hour[3]	={0};
+		char e_min[3]	={0};
+		date b,e,c;
+		if(	read_dgus(ADDR_BEGIN_YEAR,2,b_year) && read_dgus(ADDR_BEGIN_DAY,1,b_day)
+			&& read_dgus(ADDR_BEGIN_MON,1,b_mon)&& read_dgus(ADDR_BEGIN_HOUR,1,b_hour)
+			&& read_dgus(ADDR_BEGIN_MIN,1,b_min)&& read_dgus(ADDR_END_YEAR,2,e_year)
+			&& read_dgus(ADDR_END_DAY,1,e_day) 	&& read_dgus(ADDR_END_MON,1,e_mon)
 			&& read_dgus(ADDR_END_HOUR,1,e_hour)&& read_dgus(ADDR_END_MIN,1,e_min))
 			{
-				if(atoi(b_year)>0 && atoi(b_mon)>0 && atoi(b_mon)<=12 && atoi(b_day)>0 && atoi(b_day)<=31
-					&& atoi(b_hour)>=0 && atoi(b_hour)<=23 && atoi(b_min)>=0 && atoi(b_min)<=59	&& atoi(e_year)>0 
-					&& atoi(e_mon)>0 && atoi(e_mon)<=12 && atoi(e_day)>0 && atoi(e_day)<=31 && atoi(e_hour)>=0 
-					&& atoi(e_hour)<=23 && atoi(e_min)>=0 && atoi(e_min)<=59)
+				if( atoi(b_year)>0 		&& atoi(b_mon)>0 	&& atoi(b_mon)<=12 && atoi(b_day)>0
+					&& atoi(b_day)<=31	&& atoi(b_hour)>=0 	&& atoi(b_hour)<=23&& atoi(b_min)>=0 
+					&& atoi(b_min)<=59	&& atoi(e_year)>0 	&& atoi(e_mon)>0   && atoi(e_mon)<=12 
+					&& atoi(e_day)>0 	&& atoi(e_day)<=31 	&& atoi(e_hour)>=0 && atoi(e_hour)<=23 
+					&& atoi(e_min)>=0 	&& atoi(e_min)<=59)
 					{
-						data b,e;
-						b.wYear=atoi(b_year);b.wMonth=atoi(b_mon);b.wDay=atoi(b_day);
-						b.wHour=atoi(b_hour);b.wMin=atoi(b_min);
-						e.wYear=atoi(e_year);e.wMonth=atoi(e_mon);b.wDay=atoi(e_day);
-						e.wHour=atoi(e_hour);e.wMin=atoi(e_min);
-						if(dataD(b,e)>0)
-						{
+						b.wYear=atoi(b_year);b.wMonth=	atoi(b_mon);b.wDay=atoi(b_day);
+						b.wHour=atoi(b_hour);b.wMin=	atoi(b_min);
+						e.wYear=atoi(e_year);e.wMonth=	atoi(e_mon);b.wDay=atoi(e_day);
+						e.wHour=atoi(e_hour);e.wMin=	atoi(e_min);
+						c.wYear	=g_share_memory->current_time[0]+2000;
+						c.wMonth=g_share_memory->current_time[1];
+						c.wDay	=g_share_memory->current_time[2];
+						c.wHour	=g_share_memory->current_time[3];
+						c.wMin	=g_share_memory->current_time[4];
+						if(dataD(b,e)>91*24*60 && dataD(b,c)>0 && dataD(e,c)>0)
+						{							
 							g_index=UPLOADING_OK_PAGE;				
-							manul_reloading();
+							manul_reloading(b_year,b_mon,b_day,b_hour,b_min,
+								e_year,e_mon,e_day,e_hour,e_min);
+						}
+						else
+						{
+							printfLog(LCD_PROCESS"b-e,b-c,e-c error\n");
 						}
 					}
+				else
+					{
+						printfLog(LCD_PROCESS"some param error\n");
+					}
 			}
+		else
+			{
+				printfLog(LCD_PROCESS"some input error\n");
+			}
+		printfLog(LCD_PROCESS"reloading \nb_time %s-%s-%s %s:%s\ne_time %s-%s-%s %s:%s\n"
+							 "c_time %d-%d-%d %d:%d\n",
+								b_year,b_mon,b_day,b_hour,b_min,
+								e_year,e_mon,e_day,e_hour,e_min,
+								c.wYear,c.wMonth,c.wDay,
+								c.wHour,c.wMin);
 		switch_pic(g_index);		
 	}	
 	return 0;
 }
-bool runnian(int mf)
+int runnian(int mf)
 {
     if (mf % 4 != 0 && (mf % 100 == 0 || mf % 400 != 0))
-        return false;
+        return 0;
     else
-        return true;
+        return 1;
 }
 
-int dataD(data mf, data time)
+long dataD(date mf, date time)
 {
     int sum = 0;
+	int i,flag;
     int yaerNum = time.wYear - mf.wYear;
-    for (int i = mf.wYear + 1; i<time.wYear; i++)
+    for (i = mf.wYear + 1; i<time.wYear; i++)
     {
         if (runnian(i))
             sum++;
     }
     sum += yaerNum * 365;
-    bool flag = (time.wMonth - mf.wMonth)>0;
-    if (flag)
-    for (int i = mf.wMonth; i < time.wMonth; i++)
-    {
-        switch (i)
-        {
-        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum += 31; break;
-        case 2:if (runnian(mf.wYear)) sum++; sum += 28; break;
-        default:sum += 30;
-        }
-    }
-    else
-    for (int i = time.wMonth; i < mf.wMonth; i++)
-    {
-        switch (i)
-        {
-        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum -= 31; break;
-        case 2:if (runnian(time.wYear)) sum--; sum -= 28; break;
-        default:sum -= 30;
-        }
-    }
+	printfLog(LCD_PROCESS"dist first to end %d days1\n",sum);
+	if(time.wMonth - mf.wMonth != 0)
+	{
+	    flag = (time.wMonth - mf.wMonth)>0;
+	    if (flag)
+	    for (i = mf.wMonth; i < time.wMonth; i++)
+	    {
+	        switch (i)
+	        {
+	        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum += 31; break;
+	        case 2:if (runnian(mf.wYear)) sum++; sum += 28; break;
+	        default:sum += 30;
+	        }
+	    }
+	    else
+	    for (i = time.wMonth; i < mf.wMonth; i++)
+	    {
+	        switch (i)
+	        {
+	        case 1:case 3:case 5:case 7:case 8:case 10:case 12:sum -= 31; break;
+	        case 2:if (runnian(time.wYear)) sum--; sum -= 28; break;
+	        default:sum -= 30;
+	        }
+	    }
+	}
     sum += (time.wDay - mf.wDay);
-	sum = sum*24 + time.wHour - mf.wHour;
-	sum = sum*60 + time.wMin - mf.wMin;
+	printfLog(LCD_PROCESS"dist first to end %d days\n",sum);
+	sum = sum*24*60;
+	if(time.wHour - mf.wHour != 0)
+	{
+		flag = (time.wHour - mf.wHour)>0;
+		if(flag)
+			for (i = mf.wHour; i< time.wHour; i++)
+				sum += 60;
+		else
+			for (i = time.wHour; i< mf.wHour; i++)
+				sum -= 60;
+	}
+	sum += (time.wMin - mf.wMin);
+	printfLog(LCD_PROCESS"dist first to end %d mins\n",sum);
     return sum;
 }
 
