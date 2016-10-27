@@ -5275,7 +5275,7 @@ unsigned short input_handle(char *input)
 						c.wDay	=g_share_memory->current_time[2];
 						c.wHour	=g_share_memory->current_time[3];
 						c.wMin	=g_share_memory->current_time[4];
-						if(dataD(b,e)<=92*24*60 && dataD(b,c)>0 && dataD(e,c)>0)
+						if(dataD(b,e)<=92*24*60 && dataD(b,e)>0 && dataD(b,c)>0 && dataD(e,c)>0)
 						{							
 							g_index=UPLOADING_OK_PAGE;				
 							manul_reloading(b_year,b_mon,b_day,b_hour,b_min,
