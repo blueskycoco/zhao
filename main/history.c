@@ -201,5 +201,7 @@ void load_history(const char *name)
 void manul_reloading(char *b_year, char *b_mon, char *b_day, char *b_hour, char *b_min,
 	char *e_year, char *e_mon, char *e_day, char *e_hour, char *e_min)
 {
+	printfLog(HISTORY"manul reloading from %s-%s-%s %s:%s to %s-%s-%s %s:%s\n"
+		,b_year,b_mon,b_day,b_hour,b_min,e_year,e_mon,e_day,e_hour,e_min);
 	return ;
 }

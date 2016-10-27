@@ -5268,14 +5268,14 @@ unsigned short input_handle(char *input)
 					{
 						b.wYear=atoi(b_year);b.wMonth=	atoi(b_mon);b.wDay=atoi(b_day);
 						b.wHour=atoi(b_hour);b.wMin=	atoi(b_min);
-						e.wYear=atoi(e_year);e.wMonth=	atoi(e_mon);b.wDay=atoi(e_day);
+						e.wYear=atoi(e_year);e.wMonth=	atoi(e_mon);e.wDay=atoi(e_day);
 						e.wHour=atoi(e_hour);e.wMin=	atoi(e_min);
 						c.wYear	=g_share_memory->current_time[0]+2000;
 						c.wMonth=g_share_memory->current_time[1];
 						c.wDay	=g_share_memory->current_time[2];
 						c.wHour	=g_share_memory->current_time[3];
 						c.wMin	=g_share_memory->current_time[4];
-						if(dataD(b,e)>91*24*60 && dataD(b,c)>0 && dataD(e,c)>0)
+						if(dataD(b,e)<=92*24*60 && dataD(b,c)>0 && dataD(e,c)>0)
 						{							
 							g_index=UPLOADING_OK_PAGE;				
 							manul_reloading(b_year,b_mon,b_day,b_hour,b_min,
@@ -5324,8 +5324,12 @@ long dataD(date mf, date time)
             sum++;
     }
     sum += yaerNum * 365;
+    printfLog(LCD_PROCESS"b %d-%d-%d %d:%d\n",mf.wYear,mf.wMonth,
+    		mf.wDay,mf.wHour,mf.wMin);
+    printfLog(LCD_PROCESS"e %d-%d-%d %d:%d\n",time.wYear,time.wMonth,
+    		time.wDay,time.wHour,time.wMin);
 	printfLog(LCD_PROCESS"dist first to end %d days1\n",sum);
-	if(time.wMonth - mf.wMonth != 0)
+	if(time.wMonth != mf.wMonth)
 	{
 	    flag = (time.wMonth - mf.wMonth)>0;
 	    if (flag)
@@ -5352,7 +5356,7 @@ long dataD(date mf, date time)
     sum += (time.wDay - mf.wDay);
 	printfLog(LCD_PROCESS"dist first to end %d days\n",sum);
 	sum = sum*24*60;
-	if(time.wHour - mf.wHour != 0)
+	if(time.wHour != mf.wHour)
 	{
 		flag = (time.wHour - mf.wHour)>0;
 		if(flag)
