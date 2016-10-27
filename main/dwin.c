@@ -5230,6 +5230,12 @@ unsigned short input_handle(char *input)
 	{
 		//manul uploading data		
 		g_index=UPLOADING_SETTING_PAGE;
+		/*
+		clear_buf(ADDR_BEGIN_YEAR,4);clear_buf(ADDR_BEGIN_MON,2);clear_buf(ADDR_BEGIN_DAY,2);
+		clear_buf(ADDR_BEGIN_HOUR,2);clear_buf(ADDR_BEGIN_MIN,2);		
+		clear_buf(ADDR_END_YEAR,4);clear_buf(ADDR_END_MON,2);clear_buf(ADDR_END_DAY,2);
+		clear_buf(ADDR_END_HOUR,2);clear_buf(ADDR_END_MIN,2);
+		*/
 		switch_pic(g_index);
 	}	
 	else if((addr==TOUCH_RETURN_UPLOADING&& (TOUCH_RETURN_UPLOADING+0x100)==data)||
