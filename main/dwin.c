@@ -55,7 +55,8 @@ void lcd_off(int a)
 		cur_index!=VERIFY_PAGE &&
 		cur_index!=XFER_SETTING_PAGE &&
 		cur_index!=TIME_SETTING_PAGE &&
-		cur_index!=LOGIN_PAGE)
+		cur_index!=LOGIN_PAGE &&
+		cur_index!=100)
 	{
 		write(g_share_memory->fd_lcd,cmd,6);
 		switch_pic(OFF_PAGE);
@@ -5283,7 +5284,8 @@ unsigned short input_handle(char *input)
 						c.wMin	=g_share_memory->current_time[4];
 						if(dataD(b,e)<=92*24*60 && dataD(b,e)>0 && dataD(b,c)>0 && dataD(e,c)>0)
 						{							
-							g_index=UPLOADING_OK_PAGE;				
+							g_index=UPLOADING_OK_PAGE;
+							switch_pic(100);
 							manul_reloading(b_year,b_mon,b_day,b_hour,b_min,
 								e_year,e_mon,e_day,e_hour,e_min);
 						}

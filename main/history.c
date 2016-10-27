@@ -1,5 +1,6 @@
 #include "cap.h"
 #include "netlib.h"
+#include "xfer.h"
 #define HISTORY "[History Process] "
 
 void set_data(char *line,char *type,struct nano *history,long *cnt)
@@ -203,5 +204,170 @@ void manul_reloading(char *b_year, char *b_mon, char *b_day, char *b_hour, char 
 {
 	printfLog(HISTORY"manul reloading from %s-%s-%s %s:%s to %s-%s-%s %s:%s\n"
 		,b_year,b_mon,b_day,b_hour,b_min,e_year,e_mon,e_day,e_hour,e_min);
+	/*
+	 * sort /home/user/history/#.dat by date
+	 */	 
+	char year_j[5]={0},year_m[5]={0},tmp_file[15]={0};
+	char mon_j[3]={0},mon_m[3]={0};
+	char day_j[3]={0},day_m[3]={0};
+	struct dirent *de = NULL;
+	int i=0,j=0,m=0;
+	int index_begin=0,index_end=0;
+	char file_list[512][15];
+	DIR *d = opendir(HISTORY_PATH);
+	if(d == 0)
+	{
+		printfLog(HISTORY"open failed %s , %s",HISTORY_PATH,strerror(errno));
+		return;
+	}
+	
+	while((de = readdir(d))!=0)
+	{
+		if(strncmp(de->d_name,".",strlen("."))==0||strncmp(de->d_name,"..",strlen(".."))==0)
+			continue;
+		memset(file_list[i],'\0',15);
+		strcpy(file_list[i],de->d_name);
+		i++;
+	}	
+	closedir(d);
+	for(j=0;j<i-1;j++)
+	{
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(year_m,file_list[m],4);
+			if(atoi(year_j)>atoi(year_m))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{	
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(mon_j,file_list[j]+5,2);
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			if((atoi(mon_j)>atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+	for(j=0;j<i-1;j++)
+	{		
+		for(m=j+1;m<i;m++)
+		{
+			memcpy(year_j,file_list[j],4);
+			memcpy(mon_j,file_list[j]+5,2);
+			memcpy(day_j,file_list[j]+8,2);
+			memcpy(year_m,file_list[m],4);
+			memcpy(mon_m,file_list[m]+5,2);
+			memcpy(day_m,file_list[m]+8,2);
+			if((atoi(day_j)>atoi(day_m)) && (atoi(mon_j)==atoi(mon_m)) && (atoi(year_m)==atoi(year_j)))
+			{
+				//printf(HISTORY_TAG"switch day_j %s,day_m %s,mon_j %s,mon_m %s,year_j %s,year_m %s\n",day_j,day_m,mon_j,mon_m,year_j,year_m);
+				strcpy(tmp_file,file_list[j]);
+				strcpy(file_list[j],file_list[m]);
+				strcpy(file_list[m],tmp_file);
+			}
+		}
+	}
+
+	/*
+	 * get list from b to e
+	 */
+	for(j=0;j<i;j++)
+	{
+		memcpy(year_j,file_list[j],4);
+		memcpy(mon_j,file_list[j]+5,2);
+		memcpy(day_j,file_list[j]+8,2);
+		if(atoi(year_j)>=atoi(b_year) &&
+			atoi(mon_j)>=atoi(b_mon) &&
+			atoi(day_j)>=atoi(b_day))
+		{
+			printfLog(HISTORY"index begin %d, %s\n",j,file_list[j]);
+			index_begin=j;
+			break;
+		}
+	}
+	for(j=i;j>0;j--)
+	{
+		memcpy(year_j,file_list[j],4);
+		memcpy(mon_j,file_list[j]+5,2);
+		memcpy(day_j,file_list[j]+8,2);
+		if(atoi(year_j)<=atoi(e_year) &&
+			atoi(mon_j)<=atoi(e_mon) &&
+			atoi(day_j)<=atoi(e_day))
+		{
+			printfLog(HISTORY"index end %d, %s\n",j,file_list[j]);
+			index_end=j;
+			break;
+		}
+	}
+	/*
+	 * reloading data
+	 */
+	for(j=index_begin;j<=index_end;j++)
+	{
+		char *line=NULL;
+		char file_path[32]={0};
+		int len,cnt=0,can_send=0;
+		printfLog(HISTORY"reloading ==> %s\n",file_list[j]);
+		strcpy(file_path,HISTORY_PATH);
+		strcat(file_path,"/");
+		strcat(file_path,file_list[j]);
+		FILE *fp = fopen(file_path, "r");
+		while (getline(&line, (size_t *)&len, fp) != -1) 
+		{
+			if((cnt%2)!=0)
+			{
+				if(can_send)
+				{
+					char *rcv=NULL;
+					printfLog(HISTORY"Begin to reloading\n");
+					send_web_post(URL,line,39,&rcv);
+					if(rcv!=NULL)
+					{	
+						printfLog(HISTORY"Server back %s\n",rcv);
+						free(rcv);
+						rcv=NULL;
+					}
+				}
+				else
+					printfLog(HISTORY"Cannot send %s\n",line);
+			}
+			else
+			{
+				can_send=0;
+				char hour[3]={0};
+				char min[3]={0};
+				memcpy(hour,line,2);
+				memcpy(min,line+3,2);
+				if(j==index_begin)
+				{
+					if(atoi(b_hour)<=atoi(hour) && 
+						atoi(b_min)<=atoi(min))
+						can_send=1;
+				}
+				else if(j==index_end)
+				{
+					if(atoi(e_hour)>=atoi(hour) && 
+						atoi(e_min)>=atoi(min))
+						can_send=1;
+				}
+				else
+					can_send=1;
+			}
+			cnt++;
+		}
+		fclose(fp);
+	}
 	return ;
 }
