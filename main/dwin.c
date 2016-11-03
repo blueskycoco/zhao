@@ -56,6 +56,7 @@ void lcd_off(int a)
 		cur_index!=XFER_SETTING_PAGE &&
 		cur_index!=TIME_SETTING_PAGE &&
 		cur_index!=LOGIN_PAGE &&
+		cur_index!=UPLOADING_SETTING_PAGE &&
 		cur_index!=100)
 	{
 		write(g_share_memory->fd_lcd,cmd,6);

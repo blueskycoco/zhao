@@ -292,12 +292,12 @@ void manul_reloading(char *b_year, char *b_mon, char *b_day, char *b_hour, char 
 			atoi(mon_j)>=atoi(b_mon) &&
 			atoi(day_j)>=atoi(b_day))
 		{
-			printfLog(HISTORY"index begin %d, %s\n",j,file_list[j]);
+			printfLog(HISTORY"%d file,index begin %d, %s\n",i,j,file_list[j]);
 			index_begin=j;
 			break;
 		}
 	}
-	for(j=i;j>0;j--)
+	for(j=i-1;j>0;j--)
 	{
 		memcpy(year_j,file_list[j],4);
 		memcpy(mon_j,file_list[j]+5,2);
@@ -306,7 +306,7 @@ void manul_reloading(char *b_year, char *b_mon, char *b_day, char *b_hour, char 
 			atoi(mon_j)<=atoi(e_mon) &&
 			atoi(day_j)<=atoi(e_day))
 		{
-			printfLog(HISTORY"index end %d, %s\n",j,file_list[j]);
+			printfLog(HISTORY"%d file,index end %d, %s\n",i,j,file_list[j]);
 			index_end=j;
 			break;
 		}
@@ -348,20 +348,31 @@ void manul_reloading(char *b_year, char *b_mon, char *b_day, char *b_hour, char 
 				can_send=0;
 				char hour[3]={0};
 				char min[3]={0};
+				char temp[5]={0};
 				memcpy(hour,line,2);
 				memcpy(min,line+3,2);
-				if(j==index_begin)
+				int file_year,file_mon,file_day;
+				memcpy(temp,file_list[j],4);
+				file_year=atoi(temp);
+				memset(temp,0,5);
+				memcpy(temp,file_list[j]+5,2);
+				file_mon=atoi(temp);
+				memset(temp,0,5);
+				memcpy(temp,file_list[j]+8,2);
+				file_day=atoi(temp);
+				memset(temp,0,5);
+				if(j==index_begin && atoi(b_year)==file_year && atoi(b_mon) ==file_mon && atoi(b_day) ==file_day)
 				{
-					if(atoi(b_hour)<=atoi(hour) && 
-						atoi(b_min)<=atoi(min))
+					if(atoi(b_hour)<atoi(hour) || 
+						(atoi(b_hour)==atoi(hour) && atoi(b_min)<=atoi(min)))
 						can_send=1;
 				}
-				else if(j==index_end)
+				else if(j==index_end && atoi(e_year)== file_year&& atoi(e_mon) == file_mon&& atoi(e_day) ==file_day)
 				{
-					if(atoi(e_hour)>=atoi(hour) && 
-						atoi(e_min)>=atoi(min))
+					if(atoi(e_hour)> atoi(hour) || 
+						(atoi(e_hour)==atoi(hour) && atoi(e_min)>=atoi(min)))
 						can_send=1;
-				}
+				}				
 				else
 					can_send=1;
 			}

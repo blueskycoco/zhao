@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-#define VERSION	"V0.03-2016-10-27"
+#define VERSION	"V0.03-2016-11-03"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
