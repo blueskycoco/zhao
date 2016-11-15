@@ -828,7 +828,7 @@ int ping_server_by_gprs()
 	xfer_mode=g_share_memory->send_by_wifi;
 	printfLog(MISC_PROCESS"xfer_mode %d\n",xfer_mode);
 	g_share_memory->send_by_wifi=0;
-	send_web_post(URL,sync_message,9,&rcv);
+	send_web_post(URL,sync_message,39,&rcv);
 	g_share_memory->send_by_wifi=xfer_mode;
 	free(sync_message);
 	if(rcv!=NULL&&strlen(rcv)!=0)
@@ -852,7 +852,7 @@ void sync_server(int resend,int set_local)
 	sync_message=add_item(sync_message,ID_DEVICE_IP_ADDR,g_share_memory->ip);
 	sync_message=add_item(sync_message,ID_DEVICE_PORT,(char *)"9517");
 	printfLog(MISC_PROCESS"<sync GET>%s\n",sync_message);
-	send_web_post(URL,sync_message,9,&rcv);
+	send_web_post(URL,sync_message,39,&rcv);
 	free(sync_message);
 	//free(out1);
 	if(rcv!=NULL&&strlen(rcv)!=0)

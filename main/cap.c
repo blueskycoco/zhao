@@ -631,6 +631,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_WIND_REAL_1,value);
 		write_data(ADDR_WIND_REAL_2,value);
+		write_data(ADDR_CURR_FENGSU,value);
 	}
 	else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0)
 	{

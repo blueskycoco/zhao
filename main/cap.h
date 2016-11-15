@@ -40,7 +40,7 @@
 //#include "xfer.h"
 //#include "dwin.h"
 #include "log.h"
-#define VERSION	"V0.03-2016-11-03"
+#define VERSION	"V0.03-2016-11-15 -1"
 #define SENSOR_NO		12
 #define SENSOR_CO		0
 #define SENSOR_CO2		1
@@ -1055,6 +1055,8 @@ extern key_t  shmid_history_pm10;
 #define ADDR_END_DAY				0x0E75
 #define ADDR_END_HOUR				0x0E77
 #define ADDR_END_MIN				0x0E79
+
+#define ADDR_CURR_FENGSU			0x0E7B
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
