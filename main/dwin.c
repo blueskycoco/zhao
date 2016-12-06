@@ -98,7 +98,7 @@ void sleeping_page_show()
 	while (1) {
 		for (i = SLEEPING_PAGE_1; i < SLEEPING_PAGE_10; i++) {
 			switch_pic(i);
-			for (j = 0; j < 30; j++) {
+			for (j = 0; j < 50; j++) {
 				if(read_sleeping_state()) {
 					usleep(100000);
 				} else {
