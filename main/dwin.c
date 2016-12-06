@@ -48,9 +48,74 @@ void switch_pic(unsigned char Index)
 	cur_index=Index;
 	write(g_share_memory->fd_lcd,cmd,6);
 }
+void lcd_on(int page)
+{
+	switch_pic(page);
+	usleep(200000);
+	//ar cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
+	//ite(g_share_memory->fd_lcd,cmd,6);
+	lcd_state=1;
+	printfLog(LCD_PROCESS"lcd on\n");
+}
+int read_sleeping_state()
+{
+	int timeout = 0;
+	char ch,i=0;
+	char cmd_read_tp_flag[]	={0x5a,0xa5,0x03,0x81,0x05,0x01};
+	char cmd_clear_tp_flag[]={0x5a,0xa5,0x03,0x80,0x05,0x00};
+	write(g_share_memory->fd_lcd,cmd_read_tp_flag,6);
+	while(1)	
+	{	
+		if(read(g_share_memory->fd_lcd,&ch,1)==1)
+		{
+			i++;
+			if(i==7)
+			{				
+				write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
+				printfLog(LCD_PROCESS"==> %x\n",ch);
+				if(ch == 0x5a)					
+					return 0;
+				else 
+					return 1;
+			}
+		}
+		else
+		{
+			timeout++;
+			if(timeout>100)
+				return 0;
+			usleep(1000);
+		}
+	}
+	return 1;
+}
+void sleeping_page_show()
+{
+	int i = 0;
+	int j = 0;	
+	char cmd_clear_tp_flag[]={0x5a,0xa5,0x03,0x80,0x05,0x00};
+	write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
+	while (1) {
+		for (i = SLEEPING_PAGE_1; i < SLEEPING_PAGE_10; i++) {
+			switch_pic(i);
+			for (j = 0; j < 30; j++) {
+				if(read_sleeping_state()) {
+					usleep(100000);
+				} else {
+					lcd_on(g_index);					
+					if(g_share_memory->sleep!=0)
+						alarm(g_share_memory->sleep*60);
+					else
+						alarm(5*60);
+					return ;
+				}
+			}
+		}
+	}
+}
 void lcd_off(int a)
 {
-	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
+	//char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
 	if(g_share_memory->sleep!=0 && 
 		cur_index!=VERIFY_PAGE &&
 		cur_index!=XFER_SETTING_PAGE &&
@@ -59,21 +124,14 @@ void lcd_off(int a)
 		cur_index!=UPLOADING_SETTING_PAGE &&
 		cur_index!=100)
 	{
-		write(g_share_memory->fd_lcd,cmd,6);
-		switch_pic(OFF_PAGE);
-		lcd_state=0;
+		//ite(g_share_memory->fd_lcd,cmd,6);
+		//itch_pic(OFF_PAGE);
 		printfLog(LCD_PROCESS"lcd off\n");
+		sleeping_page_show();
+		lcd_state=0;
 	}
 }
-void lcd_on(int page)
-{
-	switch_pic(page);
-	usleep(200000);
-	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
-	write(g_share_memory->fd_lcd,cmd,6);
-	lcd_state=1;
-	printfLog(LCD_PROCESS"lcd on\n");
-}
+
 void write_string(unsigned int addr,char *data,int len)
 {
 	int i=0;

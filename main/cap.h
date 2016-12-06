@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2016-11-15-00"
+#define VERSION	"2016-12-06-00"
 #else
-#define VERSION	"2016-11-15-01"
+#define VERSION	"2016-12-06-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -183,6 +183,16 @@ extern key_t  shmid_history_pm10;
 #define UPLOADING_OK_PAGE		102
 #define UPLOADING_WRONG_PAGE	104
 #define UPLOADING_SETTING_PAGE	106
+#define SLEEPING_PAGE_1			108
+#define SLEEPING_PAGE_2			109
+#define SLEEPING_PAGE_3			110
+#define SLEEPING_PAGE_4			111
+#define SLEEPING_PAGE_5			112
+#define SLEEPING_PAGE_6			113
+#define SLEEPING_PAGE_7			114
+#define SLEEPING_PAGE_8			115
+#define SLEEPING_PAGE_9			116
+#define SLEEPING_PAGE_10		117
 #define	ADDR_HCHO_REAL_1	0x0000
 #define	ADDR_PM10_REAL_1	0x0001
 #define	ADDR_PM25_REAL_1	0x0002
