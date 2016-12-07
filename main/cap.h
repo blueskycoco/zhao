@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2016-12-06-00"
+#define VERSION	"2016-12-07-00"
 #else
-#define VERSION	"2016-12-06-01"
+#define VERSION	"2016-12-07-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -115,6 +115,7 @@ struct share_memory{
 	char	cap_board_ack;
 	char	fan_state;
 	char	audio_state;
+	char 	sleeping_state;
 	pthread_mutex_t mutex;
 };
 extern struct history sensor_history;
