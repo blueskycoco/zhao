@@ -57,26 +57,62 @@ void lcd_on(int page)
 	lcd_state=1;
 	printfLog(LCD_PROCESS"lcd on\n");
 }
-void read_sleeping_state()
-{
+int read_sleeping_state()
+{	
+	char ch;
+	int i=0;
+	int timeout = 0;
 	char cmd_read_tp_flag[]	={0x5a,0xa5,0x03,0x81,0x05,0x01};
+	char cmd_clear_tp_flag[]={0x5a,0xa5,0x03,0x80,0x05,0x00};
 	write(g_share_memory->fd_lcd,cmd_read_tp_flag,6);
-	printfLog(LCD_PROCESS"check lcd press\n");
+	while(1)	
+	{	
+		if(read(g_share_memory->fd_lcd,&ch,1)==1)
+		{
+			if(i==6 && ch == 0x5a)
+			{
+				write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
+				lcd_on(g_index);					
+				if(g_share_memory->sleep!=0)
+					alarm(g_share_memory->sleep*60);
+				else
+					alarm(5*60);
+				return 1;
+			}
+			if((i==0 && ch == 0x5a) ||
+			   (i==1 && ch == 0xa5) ||
+   		       (i==2 && ch == 0x04) ||
+   		       (i==3 && ch == 0x81) ||
+   		       (i==4 && ch == 0x05) ||
+   		       (i==5 && ch == 0x01))
+				i++;
+			else
+				return 0;
+			
+		}
+		else
+		{
+			timeout++;
+			if(timeout>100)
+				return 0;
+			usleep(1000);
+		}
+	}
+	return 0;
 }
 void sleeping_page_show()
 {
 	int i = 0;
-	int j = 0;	
+	int j = 0;
 	char cmd_clear_tp_flag[]={0x5a,0xa5,0x03,0x80,0x05,0x00};
-	read_sleeping_state();
-	//write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
-	g_share_memory->sleeping_state=1;
-	while (g_share_memory->sleeping_state) {
+	write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
+	while (1) {
 		for (i = SLEEPING_PAGE_1; i < SLEEPING_PAGE_10; i++) {
 			switch_pic(i);
-			printfLog(LCD_PROCESS"switch tp pic %d\n",i);
+			//printfLog(LCD_PROCESS"switch tp pic %d\n",i);
 			for (j = 0; j < 50; j++) {				
-				read_sleeping_state();
+				if(read_sleeping_state())
+					return ;
 				usleep(100000);
 			}
 		}
@@ -97,7 +133,6 @@ void lcd_off(int a)
 		//write(g_share_memory->fd_lcd,cmd,6);
 		//switch_pic(OFF_PAGE);
 		printfLog(LCD_PROCESS"lcd off\n");
-		//if(0==fork())
 		sleeping_page_show();
 		lcd_state=0;
 	}
@@ -5423,7 +5458,7 @@ void lcd_loop()
 	{	
 		if(read(g_share_memory->fd_lcd,&ch,1)==1)
 		{
-			printfLog(LCD_PROCESS"<= %x \r\n",ch);
+			//printfLog(LCD_PROCESS"<= %x \r\n",ch);
 			switch(get)
 			{
 				case 0:
@@ -5451,8 +5486,6 @@ void lcd_loop()
 						//printf(LCD_PROCESS"0x06 get,get =3\r\n");
 						get=3;
 					}
-					else if(ch == 0x04)
-						get=5;
 					else
 						get=0;
 					break;
@@ -5480,43 +5513,7 @@ void lcd_loop()
 							get=0;
 						}
 					}
-					break;		
-				case 5:
-					{
-						if(ch == 0x81)
-							get=6;
-						else
-							get=0;
-					}
-					break;
-				case 6:
-					if(ch == 0x05)
-						get=7;
-					else
-						get=0;
-					break;
-				case 7:
-					if(ch == 0x01)
-						get=8;
-					else
-						get=0;
-					break;
-				case 8:
-					{						
-						char cmd_clear_tp_flag[]={0x5a,0xa5,0x03,0x80,0x05,0x00};
-						write(g_share_memory->fd_lcd,cmd_clear_tp_flag,6);
-						if(ch == 0x5a)
-						{
-							g_share_memory->sleeping_state=0;
-							lcd_on(g_index);					
-							if(g_share_memory->sleep!=0)
-								alarm(g_share_memory->sleep*60);
-							else
-								alarm(5*60);							
-						}
-						get=0;
-					}
-					break;
+					break;	
 				default:
 					printfLog(LCD_PROCESS"unknown state\r\n");
 					get=0;
@@ -5546,7 +5543,6 @@ int lcd_init()
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
-		g_share_memory->sleeping_state=0;
 		signal(SIGALRM, lcd_off);		
 		if(g_share_memory->sleep!=0)
 			alarm(g_share_memory->sleep*60);
