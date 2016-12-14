@@ -162,6 +162,7 @@ int main(int argc, char *argv[])
 		printfLog(MAIN_PROCESS"[PID]%d load history process\n",fpid);
 	lcd_init();//process lcd
 	cap_init();//process cap
+	ask_hw_ver();
 	while(1)
 	{
 		//sync server with resend data 00:01 every night

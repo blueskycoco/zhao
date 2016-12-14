@@ -448,6 +448,7 @@ void get_net_interface()
 			printfLog(MISC_PROCESS"get interface size 0\n");
 			g_share_memory->send_by_wifi=1;
 			g_share_memory->sleep=5;
+			g_share_memory->black_lcd=1;	
 			fclose(fp);
 			set_net_interface();
 		}
@@ -456,7 +457,9 @@ void get_net_interface()
 			if(fread(&(g_share_memory->send_by_wifi),1,1,fp)<0)
 				g_share_memory->send_by_wifi=1;
 			if(fread(&(g_share_memory->sleep),1,1,fp)<0)
-				g_share_memory->sleep=5;	
+				g_share_memory->sleep=5;				
+			if(fread(&(g_share_memory->black_lcd),1,1,fp)<0)
+				g_share_memory->black_lcd=1;	
 			fclose(fp);
 		}
 	}
@@ -464,6 +467,7 @@ void get_net_interface()
 	{
 		g_share_memory->send_by_wifi=1;
 		g_share_memory->sleep=5;
+		g_share_memory->black_lcd=1;	
 	}
 	
 	printfLog(MISC_PROCESS"get interface is %d\n",g_share_memory->send_by_wifi);
@@ -571,6 +575,7 @@ void set_net_interface()
 	FILE *fp=fopen("/home/user/interface.txt","w");
 	fwrite(&(g_share_memory->send_by_wifi),1,1,fp);
 	fwrite(&(g_share_memory->sleep),1,1,fp);
+	fwrite(&(g_share_memory->black_lcd),1,1,fp);
 	fclose(fp);
 	printfLog(MISC_PROCESS"set interface is %d\n",g_share_memory->send_by_wifi);
 }
@@ -1141,4 +1146,32 @@ void co_flash_alarm()
 		printfLog(MISC_PROCESS"[PID]%d co flash process\n",fpid);
 	return ;
 }
-
+void ask_hw_ver()
+{
+	int i = 0;
+	char cmd[] = {0x6c,ARM_TO_CAP,0x00,0x0c,0x00,0x00,0x00};	
+	int crc=CRC_check((unsigned char *)cmd,5);
+	cmd[5]=(crc&0xff00)>>8;cmd[6]=crc&0x00ff; 	
+	printfLog(MISC_PROCESS"going to ask_hw_ver begin\n");
+	for(i=0;i<7;i++)
+		printfLog("%02x ",cmd[i]);
+	pthread_mutex_lock(&(g_share_memory->mutex));
+	memset(g_share_memory->hw_ver,0,20);
+	write(g_share_memory->fd_com,cmd,sizeof(cmd));
+	i=0;
+	while(1)
+	{
+		if(i>20)
+			break;
+		sleep(1);
+		printfLog(MISC_PROCESS"hw_ver %s\n",g_share_memory->hw_ver);
+		if(strlen(g_share_memory->hw_ver)!=0)
+			break;
+		else
+			write(g_share_memory->fd_com,cmd,sizeof(cmd));
+		i++;
+			
+	}
+	printfLog(MISC_PROCESS"\ngoing to ask_hw_ver end\n");
+	pthread_mutex_unlock(&(g_share_memory->mutex));
+}

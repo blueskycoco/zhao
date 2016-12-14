@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2016-12-08-00"
+#define VERSION	"2016-12-14-00"
 #else
-#define VERSION	"2016-12-08-01"
+#define VERSION	"2016-12-14-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -82,6 +82,7 @@ struct share_memory{
 	char 	history_done;			//history load done by history process
 	char 	send_by_wifi;			//send by wifi	
 	char 	sleep;					//0 no sleep , 1 one mins, 5 5 mins, 10 10 mins
+	char 	black_lcd;				//used for lcd black
 	char 	network_state;			//network state,ok or failed
 	char 	sensor_state[SENSOR_NO];//co/co2/ch20/pm25/temp/shidu state
 	char 	server_time[32];		//current time	
@@ -109,6 +110,7 @@ struct share_memory{
 	int 	fd_gprs;	
 	char 	ip[20];	
 	char 	uuid[256];
+	char 	hw_ver[20];
 	char 	ppm;
 	float 	pj[SENSOR_NO][200];
 	int		pj_cnt[SENSOR_NO];
@@ -193,6 +195,9 @@ extern key_t  shmid_history_pm10;
 #define SLEEPING_PAGE_8			115
 #define SLEEPING_PAGE_9			116
 #define SLEEPING_PAGE_10		117
+#define SLEEPING_SELECT_PAGE	118
+#define SLEEPING_PINGBAO_SETTING_PAGE	120
+
 #define	ADDR_HCHO_REAL_1	0x0000
 #define	ADDR_PM10_REAL_1	0x0001
 #define	ADDR_PM25_REAL_1	0x0002
@@ -701,7 +706,7 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_FACTORY_INFO_RETURN	0x0080
 		
 #define	TOUCH_PRODUCT_INFO_RETURN	0x0081
-#define	ADDR_PRODUCT_NAME	0x086b
+#define	ADDR_HW_VER  0x086b
 #define	ADDR_PRODUCT_MODEL	0x088b
 #define	ADDR_PRODUCT_ID	0x08ab
 		
@@ -738,6 +743,10 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_FIVE_MINS	0x0091
 #define	TOUCH_TEN_MINS	0x0092
 #define	TOUCH_NEVER_MINS	0x0093
+#define	TOUCH_ONE_MINS_1	0x0e80
+#define	TOUCH_FIVE_MINS_1	0x0e81
+#define	TOUCH_TEN_MINS_1	0x0e82
+#define	TOUCH_NEVER_MINS_1	0x0e83
 		
 #define	TOUCH_EXIT_VERIFY	0x0094
 #define	TOUCH_SEL_VP_0	0x0095
@@ -849,7 +858,8 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_SEL_PM25_1	0x00cc
 #define	TOUCH_SEL_NOISE_1	0x00cd
 #define	TOUCH_SEL_WIND_1	0x00ce
-#define	TOUCH_SEL_UNKNOWN_1	0x00cf
+#define TOUCH_SEL_TVOC_1	0x00cf
+#define TOUCH_SEL_O3_1		0x0e7d
 #define	TOUCH_INTERFACE_RETURN2	0x00d0
 #define	ADDR_CURRENT_SELECT	0x0a9b
 		
@@ -1071,6 +1081,9 @@ extern key_t  shmid_history_pm10;
 #define ADDR_END_MIN				0x0E79
 
 #define ADDR_CURR_FENGSU			0x0E7B
+#define TOUCH_BLACK_SETTING			0x0e7e
+#define TOUCH_PINGBAO_SETTING		0x0e7f
+
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
@@ -1695,6 +1708,8 @@ extern key_t  shmid_history_pm10;
 #define TYPE_SENSOR_QIYA_RUSHI	0x0801
 #define TYPE_SENSOR_FENGSU	0x0701
 #define TYPE_SENSOR_ZHAOSHEN	0x0601
+#define TYPE_SENSOR_TVOC_1		0x0901
+#define TYPE_SENSOR_O3_1		0x0a01
 #define URL "http://123.57.26.24:8080/saveData/airmessage/messMgr.do"
 //#define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 #define START_BYTE 0x6C

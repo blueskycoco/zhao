@@ -1513,6 +1513,16 @@ void cap_data_handle()
 			free(message);
 			return ;
 		}
+		else if (message_type == 0x0006)
+		{
+			memset(g_share_memory->hw_ver, 0, 20);
+			memcpy(g_share_memory->hw_ver, message, 13);
+			printfLog(CAP_PROCESS"Got hw_ver %s from cap board\n",
+						g_share_memory->hw_ver);
+			free(cmd);
+			free(message);
+			return;
+		}
 		if(g_share_memory->factory_mode==NORMAL_MODE)
 		{
 			if(message_type == 0x0004)

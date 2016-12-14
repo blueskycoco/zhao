@@ -24,4 +24,5 @@ void gprs_state(int state,int pic);
 int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char *outbuf,int outlen);
 void show_fan(int on);
 void show_audio(int on);
+void ask_hw_ver();
 #endif

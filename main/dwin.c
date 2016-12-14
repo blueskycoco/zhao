@@ -50,10 +50,13 @@ void switch_pic(unsigned char Index)
 }
 void lcd_on(int page)
 {
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
 	switch_pic(page);
 	usleep(200000);
-	//char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
-	//wite(g_share_memory->fd_lcd,cmd,6);
+	if(g_share_memory->black_lcd)
+	{
+		write(g_share_memory->fd_lcd,cmd,6);
+	}
 	lcd_state=1;
 	printfLog(LCD_PROCESS"lcd on\n");
 }
@@ -121,7 +124,7 @@ void sleeping_page_show()
 }
 void lcd_off(int a)
 {
-	//char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
+	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x00};
 	if(g_share_memory->sleep!=0 && 
 		cur_index!=VERIFY_PAGE &&
 		cur_index!=XFER_SETTING_PAGE &&
@@ -130,10 +133,14 @@ void lcd_off(int a)
 		cur_index!=UPLOADING_SETTING_PAGE &&
 		cur_index!=100)
 	{
-		//write(g_share_memory->fd_lcd,cmd,6);
-		//switch_pic(OFF_PAGE);
+		if(g_share_memory->black_lcd)
+		{
+			write(g_share_memory->fd_lcd,cmd,6);
+			switch_pic(OFF_PAGE);
+		}
+		else
+			sleeping_page_show();
 		printfLog(LCD_PROCESS"lcd off\n");
-		sleeping_page_show();
 		lcd_state=0;
 	}
 }
@@ -2780,6 +2787,12 @@ void interface_to_string(int interface,char *str)
 		case TYPE_SENSOR_ZHAOSHEN:
 			strcpy(str,"ÔëÉù_1");
 			break;
+		case TYPE_SENSOR_TVOC_1:
+			strcpy(str,"TVOC_1");
+			break;		
+		case TYPE_SENSOR_O3_1:
+			strcpy(str,"O3_1");
+			break;
 		default:
 			strcpy(str,"Î´Öª´«¸ÐÆ÷");
 			break;
@@ -3418,19 +3431,22 @@ unsigned short input_handle(char *input)
 	addr=input[1]<<8|input[2];
 	data=input[4]<<8|input[5];
 	printfLog(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
-#if 0
-	if(lcd_state==0)
+#if 1
+	if(g_share_memory->black_lcd)
 	{
-		lcd_on(g_index);
+		if(lcd_state==0)
+		{
+			lcd_on(g_index);
+		}
+		else
+		{
+			alarm(0);
+		}
+		if(g_share_memory->sleep!=0)
+			alarm(g_share_memory->sleep*60);
+		else
+			alarm(5*60);
 	}
-	else
-	{
-		alarm(0);
-	}
-	if(g_share_memory->sleep!=0)
-		alarm(g_share_memory->sleep*60);
-	else
-		alarm(5*60);
 #endif
 	if((addr==TOUCH_STATE_RETURN_2 && (TOUCH_STATE_RETURN_2+0x100)==data)||
 		(addr==TOUCH_STATE_RETURN_1 && (TOUCH_STATE_RETURN_1+0x100)==data)||
@@ -4400,31 +4416,49 @@ unsigned short input_handle(char *input)
 	}
 	else if(addr==TOUCH_SLEEP_SETTING && (TOUCH_SLEEP_SETTING+0x100)==data)
 	{
+		switch_pic(SLEEPING_SELECT_PAGE);
+		g_index=SLEEPING_SELECT_PAGE;
+	}
+	else if(addr==TOUCH_BLACK_SETTING&& (TOUCH_BLACK_SETTING+0x100)==data)
+	{
+		g_share_memory->black_lcd=1;
 		switch_pic(TIME_PAGE_SETTING);
 		g_index=TIME_PAGE_SETTING;
+		set_net_interface();
+	}	
+	else if(addr==TOUCH_PINGBAO_SETTING&& (TOUCH_PINGBAO_SETTING+0x100)==data)
+	{
+		g_share_memory->black_lcd=0;
+		switch_pic(SLEEPING_PINGBAO_SETTING_PAGE);
+		g_index=SLEEPING_PINGBAO_SETTING_PAGE;
+		set_net_interface();
 	}
-	else if(addr==TOUCH_ONE_MINS && (TOUCH_ONE_MINS+0x100)==data)
+	else if((addr==TOUCH_ONE_MINS && (TOUCH_ONE_MINS+0x100)==data)
+		||(addr==TOUCH_ONE_MINS_1 && (TOUCH_ONE_MINS_1+0x100)==data))
 	{
 		g_share_memory->sleep=1;
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 		set_net_interface();
 	}
-	else if(addr==TOUCH_FIVE_MINS && (TOUCH_FIVE_MINS+0x100)==data)
+	else if((addr==TOUCH_FIVE_MINS && (TOUCH_FIVE_MINS+0x100)==data)
+		||(addr==TOUCH_FIVE_MINS_1 && (TOUCH_FIVE_MINS_1+0x100)==data))
 	{
 		g_share_memory->sleep=5;
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 		set_net_interface();
 	}
-	else if(addr==TOUCH_TEN_MINS && (TOUCH_TEN_MINS+0x100)==data)
+	else if((addr==TOUCH_TEN_MINS && (TOUCH_TEN_MINS+0x100)==data)
+		||(addr==TOUCH_TEN_MINS_1 && (TOUCH_TEN_MINS_1+0x100)==data))
 	{
 		g_share_memory->sleep=10;
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 		set_net_interface();
 	}
-	else if(addr==TOUCH_NEVER_MINS && (TOUCH_NEVER_MINS+0x100)==data)
+	else if((addr==TOUCH_NEVER_MINS && (TOUCH_NEVER_MINS+0x100)==data)
+		||(addr==TOUCH_NEVER_MINS_1 && (TOUCH_NEVER_MINS_1+0x100)==data))
 	{
 		g_share_memory->sleep=0;
 		switch_pic(SYSTEM_SETTING_PAGE);
@@ -4804,14 +4838,25 @@ unsigned short input_handle(char *input)
 		if(interface_config_no!=0)
 		{
 			if((interface_config_no==1 && cur_select_interface==TYPE_SENSOR_PM25_WEISHEN)
+				||(interface_config_no==2 && (cur_select_interface==TYPE_SENSOR_CO2_WEISHEN || cur_select_interface==TYPE_SENSOR_CO2_RUDIAN))
+				||(interface_config_no==3 && (cur_select_interface==TYPE_SENSOR_CH2O_AERSHEN|| cur_select_interface==TYPE_SENSOR_CH2O_WEISHEN))
+				||(interface_config_no==4 && (cur_select_interface==TYPE_SENSOR_CO_DD|| cur_select_interface==TYPE_SENSOR_CO_WEISHEN))
+				||(interface_config_no==5 && cur_select_interface==TYPE_SENSOR_ZHAOSHEN)
 				||(interface_config_no==8 && cur_select_interface==TYPE_SENSOR_WENSHI_RUSHI)
 				||(interface_config_no==9 && cur_select_interface==TYPE_SENSOR_FENGSU)
 				||(interface_config_no==10 && cur_select_interface==TYPE_SENSOR_QIYA_RUSHI)
-				||(interface_config_no>1 && interface_config_no<8 
+				||(((interface_config_no>5 && interface_config_no<8) || interface_config_no == 11)
 				&& cur_select_interface!=TYPE_SENSOR_QIYA_RUSHI
 				&& cur_select_interface!=TYPE_SENSOR_WENSHI_RUSHI
 				&& cur_select_interface!=TYPE_SENSOR_PM25_WEISHEN
-				&& cur_select_interface!=TYPE_SENSOR_FENGSU))
+				&& cur_select_interface!=TYPE_SENSOR_FENGSU
+				&& cur_select_interface!=TYPE_SENSOR_CO2_WEISHEN
+				&& cur_select_interface!=TYPE_SENSOR_CO2_RUDIAN
+				&& cur_select_interface!=TYPE_SENSOR_CH2O_AERSHEN
+				&& cur_select_interface!=TYPE_SENSOR_CH2O_WEISHEN
+				&& cur_select_interface!=TYPE_SENSOR_CO_DD
+				&& cur_select_interface!=TYPE_SENSOR_CO_WEISHEN
+				&& cur_select_interface!=TYPE_SENSOR_ZHAOSHEN))
 			g_share_memory->sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printfLog(LCD_PROCESS"save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
 			show_cur_interface(INTERFACE_PAGE);
@@ -4902,10 +4947,15 @@ unsigned short input_handle(char *input)
 	{
 		cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
 		show_cur_select_intr(cur_select_interface);
-	}
-	else if(addr==TOUCH_SEL_UNKNOWN_1&& (TOUCH_SEL_UNKNOWN_1+0x100)==data)
+	}	
+	else if(addr==TOUCH_SEL_O3_1 && (TOUCH_SEL_O3_1+0x100)==data)
 	{
-		cur_select_interface=0x00;
+		cur_select_interface=TYPE_SENSOR_O3_1;
+		show_cur_select_intr(cur_select_interface);
+	}
+	else if(addr==TOUCH_SEL_TVOC_1&& (TOUCH_SEL_TVOC_1+0x100)==data)
+	{
+		cur_select_interface=TYPE_SENSOR_TVOC_1;
 		show_cur_select_intr(cur_select_interface);
 	}
 	else if(addr==TOUCH_SYSTEM_SETTING_RETURN&& (TOUCH_SYSTEM_SETTING_RETURN+0x100)==data)
@@ -4915,11 +4965,12 @@ unsigned short input_handle(char *input)
 	else if((addr==TOUCH_PRODUCT_INFO_1 && (TOUCH_PRODUCT_INFO_1+0x100)==data)||
 		(addr==TOUCH_PRODUCT_INFO_2 && (TOUCH_PRODUCT_INFO_2+0x100)==data))
 	{//product info
-		clear_buf(ADDR_PRODUCT_NAME,40);
+		clear_buf(ADDR_HW_VER,40);
 		clear_buf(ADDR_PRODUCT_MODEL,40);
 		clear_buf(ADDR_PRODUCT_ID,40);
 		clear_buf(ADDR_SW_VERSION,20);
 		write_string(ADDR_PRODUCT_ID,g_share_memory->uuid,strlen(g_share_memory->uuid));
+		write_string(ADDR_HW_VER,g_share_memory->hw_ver,strlen(g_share_memory->hw_ver));
 		write_string(ADDR_SW_VERSION,VERSION,strlen(VERSION));
 		switch_pic(PRODUCT_PAGE);
 		g_index=PRODUCT_PAGE;
