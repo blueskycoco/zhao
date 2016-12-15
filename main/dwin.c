@@ -3432,11 +3432,10 @@ unsigned short input_handle(char *input)
 	data=input[4]<<8|input[5];
 	printfLog(LCD_PROCESS"got press %04x %04x\r\n",addr,data);
 #if 1
-	if(g_share_memory->black_lcd)
-	{
 		if(lcd_state==0)
 		{
-			lcd_on(g_index);
+			if(g_share_memory->black_lcd)
+				lcd_on(g_index);
 		}
 		else
 		{
@@ -3446,7 +3445,6 @@ unsigned short input_handle(char *input)
 			alarm(g_share_memory->sleep*60);
 		else
 			alarm(5*60);
-	}
 #endif
 	if((addr==TOUCH_STATE_RETURN_2 && (TOUCH_STATE_RETURN_2+0x100)==data)||
 		(addr==TOUCH_STATE_RETURN_1 && (TOUCH_STATE_RETURN_1+0x100)==data)||

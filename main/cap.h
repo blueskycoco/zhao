@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2016-12-14-00"
+#define VERSION	"2016-12-15-00"
 #else
-#define VERSION	"2016-12-14-01"
+#define VERSION	"2016-12-15-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
