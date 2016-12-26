@@ -133,15 +133,15 @@ void lcd_off(int a)
 		cur_index!=UPLOADING_SETTING_PAGE &&
 		cur_index!=100)
 	{
+		printfLog(LCD_PROCESS"lcd off\n");
 		if(g_share_memory->black_lcd)
 		{
 			write(g_share_memory->fd_lcd,cmd,6);
 			switch_pic(OFF_PAGE);
+			lcd_state=0;
 		}
 		else
 			sleeping_page_show();
-		printfLog(LCD_PROCESS"lcd off\n");
-		lcd_state=0;
 	}
 }
 
