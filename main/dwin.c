@@ -5507,7 +5507,7 @@ void lcd_loop()
 	{	
 		if(read(g_share_memory->fd_lcd,&ch,1)==1)
 		{
-			//printfLog(LCD_PROCESS"<= %x \r\n",ch);
+			//printfLog(LCD_PROCESS"$<= %x \r\n",ch);
 			switch(get)
 			{
 				case 0:
@@ -5530,7 +5530,7 @@ void lcd_loop()
 						get=0;
 					break;
 				case 2:
-					if(ch==0x06)
+					if(ch==0x06 || ch == 0x0a)
 					{
 						//printf(LCD_PROCESS"0x06 get,get =3\r\n");
 						get=3;
