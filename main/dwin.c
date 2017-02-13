@@ -4455,13 +4455,18 @@ unsigned short input_handle(char *input)
 		g_index=SYSTEM_SETTING_PAGE;
 		set_net_interface();
 	}
-	else if((addr==TOUCH_NEVER_MINS && (TOUCH_NEVER_MINS+0x100)==data)
-		||(addr==TOUCH_NEVER_MINS_1 && (TOUCH_NEVER_MINS_1+0x100)==data))
+	else if(addr==TOUCH_NEVER_MINS_1 && (TOUCH_NEVER_MINS_1+0x100)==data)
 	{
 		g_share_memory->sleep=0;
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 		set_net_interface();
+	}
+	else if(addr==TOUCH_NO_UPLOAD && (TOUCH_NO_UPLOAD+0x100)==data)
+	{
+		//cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
+		//show_cur_select_intr(cur_select_interface);
+		printfLog("no upload key pressed\n");
 	}
 	else if(addr==TOUCH_XFER_SETTING&&(TOUCH_XFER_SETTING+0x100)==data)
 	{//enter wifi passwd setting

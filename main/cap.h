@@ -256,7 +256,7 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_PRODUCT_INFO_2	0x0035
 #define	TOUCH_SYSTEM_SETTING_2	0x0036
 #define	TOUCH_CONVERSION_2	0x0037
-#define 	ADDR_CUT_VP_CO_2	0x0baa
+#define ADDR_CUT_VP_CO_2	0x0baa
 		
 #define	TOUCH_HCHO_HISTORY	0x0038
 #define	TOUCH_HCHO_RETURN	0x0039
@@ -742,7 +742,7 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_ONE_MINS	0x0090
 #define	TOUCH_FIVE_MINS	0x0091
 #define	TOUCH_TEN_MINS	0x0092
-#define	TOUCH_NEVER_MINS	0x0093
+#define	TOUCH_NO_UPLOAD	0x0093
 #define	TOUCH_ONE_MINS_1	0x0e80
 #define	TOUCH_FIVE_MINS_1	0x0e81
 #define	TOUCH_TEN_MINS_1	0x0e82
