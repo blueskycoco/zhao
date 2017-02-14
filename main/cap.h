@@ -1710,6 +1710,7 @@ extern key_t  shmid_history_pm10;
 #define TYPE_SENSOR_ZHAOSHEN	0x0601
 #define TYPE_SENSOR_TVOC_1		0x0901
 #define TYPE_SENSOR_O3_1		0x0a01
+#define TYPE_SENSOR_UNKNOWN		0x0000
 #define URL "http://123.57.26.24:8080/saveData/airmessage/messMgr.do"
 //#define URL "http://101.200.182.92:8080/saveData/airmessage/messMgr.do"
 #define START_BYTE 0x6C

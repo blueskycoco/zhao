@@ -4464,8 +4464,76 @@ unsigned short input_handle(char *input)
 	}
 	else if(addr==TOUCH_NO_UPLOAD && (TOUCH_NO_UPLOAD+0x100)==data)
 	{
-		//cur_select_interface=TYPE_SENSOR_QIYA_RUSHI;
-		//show_cur_select_intr(cur_select_interface);
+		cur_select_interface=TYPE_SENSOR_UNKNOWN;
+		show_cur_select_intr(cur_select_interface);
+		if (g_share_memory->sensor_interface_mem[interface_config_no]==
+			TYPE_SENSOR_O3_1)
+		{
+			write_data(ADDR_O3_SHOW_PIC,0x01);
+			write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
+			g_share_memory->sensor_has_data[SENSOR_O3] = 0;
+		}
+		else if (g_share_memory->sensor_interface_mem[interface_config_no]==
+			TYPE_SENSOR_TVOC_1)
+		{
+			write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
+			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x01);
+			g_share_memory->sensor_has_data[SENSOR_TVOC] = 0;
+		}
+		
+		if (interface_config_no == 1)
+		{
+			g_share_memory->sensor_has_data[SENSOR_PM25] = 0;
+			write_data(ADDR_PM25_SHOW_PIC,0x01);
+			write_data(ADDR_PM10_SHOW_PIC,0x01);
+			write_data(ADDR_PM25_SHOW_PIC_PPM,0x01);
+			write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 2)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO2] = 0;
+			write_data(ADDR_CO2_SHOW_PIC,0x01);
+			write_data(ADDR_CO2_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 3)
+		{
+			g_share_memory->sensor_has_data[SENSOR_HCHO] = 0;
+			write_data(ADDR_HCHO_SHOW_PIC,0x01);
+			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 4)
+		{
+			g_share_memory->sensor_has_data[SENSOR_CO] = 0;
+			write_data(ADDR_CO_SHOW_PIC,0x01);
+			write_data(ADDR_CO_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 5)
+		{
+			g_share_memory->sensor_has_data[SENSOR_NOISE] = 0;
+			write_data(ADDR_NOISE_SHOW_PIC,0x01);
+			write_data(ADDR_NOISE_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 8)
+		{
+			g_share_memory->sensor_has_data[SENSOR_TEMP] = 0;
+			g_share_memory->sensor_has_data[SENSOR_SHIDU] = 0;
+			write_data(ADDR_SHIDU_SHOW_PIC,0x01);
+			write_data(ADDR_TEMP_SHOW_PIC,0x01);
+			write_data(ADDR_TEMP_SHOW_PIC_PPM,0x01);
+			write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 9)
+		{
+			g_share_memory->sensor_has_data[SENSOR_WIND] = 0;
+			write_data(ADDR_WIND_SHOW_PIC,0x01);
+			write_data(ADDR_WIND_SHOW_PIC_PPM,0x01);
+		}
+		else if (interface_config_no == 10)
+		{
+			g_share_memory->sensor_has_data[SENSOR_PRESS] = 0;
+			write_data(ADDR_PRESS_SHOW_PIC,0x01);
+			write_data(ADDR_PRESS_SHOW_PIC_PPM,0x01);
+		}
 		printfLog("no upload key pressed\n");
 	}
 	else if(addr==TOUCH_XFER_SETTING&&(TOUCH_XFER_SETTING+0x100)==data)
@@ -4859,7 +4927,8 @@ unsigned short input_handle(char *input)
 				&& cur_select_interface!=TYPE_SENSOR_CH2O_WEISHEN
 				&& cur_select_interface!=TYPE_SENSOR_CO_DD
 				&& cur_select_interface!=TYPE_SENSOR_CO_WEISHEN
-				&& cur_select_interface!=TYPE_SENSOR_ZHAOSHEN))
+				&& cur_select_interface!=TYPE_SENSOR_ZHAOSHEN)
+				|| cur_select_interface==TYPE_SENSOR_UNKNOWN)
 			g_share_memory->sensor_interface_mem[interface_config_no]=cur_select_interface;
 			printfLog(LCD_PROCESS"save sensor_interface_mem[%d]=%02x\n",interface_config_no,cur_select_interface);
 			show_cur_interface(INTERFACE_PAGE);
