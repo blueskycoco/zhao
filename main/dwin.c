@@ -4476,7 +4476,7 @@ unsigned short input_handle(char *input)
 		else if (g_share_memory->sensor_interface_mem[interface_config_no]==
 			TYPE_SENSOR_TVOC_1)
 		{
-			write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
+			write_data(ADDR_TVOC_SHOW_PIC,0x01);
 			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x01);
 			g_share_memory->sensor_has_data[SENSOR_TVOC] = 0;
 		}
