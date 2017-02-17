@@ -557,9 +557,9 @@ void update_dwin_real_value(char *id,int value)
 			g_share_memory->sensor_has_data[SENSOR_HCHO]=1;
 			write_data(ADDR_HCHO_SHOW_PIC,0x0000);
 			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x0000);
-			printfLog(CAP_PROCESS"open hcho display\n");
+			//printfLog(CAP_PROCESS"open hcho display\n");
 		}
-		printfLog(CAP_PROCESS"HCHO for xiao %d\n",value);
+		//printfLog(CAP_PROCESS"HCHO for xiao %d\n",value);
 		write_data(ADDR_HCHO_REAL_1,value);
 	}
 	else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0&&
