@@ -43,7 +43,7 @@
 #ifdef NO_LOG
 #define VERSION	"2016-12-26-00"
 #else
-#define VERSION	"2016-12-26-01"
+#define VERSION	"2016-12-262-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -91,6 +91,7 @@ struct share_memory{
 	char 	sent[SENSOR_NO];		//had send state
 	char 	times[SENSOR_NO];		//wrong times
 	char 	sensor_has_data[SENSOR_NO];//sensor[] is exist in slot ?
+	char 	sensor_off[SENSOR_NO];//sensor[] is exist in slot ?
 	int 	sensor_interface_mem[12];
 	char	factory_mode;
 	int 	jiaozhun_sensor;	
