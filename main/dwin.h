@@ -10,4 +10,5 @@ void write_data1(unsigned int Index,int data);
 void clear_point();
 void switch_pic(unsigned char Index);
 void ctl_fan(int on);
+char *remove_p(char *buf);
 #endif

@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2016-12-26-00"
+#define VERSION	"2017-02-20-00"
 #else
-#define VERSION	"2016-12-26-01"
+#define VERSION	"2017-02-20-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -1084,6 +1084,18 @@ extern key_t  shmid_history_pm10;
 #define ADDR_CURR_FENGSU			0x0E7B
 #define TOUCH_BLACK_SETTING			0x0e7e
 #define TOUCH_PINGBAO_SETTING		0x0e7f
+#define ADDR_HCHO_HIS_1 0x0e7c
+#define ADDR_PM10_HIS_1 0x0e7d
+#define ADDR_PM25_HIS_1 0x0e7e
+#define ADDR_CO_HIS_1   0x0e7f
+#define ADDR_CO2_HIS_1  0x0e80
+#define ADDR_TEMP_HIS_1 0x0e81
+#define ADDR_SHIDU_HIS_1    0x0e82
+#define ADDR_WIND_HIS_1 0x0e83
+#define ADDR_NOISE_HIS_1    0x0e84
+#define ADDR_PRESS_HIS_1    0x0e85
+#define ADDR_TVOC_HIS_1 0x0e86
+#define ADDR_O3_HIS_1   0x0e87
 
 #if 0
 #define OFF_PAGE 				20
