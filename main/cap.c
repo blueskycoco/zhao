@@ -536,9 +536,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO_SHOW_PIC,0x0000);
 			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
 		}
+		printfLog(CAP_PROCESS"show co real %d\n", value);
 		write_data(ADDR_CO_REAL_1,value);
 		out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
 		write_data(ADDR_CO_HIS_1,atoi(out));
+		printfLog(CAP_PROCESS"show co HIS %s\n", out);
 		free(out);
 	}
 	else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0&&
