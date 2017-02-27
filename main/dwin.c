@@ -2169,60 +2169,73 @@ void wifi_handle()
 	//clear_buf(fd,WIFI_AP_PWD_ADDR,20);
 	if(read_dgus(ADDR_AP_NAME,10,ap_name) && read_dgus(ADDR_AP_KEY,10,ap_passwd))
 	{
-		printfLog(LCD_PROCESS"AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
-		if(strlen(ap_passwd)<8||strlen(ap_name)==0)
-			return ;
-		for(i=0;i<100;i++)
-		{
-			sprintf(cmd,"wpa_cli -ira0 get_network %d ssid",i);
-			if((fp=popen(cmd,"r"))!=NULL)
+		if (strlen(ap_passwd)!=0) {
+			printfLog(LCD_PROCESS"AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
+			if(strlen(ap_passwd)<8||strlen(ap_name)==0)
+				return ;
+			for(i=0;i<100;i++)
 			{
-				memset(ret,0,256);
-				fread(ret,sizeof(char),sizeof(ret),fp);
-				pclose(fp);
-				printfLog(LCD_PROCESS"wpa_cli -ira0 get_network return %s %d\n",ret,strlen(ret));
-				if(strstr(ret,"FAIL")!=NULL)
-					break;
-				if(strstr(ret,ap_name)!=NULL)
-					break;					
+				sprintf(cmd,"wpa_cli -ira0 get_network %d ssid",i);
+				if((fp=popen(cmd,"r"))!=NULL)
+				{
+					memset(ret,0,256);
+					fread(ret,sizeof(char),sizeof(ret),fp);
+					pclose(fp);
+					printfLog(LCD_PROCESS"wpa_cli -ira0 get_network return %s %d\n",ret,strlen(ret));
+					if(strstr(ret,"FAIL")!=NULL)
+						break;
+					if(strstr(ret,ap_name)!=NULL)
+						break;					
+				}
 			}
-		}
-		if(strstr(ret,"FAIL")!=NULL)
-		{
-			memset(cmd,0,256);
-			sprintf(cmd,"wpa_cli -ira0 add_network");
-			if((fp=popen(cmd,"r"))!=NULL)
+			if(strstr(ret,"FAIL")!=NULL)
 			{
-				memset(ret,0,256);
-				fread(ret,sizeof(char),sizeof(ret),fp);
-				pclose(fp);
-				ret[strlen(ret)-1]='\0';
-				printfLog(LCD_PROCESS"add_network return %s\n",ret);
-				i=atoi(ret);
+				memset(cmd,0,256);
+				sprintf(cmd,"wpa_cli -ira0 add_network");
+				if((fp=popen(cmd,"r"))!=NULL)
+				{
+					memset(ret,0,256);
+					fread(ret,sizeof(char),sizeof(ret),fp);
+					pclose(fp);
+					ret[strlen(ret)-1]='\0';
+					printfLog(LCD_PROCESS"add_network return %s\n",ret);
+					i=atoi(ret);
+				}
 			}
+			printfLog(LCD_PROCESS"i is %d\n",i);
+			sprintf(cmd,"wpa_cli -ira0 set_network %d key_mgmt WPA-PSK",i);
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);	
+			sprintf(cmd,"wpa_cli -ira0 set_network %d psk \\\"%s\\\"",i,ap_passwd);
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);		
+			sprintf(cmd,"wpa_cli -ira0 set_network %d ssid \\\"%s\\\"",i,ap_name);
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);
+			sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);
+			//sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
+			//printf("exec %s\n",cmd);
+			//system(cmd);
+			sprintf(cmd,"wpa_cli -ira0 save_config");
+			printfLog(LCD_PROCESS"exec %s\n",cmd);		
+			system(cmd);
+			sprintf(cmd,"udhcpc -i ra0");
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			//system(cmd);
 		}
-		printfLog(LCD_PROCESS"i is %d\n",i);
-		sprintf(cmd,"wpa_cli -ira0 set_network %d key_mgmt WPA-PSK",i);
-		printfLog(LCD_PROCESS"exec %s\n",cmd);
-		system(cmd);	
-		sprintf(cmd,"wpa_cli -ira0 set_network %d psk \\\"%s\\\"",i,ap_passwd);
-		printfLog(LCD_PROCESS"exec %s\n",cmd);
-		system(cmd);		
-		sprintf(cmd,"wpa_cli -ira0 set_network %d ssid \\\"%s\\\"",i,ap_name);
-		printfLog(LCD_PROCESS"exec %s\n",cmd);
-		system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 enable_network %d",i);
-		printfLog(LCD_PROCESS"exec %s\n",cmd);
-		system(cmd);
-		//sprintf(cmd,"wpa_cli -ira0 select_network %d",i);
-		//printf("exec %s\n",cmd);
-		//system(cmd);
-		sprintf(cmd,"wpa_cli -ira0 save_config");
-		printfLog(LCD_PROCESS"exec %s\n",cmd);		
-		system(cmd);
-		sprintf(cmd,"udhcpc -i ra0");
-		printfLog(LCD_PROCESS"exec %s\n",cmd);
-		//system(cmd);
+		else
+		{
+			//wep handle
+			printfLog(LCD_PROCESS"AP Name %s \n",ap_name);
+			sprintf(cmd,"wpa_cli -ira0 disconnect");
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);
+			sprintf(cmd,"iwconfig ra0 essid %s", ap_name);
+			printfLog(LCD_PROCESS"exec %s\n",cmd);
+			system(cmd);
+		}
 	}
 }
 
