@@ -1438,7 +1438,7 @@ void	send_cmd_to_cap(char *cmd,int len)
 {
 	int i=0;
 	pthread_mutex_lock(&(g_share_memory->mutex));
-	g_share_memory->cap_board_ack=0;
+	g_share_memory->cap_board_ack=1;
 	write(g_share_memory->fd_com,cmd,len);
 	while(1)
 	{
