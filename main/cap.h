@@ -1096,6 +1096,18 @@ extern key_t  shmid_history_pm10;
 #define ADDR_PRESS_HIS_1    0x0e85
 #define ADDR_TVOC_HIS_1 0x0e86
 #define ADDR_O3_HIS_1   0x0e87
+#define ADDR_HCHO_HIS_2 0x0e88
+#define ADDR_PM10_HIS_2 0x0e89
+#define ADDR_PM25_HIS_2 0x0e8a
+#define ADDR_CO_HIS_2   0x0e8b
+#define ADDR_CO2_HIS_2  0x0e8c
+#define ADDR_TEMP_HIS_2 0x0e8d
+#define ADDR_SHIDU_HIS_2    0x0e8e
+#define ADDR_WIND_HIS_2 0x0e8f
+#define ADDR_NOISE_HIS_2    0x0e90
+#define ADDR_PRESS_HIS_2    0x0e91
+#define ADDR_TVOC_HIS_2 0x0e92
+#define ADDR_O3_HIS_2   0x0e93
 
 #if 0
 #define OFF_PAGE 				20

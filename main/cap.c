@@ -538,10 +538,12 @@ void update_dwin_real_value(char *id,int value)
 		}
 		printfLog(CAP_PROCESS"show co real %d\n", value);
 		write_data(ADDR_CO_REAL_1,value);
-		out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
-		write_data(ADDR_CO_HIS_1,atoi(out));
-		printfLog(CAP_PROCESS"show co HIS %s\n", out);
-		free(out);
+		if(g_share_memory->cnt[SENSOR_CO]!=0) {
+			out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
+			write_data(ADDR_CO_HIS_1,atoi(out));
+			printfLog(CAP_PROCESS"show co HIS %s\n", out);
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0&&
 			      g_share_memory->sensor_off[SENSOR_CO2]==0)
@@ -553,9 +555,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO2_REAL_1,value);
-		out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
-		write_data(ADDR_CO2_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_CO2]!=0) {
+			out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+			write_data(ADDR_CO2_HIS_1,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_HCHO_EXT,strlen(ID_CAP_HCHO_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_HCHO]==0)
@@ -569,9 +573,11 @@ void update_dwin_real_value(char *id,int value)
 		}
 		//printfLog(CAP_PROCESS"HCHO for xiao %d\n",value);
 		write_data(ADDR_HCHO_REAL_1,value);
-		out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
-		write_data(ADDR_HCHO_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
+			out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
+			write_data(ADDR_HCHO_HIS_1,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TVOC]==0)
@@ -583,9 +589,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TVOC_REAL_1,value);
-		out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
-		write_data(ADDR_TVOC_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_TVOC]!=0) {
+			out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
+			write_data(ADDR_TVOC_HIS_1,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_O3]==0)
@@ -597,9 +605,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_O3_REAL_1,value);
-		out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
-		write_data(ADDR_O3_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_O3]!=0) {
+			out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
+			write_data(ADDR_O3_HIS_1,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TEMP]==0)
@@ -611,10 +621,13 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TEMP_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TEMP_REAL_1,value);
-		write_data(ADDR_TEMP_REAL_2,value);
-		out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-1].data);
-		write_data(ADDR_TEMP_HIS_1,atoi(out));
-		free(out);
+		write_data(ADDR_TEMP_REAL_2,value);		
+		if(g_share_memory->cnt[SENSOR_TEMP]!=0) {
+			out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-1].data);
+			write_data(ADDR_TEMP_HIS_1,atoi(out));
+			write_data(ADDR_TEMP_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0&&
 			                  g_share_memory->sensor_off[SENSOR_SHIDU]==0)
@@ -626,10 +639,13 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_SHIDU_REAL_1,value);
-		write_data(ADDR_SHIDU_REAL_2,value);
-		out=remove_p(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-1].data);
-		write_data(ADDR_SHIDU_HIS_1,atoi(out));
-		free(out);
+		write_data(ADDR_SHIDU_REAL_2,value);		
+		if(g_share_memory->cnt[SENSOR_SHIDU]!=0) {
+			out=remove_p(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-1].data);
+			write_data(ADDR_SHIDU_HIS_1,atoi(out));
+			write_data(ADDR_SHIDU_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0&&
 			                  g_share_memory->sensor_off[SENSOR_PM25]==0)
@@ -641,10 +657,13 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_PM25_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_PM25_REAL_1,value);
-		write_data(ADDR_PM25_REAL_2,value);
-		out=remove_p(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-1].data);
-		write_data(ADDR_PM25_HIS_1,atoi(out));
-		free(out);
+		write_data(ADDR_PM25_REAL_2,value);		
+		if(g_share_memory->cnt[SENSOR_PM25]!=0) {
+			out=remove_p(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-1].data);
+			write_data(ADDR_PM25_HIS_1,atoi(out));
+			write_data(ADDR_PM25_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0&&
 			                  g_share_memory->sensor_off[SENSOR_PM10]==0)
@@ -657,9 +676,12 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_PM10_REAL_1,value);
 		write_data(ADDR_PM10_REAL_2,value);
-		out=remove_p(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-1].data);
-		write_data(ADDR_PM10_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_PM10]!=0) {		
+			out=remove_p(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-1].data);
+			write_data(ADDR_PM10_HIS_1,atoi(out));
+			write_data(ADDR_PM10_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0&&
 			                  g_share_memory->sensor_off[SENSOR_WIND]==0)
@@ -672,10 +694,13 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_WIND_REAL_1,value);
 		write_data(ADDR_WIND_REAL_2,value);
-		write_data(ADDR_CURR_FENGSU,value);
-		out=remove_p(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-1].data);
-		write_data(ADDR_WIND_HIS_1,atoi(out));
-		free(out);
+		write_data(ADDR_CURR_FENGSU,value);		
+		if(g_share_memory->cnt[SENSOR_WIND]!=0) {
+			out=remove_p(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-1].data);
+			write_data(ADDR_WIND_HIS_1,atoi(out));
+			write_data(ADDR_WIND_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_QI_YA,strlen(ID_CAP_QI_YA))==0&&
 			                  g_share_memory->sensor_off[SENSOR_PRESS]==0)
@@ -688,9 +713,12 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_PRESS_REAL_1,value);
 		write_data(ADDR_PRESS_REAL_2,value);
-		out=remove_p(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-1].data);
-		write_data(ADDR_PRESS_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_PRESS]!=0) {
+			out=remove_p(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-1].data);
+			write_data(ADDR_PRESS_HIS_1,atoi(out));
+			write_data(ADDR_PRESS_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_BUZZY,strlen(ID_CAP_BUZZY))==0&&
 			                  g_share_memory->sensor_off[SENSOR_NOISE]==0)
@@ -703,9 +731,12 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_NOISE_REAL_1,value);
 		write_data(ADDR_NOISE_REAL_2,value);
-		out=remove_p(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data);
-		write_data(ADDR_NOISE_HIS_1,atoi(out));
-		free(out);
+		if(g_share_memory->cnt[SENSOR_NOISE]!=0) {
+			out=remove_p(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data);
+			write_data(ADDR_NOISE_HIS_1,atoi(out));
+			write_data(ADDR_NOISE_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0&&
 			                  g_share_memory->sensor_off[SENSOR_CO]==0)
@@ -717,9 +748,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO_REAL_2,value);
-		//out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
-		//write_data(ADDR_CO_HIS_1,atoi(out));
-		//free(out);
+		if(g_share_memory->cnt[SENSOR_CO]!=0) {
+			out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
+			write_data(ADDR_CO_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0&&
 			                  g_share_memory->sensor_off[SENSOR_CO2]==0)
@@ -731,9 +764,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO2_REAL_2,value);
-		//out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
-		//write_data(ADDR_CO2_HIS_1,atoi(out));
-		//free(out);
+		if(g_share_memory->cnt[SENSOR_CO2]!=0) {
+			out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+			write_data(ADDR_CO2_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0&&
 			                  g_share_memory->sensor_off[SENSOR_HCHO]==0)
@@ -745,9 +780,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_HCHO_REAL_2,value);
-		//out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
-		//write_data(ADDR_HCHO_HIS_1,atoi(out));
-		//free(out);
+		if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
+			out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
+			write_data(ADDR_HCHO_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TVOC]==0)
@@ -759,9 +796,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TVOC_REAL_2,value);
-		//out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
-		//write_data(ADDR_TVOC_HIS_1,atoi(out));
-		//free(out);
+		if(g_share_memory->cnt[SENSOR_TVOC]!=0) {
+			out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
+			write_data(ADDR_TVOC_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0&&
 			                  g_share_memory->sensor_off[SENSOR_O3]==0)
@@ -773,9 +812,11 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_O3_REAL_2,value);
-		//out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
-		//write_data(ADDR_O3_HIS_1,atoi(out));
-		//free(out);
+		if(g_share_memory->cnt[SENSOR_O3]!=0) {
+			out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
+			write_data(ADDR_O3_HIS_2,atoi(out));
+			free(out);
+		}
 	}
 }
 /*
@@ -1545,7 +1586,7 @@ int cap_board_mon()
 					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
 					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
 					to_check[5+message_len+1]=crc&0xff;
-					//show_cap_value(to_check+2,message_len);
+					show_cap_value(to_check+2,message_len);
 					if(crc!=CRC_check((unsigned char *)to_check,message_len+5))
 					{
 						printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)to_check,message_len+5));
