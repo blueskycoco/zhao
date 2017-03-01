@@ -1125,7 +1125,7 @@ void return_zero_point(int co)
 	int crc = 0;
 	int i =0;
 	char cmd_return_point[]=	{0x6c,ARM_TO_CAP,0x00,0x05,0x04,0x00,0x01,0x00,0x00,0x00,0x00};
-	if(co)
+	if(co == 1)
 	{
 		for(i=0;i<11;i++)
 			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CO_WEISHEN ||
@@ -1136,7 +1136,7 @@ void return_zero_point(int co)
 		cmd_return_point[7]=(g_share_memory->cur_co>>8) & 0xff;
 		cmd_return_point[8]=(g_share_memory->cur_co & 0xff);
 	}
-	else
+	else if(co == 0)
 	{
 		for(i=0;i<11;i++)
 			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_CH2O_WEISHEN ||
@@ -1146,6 +1146,16 @@ void return_zero_point(int co)
 		printfLog(CAP_PROCESS"CH2O zero value %d\n",g_share_memory->cur_ch2o);
 		cmd_return_point[7]=(g_share_memory->cur_ch2o>>8) & 0xff;
 		cmd_return_point[8]=(g_share_memory->cur_ch2o & 0xff);
+	}
+	else if(co == 2)
+	{
+		for(i=0;i<11;i++)
+			if(g_share_memory->sensor_interface_mem[i] == TYPE_SENSOR_TVOC_1)
+				break;
+		printfLog(CAP_PROCESS"TVOC interface %d %4x\n",i,g_share_memory->sensor_interface_mem[i]);
+		printfLog(CAP_PROCESS"TVOC zero value %d\n",g_share_memory->cur_tvoc);
+		cmd_return_point[7]=(g_share_memory->cur_tvoc>>8) & 0xff;
+		cmd_return_point[8]=(g_share_memory->cur_tvoc & 0xff);
 	}
 	cmd_return_point[5]=i+1;
 	crc=CRC_check((unsigned char *)cmd_return_point,9);

@@ -4,6 +4,7 @@
 #include "netlib.h"
 #include "xfer.h"
 #include "history.h"
+#include <stdbool.h>
 int lcd_state=1;
 char logged=0,g_index=0,interface_select=0,last_g_index=0,cur_index=0;
 extern char g_uuid[256];
@@ -3140,6 +3141,8 @@ char *Get_Type(int index)
 		return ID_CAP_BUZZY;
 	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_FENGSU)
 		return ID_CAP_FENG_SU;
+	else if(g_share_memory->sensor_interface_mem[index]==TYPE_SENSOR_TVOC_1)
+		return ID_CAP_TVOC;
 	else
 		return ID_CAP_CO;
 	return NULL;
@@ -3394,6 +3397,7 @@ void tun_zero(int on)
 	{		
 		clear_buf(ADDR_TUN_ZERO_HCHO,6);
 		clear_buf(ADDR_TUN_ZERO_CO,6);
+		clear_buf(ADDR_TUN_ZERO_TVOC,6);
 		printfLog(LCD_PROCESS"Start Co,ch2o tun zero\n");
 		cmd_request_verify[5]=0x01;
 	}
@@ -3402,9 +3406,11 @@ void tun_zero(int on)
 		if(g_share_memory->factory_mode==TUN_ZERO_MODE)
 		{
 			switch_pic(100);
-			return_zero_point(1);
+			return_zero_point(1);//co
 			sleep(1);
-			return_zero_point(0);
+			return_zero_point(0);//ch2o
+			sleep(1);
+			return_zero_point(2);//tvoc
 			sleep(1);
 		}
 		printfLog(LCD_PROCESS"Stop Co,ch2o tun zero\n");
