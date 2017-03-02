@@ -39,6 +39,7 @@
 #define CAP_IMX280_BAK	"/home/user/cap-imx280-bak"
 #define WPA_FILE		"/etc/wpa_supplicant.conf"
 #define WPA_FILE_BAK	"/home/user/wpa_supplicant.conf-bak"
+#if 0
 void read_curr_time(char *out)
 {
 	int retval;
@@ -50,11 +51,11 @@ void read_curr_time(char *out)
 	/* Read the current RTC time/date */
 	retval = ioctl(fd, RTC_RD_TIME, &rtc_tm);
 	if (retval == -1) {
-		printfLog("RTC_RD_TIME ioctl error");
+		printf("RTC_RD_TIME ioctl error");
 		exit(errno);
 	}
 
-	printfLog("Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
+	printf("Current RTC date/time is %d-%d-%d, %02d:%02d:%02d.\n",
 			rtc_tm.tm_mday, rtc_tm.tm_mon + 1, rtc_tm.tm_year + 1900,
 			rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
 	if(out!=NULL)
@@ -64,6 +65,7 @@ void read_curr_time(char *out)
 	}
 	close(fd);
 }
+#endif
 int file_len(char *path)
 {
 	FILE *fp;
@@ -76,7 +78,7 @@ int file_len(char *path)
 		fclose(fp);
 		printfLog("check %s, len %d\n", path, flen);	
 	} else {
-		printfLog("file %s is not exist\n");
+		printfLog("file %s is not exist\n",path);
 	}
 
 	return flen;
@@ -86,8 +88,8 @@ int main(void)
 	int flen_ori,flen_bak;
 	char file[256] = {0};
 	char cmd[256] = {0};
-	read_curr_time(file);
-	strcat(file,"_file");
+	//read_curr_time(file);
+	strcpy(file,"_file");
 	init_log(file);
 	printfLog("check system files\n");
 	
@@ -119,6 +121,13 @@ int main(void)
 		}
 		else
 			printfLog("there is no configuration bak file , hung\n");
+	}
+	else if (flen_ori > flen_bak)
+	{
+		printfLog("copy from %s to %s\n", WPA_FILE,
+					WPA_FILE_BAK);
+		sprintf(cmd, "cp -f %s %s", WPA_FILE, WPA_FILE_BAK);
+		system(cmd);
 	}
 
 	return 0;
