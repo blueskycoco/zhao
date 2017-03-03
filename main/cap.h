@@ -77,6 +77,20 @@ struct history{
 	struct nano *tvoc;
 	struct nano *o3;
 };
+struct alarm_val{
+	char co[10];
+	char co2[10];
+	char hcho[10];
+	char temp[10];
+	char shidu[10];
+	char pm25[10];
+	char pm10[10];
+	char wind[10];
+	char noise[10];
+	char press[10];
+	char tvoc[10];
+	char o3[10];
+};	
 struct share_memory{
 	long 	cnt[SENSOR_NO];			//cap sensor hisotry co/co2/ch2o/pm25/temp/shidu count	
 	char 	history_done;			//history load done by history process
@@ -118,6 +132,7 @@ struct share_memory{
 	char	cap_board_ack;
 	char	fan_state;
 	char	audio_state;
+	struct alarm_val sensor_alarm_val;
 	pthread_mutex_t mutex;
 };
 extern struct history sensor_history;
@@ -198,6 +213,8 @@ extern key_t  shmid_history_pm10;
 #define SLEEPING_PAGE_10		117
 #define SLEEPING_SELECT_PAGE	118
 #define SLEEPING_PINGBAO_SETTING_PAGE	120
+#define ALARM_SETTING_PAGE	122
+
 
 #define	ADDR_HCHO_REAL_1	0x0000
 #define	ADDR_PM10_REAL_1	0x0001
@@ -1109,6 +1126,13 @@ extern key_t  shmid_history_pm10;
 #define ADDR_TVOC_HIS_2 0x0e92
 #define ADDR_O3_HIS_2   0x0e93
 
+#define ADDR_ALAM_CO	0x00d4
+#define	ADDR_CUT_CO_1	0x00dc
+#define	ADDR_CUT_CO_2	0x00dd
+#define	TOUCH_SET_ALAM	0x00da
+#define	TOUCH_RETURN_ALAM 0x00db
+#define TOUCH_ALAM_SET	0x00d3
+#define ADDR_ALARM_CO_SHOW	0x00de
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
@@ -1750,6 +1774,7 @@ extern key_t  shmid_history_pm10;
 #define SENSOR_VERIFY_MODE	2
 #define CONFIG_FILE "sensor_alarm.cfg"
 #define FILE_PATH	"/home/user/history/"
+#define SENSOR_ALARM_FILE	"/home/user/sensor_alarm.cfg"
 #define PERM S_IRUSR|S_IWUSR  
 #define ALARM_NONE		0
 #define ALARM_BELOW 	1

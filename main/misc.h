@@ -25,4 +25,7 @@ int code_convert(char *from_charset,char *to_charset,char *inbuf,int inlen,char 
 void show_fan(int on);
 void show_audio(int on);
 void ask_hw_ver();
+void get_alarm_val(char *file_path);
+void set_alarm_val(char *file_path);
+void show_main_alarm();
 #endif

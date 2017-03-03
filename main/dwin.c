@@ -3468,6 +3468,25 @@ void tun_zero(int on)
 	//printf("\n");
 	//write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 }
+void handle_alarm_value()
+{
+	char val_co[10]={0};
+	int result = 0;
+	result = read_dgus(ADDR_ALAM_CO,6,val_co);
+	if (result && strlen(val_co) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.co,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.co,val_co);
+		printfLog(LCD_PROCESS"co alarm value %s\n", g_share_memory->sensor_alarm_val.co);
+	}
+	set_alarm_val(SENSOR_ALARM_FILE);
+}
+void show_alarm_value()
+{
+	if (strlen(g_share_memory->sensor_alarm_val.co)!=0)
+		write_string(ADDR_ALAM_CO,g_share_memory->sensor_alarm_val.co,
+			strlen(g_share_memory->sensor_alarm_val.co));	
+}
 unsigned short input_handle(char *input)
 {
 	int addr=0,data=0;
@@ -3584,7 +3603,8 @@ unsigned short input_handle(char *input)
 		(addr==TOUCH_USER_INFO_RETURN && (TOUCH_USER_INFO_RETURN+0x100)==data)||
 		(addr==TOUCH_FACTORY_INFO_RETURN && (TOUCH_FACTORY_INFO_RETURN+0x100)==data)||
 		(addr==TOUCH_XFER_RETURN && (TOUCH_XFER_RETURN+0x100)==data)||
-		(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data))
+		(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data)||
+		(addr==TOUCH_RETURN_ALAM && (TOUCH_RETURN_ALAM+0x100)==data))
 	{
 		if(addr==TOUCH_SETTING_RETURN && (TOUCH_SETTING_RETURN+0x100)==data)
 			ctl_fan(1);
@@ -4470,6 +4490,18 @@ unsigned short input_handle(char *input)
 			g_index=GPRS_DONE_PAGE;
 		}
 		set_net_interface();		
+	}		
+	else if(addr==TOUCH_ALAM_SET&& (TOUCH_ALAM_SET+0x100)==data)
+	{//setting alarm value
+		show_alarm_value();
+		switch_pic(ALARM_SETTING_PAGE);
+		g_index=ALARM_SETTING_PAGE;
+	}
+	else if(addr==TOUCH_SET_ALAM&& (TOUCH_SET_ALAM+0x100)==data)
+	{//setting alarm value
+		handle_alarm_value();
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
 	}
 	else if((addr==TOUCH_SEL_WIFI)&& (TOUCH_SEL_WIFI+0x100)==data)
 	{//WiFi Passwd changed
@@ -5768,6 +5800,7 @@ int lcd_init()
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
+		get_alarm_val(SENSOR_ALARM_FILE);
 		signal(SIGALRM, lcd_off);		
 		if(g_share_memory->sleep!=0)
 			alarm(g_share_memory->sleep*60);

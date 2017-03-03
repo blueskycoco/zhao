@@ -428,6 +428,74 @@ void save_to_file(char *date,char *message)
 	fwrite(data,strlen(data),1,fp);
 	fclose(fp);
 }
+void get_data_line(FILE *fp, char *data)
+{
+
+	char *line=NULL;
+	int len;
+	if (getline(&line, (size_t *)&len, fp) != -1) 
+	{
+		if(strncmp(line,"00000000",8)!=0)
+		{
+			strcpy(data,line);
+			printfLog(MISC_PROCESS"%s\n", line);
+		}
+	}
+}
+void get_alarm_val(char *file_path)
+{
+	memset(g_share_memory->sensor_alarm_val,0,sizeof(struct alarm_val));
+	FILE *fp = fopen(file_path, "r");
+	if (fp != NULL)
+	{
+		get_data_line(fp,g_share_memory->sensor_alarm_val.co);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.co2);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.hcho);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.temp);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.shidu);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.pm25);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.pm10);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.wind);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.noise);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.press);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.tvoc);
+		get_data_line(fp,g_share_memory->sensor_alarm_val.o3);
+	}
+	fclose(fp);
+}
+void set_data_line(FILE *fp, char *data)
+{
+	char val[32] = {0};
+
+	if(strlen(data)!=0)
+		strcpy(val,data);
+	else
+		strcpy(val,"00000000");
+	strcat(val,"\n");
+	printfLog(MISC_PROCESS"set %s",data);
+	fwrite(val,strlen(val),1,fp);	
+}
+void set_alarm_val(char *file_path)
+{
+	FILE *fp = fopen(file_path, "w");
+	if (fp != NULL)
+	{
+		set_data_line(fp,g_share_memory->sensor_alarm_val.co);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.co2);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.hcho);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.temp);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.shidu);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.pm25);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.pm10);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.wind);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.noise);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.press);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.tvoc);
+		set_data_line(fp,g_share_memory->sensor_alarm_val.o3);
+	}
+	fclose(fp);
+
+}
 long filesize(FILE*stream)
 {
 	long curpos,length;
@@ -1174,4 +1242,24 @@ void ask_hw_ver()
 	}
 	printfLog(MISC_PROCESS"\ngoing to ask_hw_ver end\n");
 	pthread_mutex_unlock(&(g_share_memory->mutex));
+}
+void show_main_alarm()
+{
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_CO_SHOW,0x0001);
+	}
+	else if (beyond_alarm())
+	{
+		/* <, show green */
+		write_data(ADDR_ALARM_CO_SHOW,0x0000);
+	}
+	else
+	{
+		/* > , show red */
+
+	}
+
 }

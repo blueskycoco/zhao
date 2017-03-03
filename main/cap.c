@@ -884,6 +884,7 @@ char *build_message(char *cmd,int len,char *message)
 					printfLog(CAP_PROCESS"Upload data msg :\n");
 					message=count_pj(message);
 					send_server_save_local(date,message,1);
+					show_main_alarm();
 				}
 				free(message);
 				message=NULL;
