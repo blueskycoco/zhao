@@ -2750,7 +2750,7 @@ int read_dgus(int addr,char len,char *out)
 			if(i>=7 && ch!=0xff)
 				out[i-7]=ch;
 			i++;
-			printfLog(LCD_PROCESS"==> %x\n",ch);
+			//printfLog(LCD_PROCESS"==> %x\n",ch);
 			if(i==(2*len+7))
 				return 1;
 		}
@@ -3474,6 +3474,10 @@ void handle_alarm_value()
 {
 	char val[10]={0};
 	int result = 0;
+	clear_buf(ADDR_ALAM_CO,6);clear_buf(ADDR_ALAM_HCHO,6);clear_buf(ADDR_ALAM_SHIDU,6);
+	clear_buf(ADDR_ALAM_CO2,6);clear_buf(ADDR_ALAM_O3,6);clear_buf(ADDR_ALAM_TEMP,6);
+	clear_buf(ADDR_ALAM_PM25,6);clear_buf(ADDR_ALAM_NOISE,6);clear_buf(ADDR_ALAM_TVOC,6);
+	clear_buf(ADDR_ALAM_PM10,6);
 	result = read_dgus(ADDR_ALAM_CO,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3489,6 +3493,67 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.pm25,val);
 		printfLog(LCD_PROCESS"pm25 alarm value %s\n", g_share_memory->sensor_alarm_val.pm25);
 	}
+	
+	result = read_dgus(ADDR_ALAM_PM10,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.pm10,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.pm10,val);
+		printfLog(LCD_PROCESS"pm10 alarm value %s\n", g_share_memory->sensor_alarm_val.pm10);
+	}
+	
+	result = read_dgus(ADDR_ALAM_HCHO,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.hcho,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.hcho,val);
+		printfLog(LCD_PROCESS"hcho alarm value %s\n", g_share_memory->sensor_alarm_val.hcho);
+	}
+
+	
+	result = read_dgus(ADDR_ALAM_O3,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.o3,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.o3,val);
+		printfLog(LCD_PROCESS"o3 alarm value %s\n", g_share_memory->sensor_alarm_val.o3);
+	}
+	
+	result = read_dgus(ADDR_ALAM_NOISE,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.noise,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.noise,val);
+		printfLog(LCD_PROCESS"noise alarm value %s\n", g_share_memory->sensor_alarm_val.noise);
+	}
+	result = read_dgus(ADDR_ALAM_CO2,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.co2,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.co2,val);
+		printfLog(LCD_PROCESS"co2 alarm value %s\n", g_share_memory->sensor_alarm_val.co2);
+	}
+	result = read_dgus(ADDR_ALAM_TEMP,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.temp,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.temp,val);
+		printfLog(LCD_PROCESS"temp alarm value %s\n", g_share_memory->sensor_alarm_val.temp);
+	}
+	result = read_dgus(ADDR_ALAM_TVOC,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.tvoc,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.tvoc,val);
+		printfLog(LCD_PROCESS"tvoc alarm value %s\n", g_share_memory->sensor_alarm_val.tvoc);
+	}
+	result = read_dgus(ADDR_ALAM_SHIDU,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.shidu,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.shidu,val);
+		printfLog(LCD_PROCESS"shidu alarm value %s\n", g_share_memory->sensor_alarm_val.shidu);
+	}
 	set_alarm_val(SENSOR_ALARM_FILE);
 }
 void show_alarm_value()
@@ -3499,6 +3564,30 @@ void show_alarm_value()
 	if (strlen(g_share_memory->sensor_alarm_val.pm25)!=0)
 		write_string(ADDR_ALAM_PM25,g_share_memory->sensor_alarm_val.pm25,
 			strlen(g_share_memory->sensor_alarm_val.pm25));	
+	if (strlen(g_share_memory->sensor_alarm_val.hcho)!=0)
+		write_string(ADDR_ALAM_HCHO,g_share_memory->sensor_alarm_val.hcho,
+			strlen(g_share_memory->sensor_alarm_val.hcho));	
+	if (strlen(g_share_memory->sensor_alarm_val.pm10)!=0)
+		write_string(ADDR_ALAM_PM10,g_share_memory->sensor_alarm_val.pm10,
+			strlen(g_share_memory->sensor_alarm_val.pm10));	
+	if (strlen(g_share_memory->sensor_alarm_val.o3)!=0)
+		write_string(ADDR_ALAM_O3,g_share_memory->sensor_alarm_val.o3,
+			strlen(g_share_memory->sensor_alarm_val.o3));	
+	if (strlen(g_share_memory->sensor_alarm_val.noise)!=0)
+		write_string(ADDR_ALAM_NOISE,g_share_memory->sensor_alarm_val.noise,
+			strlen(g_share_memory->sensor_alarm_val.noise));	
+	if (strlen(g_share_memory->sensor_alarm_val.co2)!=0)
+		write_string(ADDR_ALAM_CO2,g_share_memory->sensor_alarm_val.co2,
+			strlen(g_share_memory->sensor_alarm_val.co2));	
+	if (strlen(g_share_memory->sensor_alarm_val.temp)!=0)
+		write_string(ADDR_ALAM_TEMP,g_share_memory->sensor_alarm_val.temp,
+			strlen(g_share_memory->sensor_alarm_val.temp));	
+	if (strlen(g_share_memory->sensor_alarm_val.tvoc)!=0)
+		write_string(ADDR_ALAM_TVOC,g_share_memory->sensor_alarm_val.tvoc,
+			strlen(g_share_memory->sensor_alarm_val.tvoc));	
+	if (strlen(g_share_memory->sensor_alarm_val.shidu)!=0)
+		write_string(ADDR_ALAM_SHIDU,g_share_memory->sensor_alarm_val.shidu,
+			strlen(g_share_memory->sensor_alarm_val.shidu));	
 }
 unsigned short input_handle(char *input)
 {

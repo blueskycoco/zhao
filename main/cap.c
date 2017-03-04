@@ -535,7 +535,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO_SHOW_PIC,0x0000);
 			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
 		}
-		printfLog(CAP_PROCESS"show co real %d\n", value);
+		//printfLog(CAP_PROCESS"show co real %d\n", value);
 		write_data(ADDR_CO_REAL_1,value);
 		
 	}
@@ -748,7 +748,7 @@ char *build_message(char *cmd,int len,char *message)
 			case TIME_BYTE:
 			{	//TIME_BYTE got ,we can send to server now
 				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9]);
-				printfLog(CAP_PROCESS"date is %s\r\n",date);
+				//printfLog(CAP_PROCESS"date is %s\r\n",date);
 				g_share_memory->current_time[0]=cmd[5];
 				g_share_memory->current_time[1]=cmd[6];
 				g_share_memory->current_time[2]=cmd[7];
