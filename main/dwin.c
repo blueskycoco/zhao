@@ -290,8 +290,8 @@ int count_all_pages(struct nano *item,int cnt)
 char *remove_p(char *buf)
 {
 	int i=0,j=0;
-	char *out=(char *)malloc(strlen(buf));
-	memset(out,'\0',strlen(buf));
+	char *out=(char *)malloc(strlen(buf)+1);
+	memset(out,0,strlen(buf)+1);
 	while(buf[i]!='\0')
 	{
 		if(buf[i]!='.')
@@ -2750,7 +2750,7 @@ int read_dgus(int addr,char len,char *out)
 			if(i>=7 && ch!=0xff)
 				out[i-7]=ch;
 			i++;
-			//printfLog(LCD_PROCESS"==> %x\n",ch);
+			printfLog(LCD_PROCESS"==> %x\n",ch);
 			if(i==(2*len+7))
 				return 1;
 		}
@@ -3474,10 +3474,6 @@ void handle_alarm_value()
 {
 	char val[10]={0};
 	int result = 0;
-	clear_buf(ADDR_ALAM_CO,6);clear_buf(ADDR_ALAM_HCHO,6);clear_buf(ADDR_ALAM_SHIDU,6);
-	clear_buf(ADDR_ALAM_CO2,6);clear_buf(ADDR_ALAM_O3,6);clear_buf(ADDR_ALAM_TEMP,6);
-	clear_buf(ADDR_ALAM_PM25,6);clear_buf(ADDR_ALAM_NOISE,6);clear_buf(ADDR_ALAM_TVOC,6);
-	clear_buf(ADDR_ALAM_PM10,6);
 	result = read_dgus(ADDR_ALAM_CO,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3485,7 +3481,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.co,val);
 		printfLog(LCD_PROCESS"co alarm value %s\n", g_share_memory->sensor_alarm_val.co);
 	}
-	
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_PM25,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3493,7 +3489,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.pm25,val);
 		printfLog(LCD_PROCESS"pm25 alarm value %s\n", g_share_memory->sensor_alarm_val.pm25);
 	}
-	
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_PM10,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3501,7 +3497,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.pm10,val);
 		printfLog(LCD_PROCESS"pm10 alarm value %s\n", g_share_memory->sensor_alarm_val.pm10);
 	}
-	
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_HCHO,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3509,6 +3505,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.hcho,val);
 		printfLog(LCD_PROCESS"hcho alarm value %s\n", g_share_memory->sensor_alarm_val.hcho);
 	}
+	memset(val,0,10);
 
 	
 	result = read_dgus(ADDR_ALAM_O3,6,val);
@@ -3518,7 +3515,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.o3,val);
 		printfLog(LCD_PROCESS"o3 alarm value %s\n", g_share_memory->sensor_alarm_val.o3);
 	}
-	
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_NOISE,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3526,6 +3523,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.noise,val);
 		printfLog(LCD_PROCESS"noise alarm value %s\n", g_share_memory->sensor_alarm_val.noise);
 	}
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_CO2,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3533,6 +3531,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.co2,val);
 		printfLog(LCD_PROCESS"co2 alarm value %s\n", g_share_memory->sensor_alarm_val.co2);
 	}
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_TEMP,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3540,6 +3539,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.temp,val);
 		printfLog(LCD_PROCESS"temp alarm value %s\n", g_share_memory->sensor_alarm_val.temp);
 	}
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_TVOC,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3547,6 +3547,7 @@ void handle_alarm_value()
 		strcpy(g_share_memory->sensor_alarm_val.tvoc,val);
 		printfLog(LCD_PROCESS"tvoc alarm value %s\n", g_share_memory->sensor_alarm_val.tvoc);
 	}
+	memset(val,0,10);
 	result = read_dgus(ADDR_ALAM_SHIDU,6,val);
 	if (result && strlen(val) !=0)		
 	{
@@ -3558,6 +3559,10 @@ void handle_alarm_value()
 }
 void show_alarm_value()
 {
+	clear_buf(ADDR_ALAM_CO,6);clear_buf(ADDR_ALAM_HCHO,6);clear_buf(ADDR_ALAM_SHIDU,6);
+	clear_buf(ADDR_ALAM_CO2,6);clear_buf(ADDR_ALAM_O3,6);clear_buf(ADDR_ALAM_TEMP,6);
+	clear_buf(ADDR_ALAM_PM25,6);clear_buf(ADDR_ALAM_NOISE,6);clear_buf(ADDR_ALAM_TVOC,6);
+	clear_buf(ADDR_ALAM_PM10,6);
 	if (strlen(g_share_memory->sensor_alarm_val.co)!=0)
 		write_string(ADDR_ALAM_CO,g_share_memory->sensor_alarm_val.co,
 			strlen(g_share_memory->sensor_alarm_val.co));	
@@ -5903,7 +5908,6 @@ int lcd_init()
 		sensor_history.wind= (struct nano *)shmat(shmid_history_wind,0, 0);
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
-		get_alarm_val(SENSOR_ALARM_FILE);
 		signal(SIGALRM, lcd_off);		
 		if(g_share_memory->sleep!=0)
 			alarm(g_share_memory->sleep*60);

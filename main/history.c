@@ -197,6 +197,7 @@ void load_history(const char *name)
 		fclose(fp);
 	}
 	g_share_memory->history_done=1;
+	get_alarm_val(SENSOR_ALARM_FILE);
 	show_main_his();
 	show_main_alarm();
 	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
