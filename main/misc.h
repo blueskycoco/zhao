@@ -28,4 +28,5 @@ void ask_hw_ver();
 void get_alarm_val(char *file_path);
 void set_alarm_val(char *file_path);
 void show_main_alarm();
+void show_main_his();
 #endif

@@ -298,7 +298,7 @@ char *remove_p(char *buf)
 			out[j++]=buf[i];
 		i++;
 	}
-	printfLog(LCD_PROCESS"out is %s\n",out);
+	//printfLog(LCD_PROCESS"out is %s\n",out);
 	return out;
 }
 int show_history(char *id,int offset,int page)
@@ -2172,6 +2172,8 @@ bool execute_cmd(char *cmd)
 
 	if(strlen(ret)!=0)
 		return true;
+
+	return false;
 }
 
 void wifi_handle()
@@ -3470,14 +3472,22 @@ void tun_zero(int on)
 }
 void handle_alarm_value()
 {
-	char val_co[10]={0};
+	char val[10]={0};
 	int result = 0;
-	result = read_dgus(ADDR_ALAM_CO,6,val_co);
-	if (result && strlen(val_co) !=0)		
+	result = read_dgus(ADDR_ALAM_CO,6,val);
+	if (result && strlen(val) !=0)		
 	{
 		memset(g_share_memory->sensor_alarm_val.co,0,10);
-		strcpy(g_share_memory->sensor_alarm_val.co,val_co);
+		strcpy(g_share_memory->sensor_alarm_val.co,val);
 		printfLog(LCD_PROCESS"co alarm value %s\n", g_share_memory->sensor_alarm_val.co);
+	}
+	
+	result = read_dgus(ADDR_ALAM_PM25,6,val);
+	if (result && strlen(val) !=0)		
+	{
+		memset(g_share_memory->sensor_alarm_val.pm25,0,10);
+		strcpy(g_share_memory->sensor_alarm_val.pm25,val);
+		printfLog(LCD_PROCESS"pm25 alarm value %s\n", g_share_memory->sensor_alarm_val.pm25);
 	}
 	set_alarm_val(SENSOR_ALARM_FILE);
 }
@@ -3486,6 +3496,9 @@ void show_alarm_value()
 	if (strlen(g_share_memory->sensor_alarm_val.co)!=0)
 		write_string(ADDR_ALAM_CO,g_share_memory->sensor_alarm_val.co,
 			strlen(g_share_memory->sensor_alarm_val.co));	
+	if (strlen(g_share_memory->sensor_alarm_val.pm25)!=0)
+		write_string(ADDR_ALAM_PM25,g_share_memory->sensor_alarm_val.pm25,
+			strlen(g_share_memory->sensor_alarm_val.pm25));	
 }
 unsigned short input_handle(char *input)
 {
@@ -4500,6 +4513,7 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_SET_ALAM&& (TOUCH_SET_ALAM+0x100)==data)
 	{//setting alarm value
 		handle_alarm_value();
+		show_main_alarm();
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
 	}

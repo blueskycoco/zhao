@@ -444,7 +444,7 @@ void get_data_line(FILE *fp, char *data)
 }
 void get_alarm_val(char *file_path)
 {
-	memset(g_share_memory->sensor_alarm_val,0,sizeof(struct alarm_val));
+	memset(&(g_share_memory->sensor_alarm_val),0,sizeof(struct alarm_val));
 	FILE *fp = fopen(file_path, "r");
 	if (fp != NULL)
 	{
@@ -472,7 +472,7 @@ void set_data_line(FILE *fp, char *data)
 	else
 		strcpy(val,"00000000");
 	strcat(val,"\n");
-	printfLog(MISC_PROCESS"set %s",data);
+	printfLog(MISC_PROCESS"set %s",val);
 	fwrite(val,strlen(val),1,fp);	
 }
 void set_alarm_val(char *file_path)
@@ -1115,6 +1115,20 @@ void show_fan(int on)
 		write(g_share_memory->fd_lcd,off2,sizeof(off2));
 	}
 }
+void cut(struct cut_info info)
+{
+	char cmd[]={0x5a,0xa5,0x15,0x82,0x0d,0xa9,0x00,0x06,0x00,0x01,0x00,0x01,
+				0x03,0x53,0x00,0x0d,0x03,0x9b,0x00,0x4a,0x03,0x53,0x00,0x0d};
+	cmd[4]=info.vp0;cmd[5]=info.vp1;
+	cmd[10]=info.page0;cmd[11]=info.page1;
+	cmd[12]=info.x00;cmd[13]=info.x01;
+	cmd[14]=info.y00;cmd[15]=info.y01;
+	cmd[16]=info.x10;cmd[17]=info.x11;
+	cmd[18]=info.y10;cmd[19]=info.y11;
+	cmd[20]=info.x00;cmd[21]=info.x01;
+	cmd[22]=info.y00;cmd[23]=info.y01;
+	write(g_share_memory->fd_lcd,cmd,sizeof(cmd));
+}
 void show_audio(int on)
 {
 	char cmd1[]={0x5a,0xa5,0x15,0x82,0x0d,0xb2,0x00,0x06,0x00,0x01,0x00,0x01,
@@ -1243,23 +1257,206 @@ void ask_hw_ver()
 	printfLog(MISC_PROCESS"\ngoing to ask_hw_ver end\n");
 	pthread_mutex_unlock(&(g_share_memory->mutex));
 }
+void show_main_his()
+{
+	char *out=NULL;
+	if(g_share_memory->cnt[SENSOR_CO]!=0) {
+		out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
+		write_data(ADDR_CO_HIS_1,atoi(out));
+		printfLog(MISC_PROCESS"show co HIS %s\n", out);
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_CO2]!=0) {
+		out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+		write_data(ADDR_CO2_HIS_1,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
+		out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
+		write_data(ADDR_HCHO_HIS_1,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_TVOC]!=0) {
+		out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
+		write_data(ADDR_TVOC_HIS_1,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_O3]!=0) {
+		out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
+		write_data(ADDR_O3_HIS_1,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_TEMP]!=0) {
+		out=remove_p(sensor_history.temp[g_share_memory->cnt[SENSOR_TEMP]-1].data);
+		write_data(ADDR_TEMP_HIS_1,atoi(out));
+		write_data(ADDR_TEMP_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_SHIDU]!=0) {
+		out=remove_p(sensor_history.shidu[g_share_memory->cnt[SENSOR_SHIDU]-1].data);
+		write_data(ADDR_SHIDU_HIS_1,atoi(out));
+		write_data(ADDR_SHIDU_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_PM25]!=0) {
+		out=remove_p(sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-1].data);
+		write_data(ADDR_PM25_HIS_1,atoi(out));
+		write_data(ADDR_PM25_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_PM10]!=0) {		
+		out=remove_p(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]-1].data);
+		write_data(ADDR_PM10_HIS_1,atoi(out));
+		write_data(ADDR_PM10_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_WIND]!=0) {
+		out=remove_p(sensor_history.wind[g_share_memory->cnt[SENSOR_WIND]-1].data);
+		write_data(ADDR_WIND_HIS_1,atoi(out));
+		write_data(ADDR_WIND_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_PRESS]!=0) {
+		out=remove_p(sensor_history.press[g_share_memory->cnt[SENSOR_PRESS]-1].data);
+		write_data(ADDR_PRESS_HIS_1,atoi(out));
+		write_data(ADDR_PRESS_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_NOISE]!=0) {
+		out=remove_p(sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data);
+		write_data(ADDR_NOISE_HIS_1,atoi(out));
+		write_data(ADDR_NOISE_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_CO]!=0) {
+		out=remove_p(sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data);
+		write_data(ADDR_CO_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_CO2]!=0) {
+		out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+		write_data(ADDR_CO2_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
+		out=remove_p(sensor_history.hcho[g_share_memory->cnt[SENSOR_HCHO]-1].data);
+		write_data(ADDR_HCHO_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_TVOC]!=0) {
+		out=remove_p(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]-1].data);
+		write_data(ADDR_TVOC_HIS_2,atoi(out));
+		free(out);
+	}
+	if(g_share_memory->cnt[SENSOR_O3]!=0) {
+		out=remove_p(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]-1].data);
+		write_data(ADDR_O3_HIS_2,atoi(out));
+		free(out);
+	}
+
+}
+int beyond_alarm(char *alarm,char *data)
+{
+	int result=0;
+	char *a=remove_p(alarm);
+	char *b=remove_p(data);
+
+	if(atoi(a)>=atoi(b))
+		result=1;
+	free(a);free(b);
+	return result;
+}
 void show_main_alarm()
 {
+	struct cut_info info;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
 	{
 		/* no alarm point , no display */
-		write_data(ADDR_ALARM_CO_SHOW,0x0001);
+		write_data(ADDR_ALARM_CO_SHOW1,0x0001);
+		write_data(ADDR_ALARM_CO_SHOW2,0x0001);
 	}
-	else if (beyond_alarm())
+	else 
 	{
-		/* <, show green */
-		write_data(ADDR_ALARM_CO_SHOW,0x0000);
+		write_data(ADDR_ALARM_CO_SHOW1,0x0000);
+		write_data(ADDR_ALARM_CO_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.co,
+			sensor_history.co[g_share_memory->cnt[SENSOR_CO]-1].data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_1&0xff;
+			info.x00=(126>>8)&0xff;info.y00=(311>>8)&0xff;
+			info.x01=126&0xff;info.y01=311&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(311+18)&0xff;
+			cut(info);
+			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_1&0xff;
+			info.x00=(126>>8)&0xff;info.y00=(311>>8)&0xff;
+			info.x01=126&0xff;info.y01=311&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(311+18)&0xff;
+			cut(info);
+			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_2&0xff;
+			cut(info);
+		}
 	}
-	else
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.pm25) ==0)
 	{
-		/* > , show red */
-
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_PM25_SHOW1,0x0001);
+		write_data(ADDR_ALARM_PM25_SHOW2,0x0001);
 	}
-
+	else 
+	{
+		write_data(ADDR_ALARM_PM25_SHOW1,0x0000);
+		write_data(ADDR_ALARM_PM25_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.pm25,
+			sensor_history.pm25[g_share_memory->cnt[SENSOR_PM25]-1].data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_1&0xff;
+			info.x00=(126>>8)&0xff;info.y00=(249>>8)&0xff;
+			info.x01=126&0xff;info.y01=249&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(249+18)&0xff;
+			cut(info);
+			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_1&0xff;
+			info.x00=(126>>8)&0xff;info.y00=(249>>8)&0xff;
+			info.x01=126&0xff;info.y01=249&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(249+18)&0xff;
+			cut(info);
+			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_2&0xff;
+			cut(info);
+		}
+	}
 }

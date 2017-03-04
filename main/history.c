@@ -1,6 +1,7 @@
 #include "cap.h"
 #include "netlib.h"
 #include "xfer.h"
+#include "misc.h"
 #define HISTORY "[History Process] "
 
 void set_data(char *line,char *type,struct nano *history,long *cnt)
@@ -196,6 +197,8 @@ void load_history(const char *name)
 		fclose(fp);
 	}
 	g_share_memory->history_done=1;
+	show_main_his();
+	show_main_alarm();
 	printfLog(HISTORY"load=>history_done %d\n",g_share_memory->history_done);
 }
 

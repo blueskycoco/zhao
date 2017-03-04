@@ -43,7 +43,7 @@
 #ifdef NO_LOG
 #define VERSION	"2017-02-20-00"
 #else
-#define VERSION	"2017-02-204-01"
+#define VERSION	"2017-02-20-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -62,6 +62,12 @@
 struct nano{
 	char time[20];
 	char data[10];
+};
+struct cut_info{
+	unsigned char vp0,vp1;
+	unsigned char page0,page1;
+	unsigned char x00,x01,y00,y01;
+	unsigned char x10,x11,y10,y11;
 };
 struct history{
 	struct nano *co;
@@ -197,6 +203,8 @@ extern key_t  shmid_history_pm10;
 #define INTERFACE_PAGE			46
 #define SENSOR_SEL_PAGE			47
 #define USER_INFO_PAGE			49
+#define MAIN_SUB_PAGE1			51
+#define MAIN_SUB_PAGE2			52
 #define OFF_PAGE				99
 #define UPLOADING_OK_PAGE		102
 #define UPLOADING_WRONG_PAGE	104
@@ -1128,11 +1136,19 @@ extern key_t  shmid_history_pm10;
 
 #define ADDR_ALAM_CO	0x00d4
 #define	ADDR_CUT_CO_1	0x00dc
-#define	ADDR_CUT_CO_2	0x00dd
+#define	ADDR_CUT_CO_2	0x00e5
 #define	TOUCH_SET_ALAM	0x00da
 #define	TOUCH_RETURN_ALAM 0x00db
 #define TOUCH_ALAM_SET	0x00d3
-#define ADDR_ALARM_CO_SHOW	0x00de
+#define ADDR_ALARM_CO_SHOW1	0x00ee
+#define ADDR_ALARM_CO_SHOW2	0x00ef
+
+#define ADDR_ALAM_PM25	0x00f0
+#define	ADDR_CUT_PM25_1	0x00F8
+#define	ADDR_CUT_PM25_2	0x0101
+#define ADDR_ALARM_PM25_SHOW1	0x00F6
+#define ADDR_ALARM_PM25_SHOW2	0x00F7
+
 #if 0
 #define OFF_PAGE 				20
 #define LIST_PM25_PAGE 			8
