@@ -748,7 +748,7 @@ char *build_message(char *cmd,int len,char *message)
 			case TIME_BYTE:
 			{	//TIME_BYTE got ,we can send to server now
 				sprintf(date,"20%02d-%02d-%02d %02d:%02d",cmd[5],cmd[6],cmd[7],cmd[8],cmd[9]);
-				//printfLog(CAP_PROCESS"date is %s\r\n",date);
+				printfLog(CAP_PROCESS"date is %s\r\n",date);
 				g_share_memory->current_time[0]=cmd[5];
 				g_share_memory->current_time[1]=cmd[6];
 				g_share_memory->current_time[2]=cmd[7];

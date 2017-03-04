@@ -2750,7 +2750,7 @@ int read_dgus(int addr,char len,char *out)
 			if(i>=7 && ch!=0xff)
 				out[i-7]=ch;
 			i++;
-			printfLog(LCD_PROCESS"==> %x\n",ch);
+			//printfLog(LCD_PROCESS"==> %x\n",ch);
 			if(i==(2*len+7))
 				return 1;
 		}

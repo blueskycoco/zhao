@@ -1246,7 +1246,7 @@ void ask_hw_ver()
 		if(i>20)
 			break;
 		sleep(1);
-		printfLog(MISC_PROCESS"hw_ver %s\n",g_share_memory->hw_ver);
+		//printfLog(MISC_PROCESS"hw_ver %s\n",g_share_memory->hw_ver);
 		if(strlen(g_share_memory->hw_ver)!=0)
 			break;
 		else
