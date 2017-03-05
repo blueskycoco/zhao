@@ -460,8 +460,8 @@ void get_alarm_val(char *file_path)
 		get_data_line(fp,g_share_memory->sensor_alarm_val.press);
 		get_data_line(fp,g_share_memory->sensor_alarm_val.tvoc);
 		get_data_line(fp,g_share_memory->sensor_alarm_val.o3);
+		fclose(fp);
 	}
-	fclose(fp);
 }
 void set_data_line(FILE *fp, char *data)
 {
@@ -492,8 +492,8 @@ void set_alarm_val(char *file_path)
 		set_data_line(fp,g_share_memory->sensor_alarm_val.press);
 		set_data_line(fp,g_share_memory->sensor_alarm_val.tvoc);
 		set_data_line(fp,g_share_memory->sensor_alarm_val.o3);
+		fclose(fp);
 	}
-	fclose(fp);
 
 }
 long filesize(FILE*stream)
