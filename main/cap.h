@@ -1850,7 +1850,7 @@ extern key_t  shmid_history_pm10;
 #define SENSOR_VERIFY_MODE	2
 #define CONFIG_FILE "sensor_alarm.cfg"
 #define FILE_PATH	"/home/user/history/"
-#define SENSOR_ALARM_FILE	"/home/user/sensor_alarm.cfg"
+#define SENSOR_ALARM_FILE	"/home/user/sensor_alarm_config.cfg"
 #define PERM S_IRUSR|S_IWUSR  
 #define ALARM_NONE		0
 #define ALARM_BELOW 	1
