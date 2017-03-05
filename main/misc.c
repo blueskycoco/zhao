@@ -437,7 +437,7 @@ void get_data_line(FILE *fp, char *data)
 	{
 		if(strncmp(line,"00000000",8)!=0)
 		{
-			memcpy(data,line,strlen(line)-1);
+			memcpy(data,line,strlen(line)-2);
 			printfLog(MISC_PROCESS"%s\n", data);
 		}
 	}
@@ -471,7 +471,7 @@ void set_data_line(FILE *fp, char *data)
 		strcpy(val,data);
 	else
 		strcpy(val,"00000000");
-	strcat(val,"\n");
+	strcat(val,"\r\n");
 	printfLog(MISC_PROCESS"set %s",val);
 	fwrite(val,strlen(val),1,fp);	
 }

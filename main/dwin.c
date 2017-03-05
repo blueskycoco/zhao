@@ -2192,6 +2192,7 @@ void wifi_handle()
 			printfLog(LCD_PROCESS"AP Name %s \nAP Pwd %s\n",ap_name,ap_passwd);
 			if(strlen(ap_passwd)<8||strlen(ap_name)==0)
 				return ;
+			switch_pic(100);
 			sprintf(cmd,"wpa_cli -ira0 status");
 			if ((fp=popen(cmd,"r"))!=NULL)
 			{
@@ -2263,6 +2264,7 @@ void wifi_handle()
 		else
 		{
 			//wep handle
+			switch_pic(100);
 			printfLog(LCD_PROCESS"AP Name %s \n",ap_name);
 			sprintf(cmd,"wpa_cli status");
 			if ((fp=popen(cmd,"r"))!=NULL)
@@ -2286,9 +2288,13 @@ void wifi_handle()
 				}
 			}
 			sprintf(cmd,"iwconfig ra0 essid %s", ap_name);
+			int i=0;
 			while(execute_cmd(cmd))
 			{
 				sleep(1);
+				i++;
+				if(i>3)
+					break;
 			}
 		}
 		sprintf(cmd,"udhcpc -i ra0 -q -n");
@@ -4771,6 +4777,7 @@ unsigned short input_handle(char *input)
 		clear_buf(ADDR_AP_NAME,20);
 		clear_buf(ADDR_AP_KEY,20);
 		clear_buf(ADDR_WIFI_STATUS,32);
+		switch_pic(100);
 		if(ping_server())
 			sprintf(cmd,"%s",buf1);
 		else
@@ -4778,6 +4785,7 @@ unsigned short input_handle(char *input)
 		write_string(ADDR_WIFI_STATUS,cmd,strlen(cmd));		
 		switch_pic(XFER_SETTING_PAGE);
 		g_index=XFER_SETTING_PAGE;
+		wifi_select=g_share_memory->send_by_wifi;
 		if(g_share_memory->send_by_wifi)
 		{
 			write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
