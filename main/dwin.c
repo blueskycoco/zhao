@@ -5006,10 +5006,15 @@ unsigned short input_handle(char *input)
 	}
 	else if(addr==TOUCH_EXIT_VERIFY && (TOUCH_EXIT_VERIFY+0x100)==data)
 	{	//verify sensor display
-		if(verify_point==0)
-			tun_zero(0);
-		verify_point=100;
-		jiaozhun(0,verify_object,verify_point);
+		if (g_index!=ALARM_SETTING_PAGE) 
+		{
+			if(verify_point==0)
+				tun_zero(0);
+			verify_point=100;
+			jiaozhun(0,verify_object,verify_point);
+		}
+		else
+			switch_pic(ALARM_SETTING_PAGE);
 	}
 	else if(addr==ADDR_XIUZHENG)
 	{

@@ -43,7 +43,7 @@
 #ifdef NO_LOG
 #define VERSION	"2017-02-20-00"
 #else
-#define VERSION	"2017-02-20-01"
+#define VERSION	"2017-02-201-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
