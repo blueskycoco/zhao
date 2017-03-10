@@ -29,4 +29,14 @@ void get_alarm_val(char *file_path);
 void set_alarm_val(char *file_path);
 void show_main_alarm();
 void show_main_his();
+void show_main_alarm_o3(char *data);
+void show_main_alarm_co2(char *data);
+void show_main_alarm_tvoc(char *data);
+void show_main_alarm_co(char *data);
+void show_main_alarm_hcho(char *data);
+void show_main_alarm_temp(char *data);
+void show_main_alarm_shidu(char *data);
+void show_main_alarm_noise(char *data);
+void show_main_alarm_pm25(char *data);
+void show_main_alarm_pm10(char *data);
 #endif

@@ -3476,6 +3476,45 @@ void tun_zero(int on)
 	//printf("\n");
 	//write(fd_com,cmd_request_verify,sizeof(cmd_request_verify));
 }
+void handle_clean_alarm(int addr)
+{
+	clear_buf(addr,6);
+	switch (addr)
+	{
+		case ADDR_ALAM_CO:			
+			memset(g_share_memory->sensor_alarm_val.co,0,10);
+			break;
+		case ADDR_ALAM_HCHO:			
+			memset(g_share_memory->sensor_alarm_val.hcho,0,10);
+			break;
+		case ADDR_ALAM_CO2:			
+			memset(g_share_memory->sensor_alarm_val.co2,0,10);
+			break;
+		case ADDR_ALAM_O3:			
+			memset(g_share_memory->sensor_alarm_val.o3,0,10);
+			break;
+		case ADDR_ALAM_TVOC:			
+			memset(g_share_memory->sensor_alarm_val.tvoc,0,10);
+			break;	
+		case ADDR_ALAM_TEMP:			
+			memset(g_share_memory->sensor_alarm_val.temp,0,10);
+			break;
+		case ADDR_ALAM_SHIDU:			
+			memset(g_share_memory->sensor_alarm_val.shidu,0,10);
+			break;
+		case ADDR_ALAM_PM25:			
+			memset(g_share_memory->sensor_alarm_val.pm25,0,10);
+			break;
+		case ADDR_ALAM_PM10:			
+			memset(g_share_memory->sensor_alarm_val.pm10,0,10);
+			break;
+		case ADDR_ALAM_NOISE:			
+			memset(g_share_memory->sensor_alarm_val.noise,0,10);
+			break;
+		default:
+			break;
+	}
+}
 void handle_alarm_value()
 {
 	char val[10]={0};
@@ -4616,6 +4655,46 @@ unsigned short input_handle(char *input)
 		show_main_alarm();
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_CO && (TOUCH_CLEAN_ALARM_CO+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_CO);
+	}	
+	else if(addr==TOUCH_CLEAN_ALARM_CO2 && (TOUCH_CLEAN_ALARM_CO2+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_CO2);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_HCHO && (TOUCH_CLEAN_ALARM_HCHO+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_HCHO);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_TEMP && (TOUCH_CLEAN_ALARM_TEMP+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_TEMP);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_O3 && (TOUCH_CLEAN_ALARM_O3+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_O3);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_PM25 && (TOUCH_CLEAN_ALARM_PM25+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_PM25);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_PM10 && (TOUCH_CLEAN_ALARM_PM10+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_PM10);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_TVOC && (TOUCH_CLEAN_ALARM_TVOC+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_TVOC);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_NOISE && (TOUCH_CLEAN_ALARM_NOISE+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_NOISE);
+	}
+	else if(addr==TOUCH_CLEAN_ALARM_SHIDU && (TOUCH_CLEAN_ALARM_SHIDU+0x100)==data)
+	{
+		handle_clean_alarm(ADDR_ALAM_SHIDU);
 	}
 	else if((addr==TOUCH_SEL_WIFI)&& (TOUCH_SEL_WIFI+0x100)==data)
 	{//WiFi Passwd changed

@@ -524,7 +524,7 @@ char *count_sensor_value(char cmd,char *json,float value)
 	//printfLog(CAP_PROCESS"count_sensor_value <== %s\n",json);
 	return json;
 }
-void update_dwin_real_value(char *id,int value)
+void update_dwin_real_value(char *id,int value, char *data)
 {	
 	if(strncmp(id,ID_CAP_CO_EXT,strlen(ID_CAP_CO_EXT))==0 &&
 			g_share_memory->sensor_off[SENSOR_CO]==0)
@@ -537,6 +537,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		//printfLog(CAP_PROCESS"show co real %d\n", value);
 		write_data(ADDR_CO_REAL_1,value);
+		show_main_alarm_co(data);
 		
 	}
 	else if(strncmp(id,ID_CAP_CO2_EXT,strlen(ID_CAP_CO2_EXT))==0&&
@@ -549,6 +550,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO2_REAL_1,value);
+		show_main_alarm_co2(data);
 	}
 	else if(strncmp(id,ID_CAP_HCHO_EXT,strlen(ID_CAP_HCHO_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_HCHO]==0)
@@ -562,6 +564,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		//printfLog(CAP_PROCESS"HCHO for xiao %d\n",value);
 		write_data(ADDR_HCHO_REAL_1,value);
+		show_main_alarm_hcho(data);
 	}
 	else if(strncmp(id,ID_CAP_TVOC_EXT,strlen(ID_CAP_TVOC_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TVOC]==0)
@@ -573,6 +576,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TVOC_REAL_1,value);
+		show_main_alarm_tvoc(data);
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG_EXT,strlen(ID_CAP_CHOU_YANG_EXT))==0&&
 			                  g_share_memory->sensor_off[SENSOR_O3]==0)
@@ -584,6 +588,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_O3_REAL_1,value);
+		show_main_alarm_o3(data);
 	}
 	else if(strncmp(id,ID_CAP_TEMPERATURE,strlen(ID_CAP_TEMPERATURE))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TEMP]==0)
@@ -595,7 +600,8 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TEMP_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TEMP_REAL_1,value);
-		write_data(ADDR_TEMP_REAL_2,value);		
+		write_data(ADDR_TEMP_REAL_2,value);
+		show_main_alarm_temp(data);		
 	}
 	else if(strncmp(id,ID_CAP_SHI_DU,strlen(ID_CAP_SHI_DU))==0&&
 			                  g_share_memory->sensor_off[SENSOR_SHIDU]==0)
@@ -607,7 +613,8 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_SHIDU_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_SHIDU_REAL_1,value);
-		write_data(ADDR_SHIDU_REAL_2,value);		
+		write_data(ADDR_SHIDU_REAL_2,value);
+		show_main_alarm_shidu(data);		
 	}
 	else if(strncmp(id,ID_CAP_PM_25,strlen(ID_CAP_PM_25))==0&&
 			                  g_share_memory->sensor_off[SENSOR_PM25]==0)
@@ -619,7 +626,8 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_PM25_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_PM25_REAL_1,value);
-		write_data(ADDR_PM25_REAL_2,value);		
+		write_data(ADDR_PM25_REAL_2,value);
+		show_main_alarm_pm25(data);		
 	}
 	else if(strncmp(id,ID_CAP_PM_10,strlen(ID_CAP_PM_10))==0&&
 			                  g_share_memory->sensor_off[SENSOR_PM10]==0)
@@ -632,6 +640,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_PM10_REAL_1,value);
 		write_data(ADDR_PM10_REAL_2,value);
+		show_main_alarm_pm10(data);
 	}
 	else if(strncmp(id,ID_CAP_FENG_SU,strlen(ID_CAP_FENG_SU))==0&&
 			                  g_share_memory->sensor_off[SENSOR_WIND]==0)
@@ -669,6 +678,7 @@ void update_dwin_real_value(char *id,int value)
 		}
 		write_data(ADDR_NOISE_REAL_1,value);
 		write_data(ADDR_NOISE_REAL_2,value);
+		show_main_alarm_noise(data);
 	}
 	else if(strncmp(id,ID_CAP_CO,strlen(ID_CAP_CO))==0&&
 			                  g_share_memory->sensor_off[SENSOR_CO]==0)
@@ -680,6 +690,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO_REAL_2,value);
+		show_main_alarm_co(data);
 	}
 	else if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0&&
 			                  g_share_memory->sensor_off[SENSOR_CO2]==0)
@@ -691,6 +702,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_CO2_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_CO2_REAL_2,value);
+		show_main_alarm_co2(data);
 	}
 	else if(strncmp(id,ID_CAP_HCHO,strlen(ID_CAP_HCHO))==0&&
 			                  g_share_memory->sensor_off[SENSOR_HCHO]==0)
@@ -702,6 +714,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_HCHO_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_HCHO_REAL_2,value);
+		show_main_alarm_hcho(data);
 	}
 	else if(strncmp(id,ID_CAP_TVOC,strlen(ID_CAP_TVOC))==0&&
 			                  g_share_memory->sensor_off[SENSOR_TVOC]==0)
@@ -713,6 +726,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_TVOC_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_TVOC_REAL_2,value);
+		show_main_alarm_tvoc(data);
 	}
 	else if(strncmp(id,ID_CAP_CHOU_YANG,strlen(ID_CAP_CHOU_YANG))==0&&
 			                  g_share_memory->sensor_off[SENSOR_O3]==0)
@@ -724,6 +738,7 @@ void update_dwin_real_value(char *id,int value)
 			write_data(ADDR_O3_SHOW_PIC_PPM,0x0000);
 		}
 		write_data(ADDR_O3_REAL_2,value);
+		show_main_alarm_o3(data);
 	}
 }
 /*
@@ -1045,7 +1060,7 @@ char *build_message(char *cmd,int len,char *message)
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
 					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
-					update_dwin_real_value(id,cmd[5]<<8|cmd[6]);
+					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
 					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
 						cmd[3]!=atoi(ID_CAP_HCHO_EXT)&&cmd[3]!=atoi(ID_CAP_SHI_DU) &&

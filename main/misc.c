@@ -1453,9 +1453,590 @@ int beyond_alarm(char *alarm,char *data)
 	}
 	return result;
 }
+void show_main_alarm_co(char *data)
+{
+	struct cut_info info;
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_CO_SHOW1,0x0001);
+		write_data(ADDR_ALARM_CO_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_CO_SHOW1,0x0000);
+		write_data(ADDR_ALARM_CO_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.co,
+			data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(342>>8)&0xff;
+			info.x01=111&0xff;info.y01=342&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(342+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(344>>8)&0xff;
+			info.x01=126&0xff;info.y01=344&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(344+18)&0xff;
+			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(342>>8)&0xff;
+			info.x01=111&0xff;info.y01=342&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(342+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(344>>8)&0xff;
+			info.x01=126&0xff;info.y01=344&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(344+18)&0xff;
+			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_CO_2&0xff;
+			cut(info);
+		}
+	}
+}
+void show_main_alarm_co2(char *data)
+{
+	struct cut_info info;
+/*1 get history data <> alarm point */
+if (strlen(g_share_memory->sensor_alarm_val.co2) ==0)
+{
+	/* no alarm point , no display */
+	write_data(ADDR_ALARM_CO2_SHOW1,0x0001);
+	write_data(ADDR_ALARM_CO2_SHOW2,0x0001);
+}
+else 
+{
+	write_data(ADDR_ALARM_CO2_SHOW1,0x0000);
+	write_data(ADDR_ALARM_CO2_SHOW2,0x0000);
+	if (beyond_alarm(g_share_memory->sensor_alarm_val.co2,data))
+	{
+		/* <, show green */
+		info.page0=(MAIN_PAGE>>8)&0xff;
+		info.page1=MAIN_PAGE&0xff;
+		info.vp0=(ADDR_CUT_CO2_1>>8)&0xff;
+		info.vp1=ADDR_CUT_CO2_1&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(406>>8)&0xff;
+		info.x01=111&0xff;info.y01=406&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((406+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(406+18)&0xff;
+		cut(info);
+		info.x00=(127>>8)&0xff;info.y00=(409>>8)&0xff;
+		info.x01=127&0xff;info.y01=409&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((409+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(409+18)&0xff;
+		info.vp0=(ADDR_CUT_CO2_2>>8)&0xff;
+		info.vp1=ADDR_CUT_CO2_2&0xff;
+		cut(info);
+	}
+	else
+	{
+		/* > , show red */
+		info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE1&0xff;
+		info.vp0=(ADDR_CUT_CO2_1>>8)&0xff;
+		info.vp1=ADDR_CUT_CO2_1&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(406>>8)&0xff;
+		info.x01=111&0xff;info.y01=406&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((406+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(406+18)&0xff;
+		cut(info);
+		info.x00=(127>>8)&0xff;info.y00=(409>>8)&0xff;
+		info.x01=127&0xff;info.y01=409&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((409+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(409+18)&0xff;
+		info.vp0=(ADDR_CUT_CO2_2>>8)&0xff;
+		info.vp1=ADDR_CUT_CO2_2&0xff;
+		cut(info);
+	}
+}
+}
+void show_main_alarm_hcho(char *data)
+{
+	struct cut_info info;
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.hcho) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_HCHO_SHOW1,0x0001);
+		write_data(ADDR_ALARM_HCHO_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_HCHO_SHOW1,0x0000);
+		write_data(ADDR_ALARM_HCHO_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.hcho,data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_HCHO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_HCHO_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(155>>8)&0xff;
+			info.x01=111&0xff;info.y01=155&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((155+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(155+18)&0xff;
+			cut(info);
+			info.page0=(MAIN_PAGE_PPM>>8)&0xff;
+			info.page1=MAIN_PAGE_PPM&0xff;
+			info.vp0=(ADDR_CUT_HCHO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_HCHO_2&0xff;
+			info.x00=(127>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=127&0xff;info.y01=154&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(154+18)&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_HCHO_1>>8)&0xff;
+			info.vp1=ADDR_CUT_HCHO_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(155>>8)&0xff;
+			info.x01=111&0xff;info.y01=155&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((155+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(155+18)&0xff;
+			cut(info);
+			info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE2&0xff;
+			info.vp0=(ADDR_CUT_HCHO_2>>8)&0xff;
+			info.vp1=ADDR_CUT_HCHO_2&0xff;
+			info.x00=(127>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=127&0xff;info.y01=154&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(154+18)&0xff;
+			cut(info);
+		}
+	}
+}
+void show_main_alarm_temp(char *data)
+{
+	struct cut_info info;
+/*1 get history data <> alarm point */
+if (strlen(g_share_memory->sensor_alarm_val.temp) ==0)
+{
+	/* no alarm point , no display */
+	write_data(ADDR_ALARM_TEMP_SHOW1,0x0001);
+	write_data(ADDR_ALARM_TEMP_SHOW2,0x0001);
+}
+else 
+{
+	write_data(ADDR_ALARM_TEMP_SHOW1,0x0000);
+	write_data(ADDR_ALARM_TEMP_SHOW2,0x0000);
+	if (beyond_alarm(g_share_memory->sensor_alarm_val.temp,data))
+	{
+		/* <, show green */
+		info.page0=(MAIN_PAGE>>8)&0xff;
+		info.page1=MAIN_PAGE&0xff;
+		info.vp0=(ADDR_CUT_TEMP_1>>8)&0xff;
+		info.vp1=ADDR_CUT_TEMP_1&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=111&0xff;info.y01=471&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(471+18)&0xff;
+		cut(info);
+		info.page0=(MAIN_PAGE_PPM>>8)&0xff;
+		info.page1=MAIN_PAGE_PPM&0xff;
+		info.vp0=(ADDR_CUT_TEMP_2>>8)&0xff;
+		info.vp1=ADDR_CUT_TEMP_2&0xff;
+		info.x00=(127>>8)&0xff;info.y00=(473>>8)&0xff;
+		info.x01=127&0xff;info.y01=473&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((473+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(473+18)&0xff;
+		cut(info);
+	}
+	else
+	{
+		/* > , show red */
+		info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE1&0xff;
+		info.vp0=(ADDR_CUT_TEMP_1>>8)&0xff;
+		info.vp1=ADDR_CUT_TEMP_1&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=111&0xff;info.y01=471&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(471+18)&0xff;
+		cut(info);
+		info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE2&0xff;
+		info.vp0=(ADDR_CUT_TEMP_2>>8)&0xff;
+		info.vp1=ADDR_CUT_TEMP_2&0xff;
+		info.x00=(127>>8)&0xff;info.y00=(473>>8)&0xff;
+		info.x01=127&0xff;info.y01=473&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((473+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(473+18)&0xff;
+		cut(info);
+	}
+}
+}
+void show_main_alarm_shidu(char *data)
+{
+	struct cut_info info;
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.shidu) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_SHIDU_SHOW1,0x0001);
+		write_data(ADDR_ALARM_SHIDU_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_SHIDU_SHOW1,0x0000);
+		write_data(ADDR_ALARM_SHIDU_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.shidu,data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_SHIDU_1>>8)&0xff;
+			info.vp1=ADDR_CUT_SHIDU_1&0xff;
+			info.x00=(525>>8)&0xff;info.y00=(156>>8)&0xff;
+			info.x01=525&0xff;info.y01=156&0xff;
+			info.x10=((525+19)>>8)&0xff;info.y10=((156+18)>>8)&0xff;
+			info.x11=(525+19)&0xff;info.y11=(156+18)&0xff;
+			cut(info);
+			info.page0=(MAIN_PAGE_PPM>>8)&0xff;
+			info.page1=MAIN_PAGE_PPM&0xff;
+			info.vp0=(ADDR_CUT_SHIDU_2>>8)&0xff;
+			info.vp1=ADDR_CUT_SHIDU_2&0xff;
+			info.x00=(541>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=541&0xff;info.y01=154&0xff;
+			info.x10=((541+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(541+19)&0xff;info.y11=(154+18)&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_SHIDU_1>>8)&0xff;
+			info.vp1=ADDR_CUT_SHIDU_1&0xff;
+			info.x00=(525>>8)&0xff;info.y00=(156>>8)&0xff;
+			info.x01=525&0xff;info.y01=156&0xff;
+			info.x10=((525+19)>>8)&0xff;info.y10=((156+18)>>8)&0xff;
+			info.x11=(525+19)&0xff;info.y11=(156+18)&0xff;
+			cut(info);
+			info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE2&0xff;
+			info.vp0=(ADDR_CUT_SHIDU_2>>8)&0xff;
+			info.vp1=ADDR_CUT_SHIDU_2&0xff;
+			info.x00=(541>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=541&0xff;info.y01=154&0xff;
+			info.x10=((541+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(541+19)&0xff;info.y11=(154+18)&0xff;
+			cut(info);
+		}
+	}
+}
+void show_main_alarm_o3(char *data)
+{
+	struct cut_info info;
+/*1 get history data <> alarm point */
+if (strlen(g_share_memory->sensor_alarm_val.o3) ==0)
+{
+	/* no alarm point , no display */
+	write_data(ADDR_ALARM_O3_SHOW1,0x0001);
+	write_data(ADDR_ALARM_O3_SHOW2,0x0001);
+}
+else 
+{
+	write_data(ADDR_ALARM_O3_SHOW1,0x0000);
+	write_data(ADDR_ALARM_O3_SHOW2,0x0000);
+	if (beyond_alarm(g_share_memory->sensor_alarm_val.o3,data))
+	{
+		/* <, show green */
+		info.page0=(MAIN_PAGE>>8)&0xff;
+		info.page1=MAIN_PAGE&0xff;
+		info.vp0=(ADDR_CUT_O3_1>>8)&0xff;
+		info.vp1=ADDR_CUT_O3_1&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=525&0xff;info.y01=471&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(471+18)&0xff;
+		cut(info);
+		info.page0=(MAIN_PAGE_PPM>>8)&0xff;
+		info.page1=MAIN_PAGE_PPM&0xff;
+		info.vp0=(ADDR_CUT_O3_2>>8)&0xff;
+		info.vp1=ADDR_CUT_O3_2&0xff;
+		info.x00=(540>>8)&0xff;info.y00=(475>>8)&0xff;
+		info.x01=540&0xff;info.y01=475&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((475+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(475+18)&0xff;
+		cut(info);
+	}
+	else
+	{
+		/* > , show red */
+		info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE1&0xff;
+		info.vp0=(ADDR_CUT_O3_1>>8)&0xff;
+		info.vp1=ADDR_CUT_O3_1&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=525&0xff;info.y01=471&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(471+18)&0xff;
+		cut(info);
+		info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE2&0xff;
+		info.vp0=(ADDR_CUT_O3_2>>8)&0xff;
+		info.vp1=ADDR_CUT_O3_2&0xff;
+		info.x00=(540>>8)&0xff;info.y00=(475>>8)&0xff;
+		info.x01=540&0xff;info.y01=475&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((475+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(475+18)&0xff;
+		cut(info);
+	}
+}
+}
+void show_main_alarm_tvoc(char *data)
+{
+	struct cut_info info;
+/*1 get history data <> alarm point */
+if (strlen(g_share_memory->sensor_alarm_val.tvoc) ==0)
+{
+	/* no alarm point , no display */
+	write_data(ADDR_ALARM_TVOC_SHOW1,0x0001);
+	write_data(ADDR_ALARM_TVOC_SHOW2,0x0001);
+}
+else 
+{
+	write_data(ADDR_ALARM_TVOC_SHOW1,0x0000);
+	write_data(ADDR_ALARM_TVOC_SHOW2,0x0000);
+	if (beyond_alarm(g_share_memory->sensor_alarm_val.tvoc,data))
+	{
+		/* <, show green */
+		info.page0=(MAIN_PAGE>>8)&0xff;
+		info.page1=MAIN_PAGE&0xff;
+		info.vp0=(ADDR_CUT_TVOC_1>>8)&0xff;
+		info.vp1=ADDR_CUT_TVOC_1&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(405>>8)&0xff;
+		info.x01=525&0xff;info.y01=405&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((405+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(405+18)&0xff;
+		cut(info);
+		info.x00=(539>>8)&0xff;info.y00=(408>>8)&0xff;
+		info.x01=539&0xff;info.y01=408&0xff;
+		info.x10=((539+19)>>8)&0xff;info.y10=((408+18)>>8)&0xff;
+		info.x11=(539+19)&0xff;info.y11=(408+18)&0xff;
+		info.vp0=(ADDR_CUT_TVOC_2>>8)&0xff;
+		info.vp1=ADDR_CUT_TVOC_2&0xff;
+		cut(info);
+	}
+	else
+	{
+		/* > , show red */
+		info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+		info.page1=MAIN_SUB_PAGE1&0xff;
+		info.vp0=(ADDR_CUT_TVOC_1>>8)&0xff;
+		info.vp1=ADDR_CUT_TVOC_1&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(405>>8)&0xff;
+		info.x01=525&0xff;info.y01=405&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((405+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(405+18)&0xff;
+		cut(info);
+		info.x00=(539>>8)&0xff;info.y00=(408>>8)&0xff;
+		info.x01=539&0xff;info.y01=408&0xff;
+		info.x10=((539+19)>>8)&0xff;info.y10=((408+18)>>8)&0xff;
+		info.x11=(539+19)&0xff;info.y11=(408+18)&0xff;
+		info.vp0=(ADDR_CUT_TVOC_2>>8)&0xff;
+		info.vp1=ADDR_CUT_TVOC_2&0xff;
+		cut(info);
+	}
+}
+}
+void show_main_alarm_noise(char *data)
+{
+	struct cut_info info;
+	
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.noise) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_NOISE_SHOW1,0x0001);
+		write_data(ADDR_ALARM_NOISE_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_NOISE_SHOW1,0x0000);
+		write_data(ADDR_ALARM_NOISE_SHOW2,0x0000);
+		printfLog("noise %s <> %s\n",g_share_memory->sensor_alarm_val.noise,data);	
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.noise,data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_NOISE_1>>8)&0xff;
+			info.vp1=ADDR_CUT_NOISE_1&0xff;
+			info.x00=(526>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=526&0xff;info.y01=280&0xff;
+			info.x10=((526+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(526+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);
+			info.x00=(540>>8)&0xff;info.y00=(283>>8)&0xff;
+			info.x01=540&0xff;info.y01=283&0xff;
+			info.x10=((540+19)>>8)&0xff;info.y10=((283+18)>>8)&0xff;
+			info.x11=(540+19)&0xff;info.y11=(283+18)&0xff;
+			info.vp0=(ADDR_CUT_NOISE_2>>8)&0xff;
+			info.vp1=ADDR_CUT_NOISE_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_NOISE_1>>8)&0xff;
+			info.vp1=ADDR_CUT_NOISE_1&0xff;
+			info.x00=(526>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=526&0xff;info.y01=280&0xff;
+			info.x10=((526+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(526+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);
+			info.x00=(540>>8)&0xff;info.y00=(283>>8)&0xff;
+			info.x01=540&0xff;info.y01=283&0xff;
+			info.x10=((540+19)>>8)&0xff;info.y10=((283+18)>>8)&0xff;
+			info.x11=(540+19)&0xff;info.y11=(283+18)&0xff;
+			info.vp0=(ADDR_CUT_NOISE_2>>8)&0xff;
+			info.vp1=ADDR_CUT_NOISE_2&0xff;
+			cut(info);
+		}
+	}
+}
+void show_main_alarm_pm25(char *data)
+{
+	struct cut_info info;
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.pm25) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_PM25_SHOW1,0x0001);
+		write_data(ADDR_ALARM_PM25_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_PM25_SHOW1,0x0000);
+		write_data(ADDR_ALARM_PM25_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.pm25,data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=111&0xff;info.y01=280&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(282>>8)&0xff;
+			info.x01=126&0xff;info.y01=282&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((282+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(282+18)&0xff;
+			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=111&0xff;info.y01=280&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(282>>8)&0xff;
+			info.x01=126&0xff;info.y01=282&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((282+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(282+18)&0xff;
+			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM25_2&0xff;
+			cut(info);
+		}
+	}
+}
+void show_main_alarm_pm10(char *data)
+{
+	struct cut_info info;
+	/*1 get history data <> alarm point */
+	if (strlen(g_share_memory->sensor_alarm_val.pm10) ==0)
+	{
+		/* no alarm point , no display */
+		write_data(ADDR_ALARM_PM10_SHOW1,0x0001);
+		write_data(ADDR_ALARM_PM10_SHOW2,0x0001);
+	}
+	else 
+	{
+		write_data(ADDR_ALARM_PM10_SHOW1,0x0000);
+		write_data(ADDR_ALARM_PM10_SHOW2,0x0000);
+		if (beyond_alarm(g_share_memory->sensor_alarm_val.pm10,data))
+		{
+			/* <, show green */
+			info.page0=(MAIN_PAGE>>8)&0xff;
+			info.page1=MAIN_PAGE&0xff;
+			info.vp0=(ADDR_CUT_PM10_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM10_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(217>>8)&0xff;
+			info.x01=111&0xff;info.y01=217&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((217+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(217+18)&0xff;
+			cut(info);			
+			info.x00=(127>>8)&0xff;info.y00=(216>>8)&0xff;
+			info.x01=127&0xff;info.y01=216&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(216+18)&0xff;
+			info.vp0=(ADDR_CUT_PM10_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM10_2&0xff;
+			cut(info);
+		}
+		else
+		{
+			/* > , show red */
+			info.page0=(MAIN_SUB_PAGE1>>8)&0xff;
+			info.page1=MAIN_SUB_PAGE1&0xff;
+			info.vp0=(ADDR_CUT_PM10_1>>8)&0xff;
+			info.vp1=ADDR_CUT_PM10_1&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(217>>8)&0xff;
+			info.x01=111&0xff;info.y01=217&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((217+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(217+18)&0xff;
+			cut(info);
+			info.x00=(127>>8)&0xff;info.y00=(216>>8)&0xff;
+			info.x01=127&0xff;info.y01=216&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(216+18)&0xff;
+			info.vp0=(ADDR_CUT_PM10_2>>8)&0xff;
+			info.vp1=ADDR_CUT_PM10_2&0xff;
+			cut(info);
+		}
+	}
+}
+
 void show_main_alarm()
 {
 	struct cut_info info;
+	return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
 	{
@@ -1475,11 +2056,15 @@ void show_main_alarm()
 			info.page1=MAIN_PAGE&0xff;
 			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
 			info.vp1=ADDR_CUT_CO_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(311>>8)&0xff;
-			info.x01=126&0xff;info.y01=311&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(311+18)&0xff;
-			cut(info);
+			info.x00=(111>>8)&0xff;info.y00=(342>>8)&0xff;
+			info.x01=111&0xff;info.y01=342&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(342+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(344>>8)&0xff;
+			info.x01=126&0xff;info.y01=344&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(344+18)&0xff;
 			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
 			info.vp1=ADDR_CUT_CO_2&0xff;
 			cut(info);
@@ -1491,11 +2076,15 @@ void show_main_alarm()
 			info.page1=MAIN_SUB_PAGE1&0xff;
 			info.vp0=(ADDR_CUT_CO_1>>8)&0xff;
 			info.vp1=ADDR_CUT_CO_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(311>>8)&0xff;
-			info.x01=126&0xff;info.y01=311&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(311+18)&0xff;
-			cut(info);
+			info.x00=(111>>8)&0xff;info.y00=(342>>8)&0xff;
+			info.x01=111&0xff;info.y01=342&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(342+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(344>>8)&0xff;
+			info.x01=126&0xff;info.y01=344&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(344+18)&0xff;
 			info.vp0=(ADDR_CUT_CO_2>>8)&0xff;
 			info.vp1=ADDR_CUT_CO_2&0xff;
 			cut(info);
@@ -1520,11 +2109,15 @@ void show_main_alarm()
 			info.page1=MAIN_PAGE&0xff;
 			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
 			info.vp1=ADDR_CUT_PM25_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(249>>8)&0xff;
-			info.x01=126&0xff;info.y01=249&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(249+18)&0xff;
-			cut(info);
+			info.x00=(111>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=111&0xff;info.y01=280&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(282>>8)&0xff;
+			info.x01=126&0xff;info.y01=282&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((282+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(282+18)&0xff;
 			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
 			info.vp1=ADDR_CUT_PM25_2&0xff;
 			cut(info);
@@ -1536,11 +2129,15 @@ void show_main_alarm()
 			info.page1=MAIN_SUB_PAGE1&0xff;
 			info.vp0=(ADDR_CUT_PM25_1>>8)&0xff;
 			info.vp1=ADDR_CUT_PM25_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(249>>8)&0xff;
-			info.x01=126&0xff;info.y01=249&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(249+18)&0xff;
-			cut(info);
+			info.x00=(111>>8)&0xff;info.y00=(280>>8)&0xff;
+			info.x01=111&0xff;info.y01=280&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(280+18)&0xff;
+			cut(info);			
+			info.x00=(126>>8)&0xff;info.y00=(282>>8)&0xff;
+			info.x01=126&0xff;info.y01=282&0xff;
+			info.x10=((126+19)>>8)&0xff;info.y10=((282+18)>>8)&0xff;
+			info.x11=(126+19)&0xff;info.y11=(282+18)&0xff;
 			info.vp0=(ADDR_CUT_PM25_2>>8)&0xff;
 			info.vp1=ADDR_CUT_PM25_2&0xff;
 			cut(info);
@@ -1565,19 +2162,19 @@ void show_main_alarm()
 			info.page1=MAIN_PAGE&0xff;
 			info.vp0=(ADDR_CUT_HCHO_1>>8)&0xff;
 			info.vp1=ADDR_CUT_HCHO_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(124>>8)&0xff;
-			info.x01=126&0xff;info.y01=124&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((124+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(124+18)&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(155>>8)&0xff;
+			info.x01=111&0xff;info.y01=155&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((155+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(155+18)&0xff;
 			cut(info);
 			info.page0=(MAIN_PAGE_PPM>>8)&0xff;
 			info.page1=MAIN_PAGE_PPM&0xff;
 			info.vp0=(ADDR_CUT_HCHO_2>>8)&0xff;
 			info.vp1=ADDR_CUT_HCHO_2&0xff;
-			info.x00=(127>>8)&0xff;info.y00=(119>>8)&0xff;
-			info.x01=127&0xff;info.y01=119&0xff;
-			info.x10=((127+19)>>8)&0xff;info.y10=((119+18)>>8)&0xff;
-			info.x11=(127+19)&0xff;info.y11=(119+18)&0xff;
+			info.x00=(127>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=127&0xff;info.y01=154&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(154+18)&0xff;
 			cut(info);
 		}
 		else
@@ -1587,19 +2184,19 @@ void show_main_alarm()
 			info.page1=MAIN_SUB_PAGE1&0xff;
 			info.vp0=(ADDR_CUT_HCHO_1>>8)&0xff;
 			info.vp1=ADDR_CUT_HCHO_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(124>>8)&0xff;
-			info.x01=126&0xff;info.y01=124&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((124+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(124+18)&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(155>>8)&0xff;
+			info.x01=111&0xff;info.y01=155&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((155+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(155+18)&0xff;
 			cut(info);
 			info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
 			info.page1=MAIN_SUB_PAGE2&0xff;
 			info.vp0=(ADDR_CUT_HCHO_2>>8)&0xff;
 			info.vp1=ADDR_CUT_HCHO_2&0xff;
-			info.x00=(127>>8)&0xff;info.y00=(119>>8)&0xff;
-			info.x01=127&0xff;info.y01=119&0xff;
-			info.x10=((127+19)>>8)&0xff;info.y10=((119+18)>>8)&0xff;
-			info.x11=(127+19)&0xff;info.y11=(119+18)&0xff;
+			info.x00=(127>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=127&0xff;info.y01=154&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(154+18)&0xff;
 			cut(info);
 		}
 	}
@@ -1624,19 +2221,19 @@ void show_main_alarm()
 			info.page1=MAIN_PAGE&0xff;
 			info.vp0=(ADDR_CUT_SHIDU_1>>8)&0xff;
 			info.vp1=ADDR_CUT_SHIDU_1&0xff;
-			info.x00=(540>>8)&0xff;info.y00=(125>>8)&0xff;
-			info.x01=540&0xff;info.y01=125&0xff;
-			info.x10=((540+19)>>8)&0xff;info.y10=((125+18)>>8)&0xff;
-			info.x11=(540+19)&0xff;info.y11=(125+18)&0xff;
+			info.x00=(525>>8)&0xff;info.y00=(156>>8)&0xff;
+			info.x01=525&0xff;info.y01=156&0xff;
+			info.x10=((525+19)>>8)&0xff;info.y10=((156+18)>>8)&0xff;
+			info.x11=(525+19)&0xff;info.y11=(156+18)&0xff;
 			cut(info);
 			info.page0=(MAIN_PAGE_PPM>>8)&0xff;
 			info.page1=MAIN_PAGE_PPM&0xff;
 			info.vp0=(ADDR_CUT_SHIDU_2>>8)&0xff;
 			info.vp1=ADDR_CUT_SHIDU_2&0xff;
-			info.x00=(541>>8)&0xff;info.y00=(119>>8)&0xff;
-			info.x01=541&0xff;info.y01=119&0xff;
-			info.x10=((541+19)>>8)&0xff;info.y10=((119+18)>>8)&0xff;
-			info.x11=(541+19)&0xff;info.y11=(119+18)&0xff;
+			info.x00=(541>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=541&0xff;info.y01=154&0xff;
+			info.x10=((541+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(541+19)&0xff;info.y11=(154+18)&0xff;
 			cut(info);
 		}
 		else
@@ -1646,19 +2243,19 @@ void show_main_alarm()
 			info.page1=MAIN_SUB_PAGE1&0xff;
 			info.vp0=(ADDR_CUT_SHIDU_1>>8)&0xff;
 			info.vp1=ADDR_CUT_SHIDU_1&0xff;
-			info.x00=(540>>8)&0xff;info.y00=(125>>8)&0xff;
-			info.x01=540&0xff;info.y01=125&0xff;
-			info.x10=((540+19)>>8)&0xff;info.y10=((125+18)>>8)&0xff;
-			info.x11=(540+19)&0xff;info.y11=(125+18)&0xff;
+			info.x00=(525>>8)&0xff;info.y00=(156>>8)&0xff;
+			info.x01=525&0xff;info.y01=156&0xff;
+			info.x10=((525+19)>>8)&0xff;info.y10=((156+18)>>8)&0xff;
+			info.x11=(525+19)&0xff;info.y11=(156+18)&0xff;
 			cut(info);
 			info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
 			info.page1=MAIN_SUB_PAGE2&0xff;
 			info.vp0=(ADDR_CUT_SHIDU_2>>8)&0xff;
 			info.vp1=ADDR_CUT_SHIDU_2&0xff;
-			info.x00=(541>>8)&0xff;info.y00=(119>>8)&0xff;
-			info.x01=541&0xff;info.y01=119&0xff;
-			info.x10=((541+19)>>8)&0xff;info.y10=((119+18)>>8)&0xff;
-			info.x11=(541+19)&0xff;info.y11=(119+18)&0xff;
+			info.x00=(541>>8)&0xff;info.y00=(154>>8)&0xff;
+			info.x01=541&0xff;info.y01=154&0xff;
+			info.x10=((541+19)>>8)&0xff;info.y10=((154+18)>>8)&0xff;
+			info.x11=(541+19)&0xff;info.y11=(154+18)&0xff;
 			cut(info);
 		}
 	}
@@ -1683,11 +2280,15 @@ void show_main_alarm()
 			info.page1=MAIN_PAGE&0xff;
 			info.vp0=(ADDR_CUT_PM10_1>>8)&0xff;
 			info.vp1=ADDR_CUT_PM10_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(186>>8)&0xff;
-			info.x01=126&0xff;info.y01=186&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((186+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(186+18)&0xff;
-			cut(info);
+			info.x00=(111>>8)&0xff;info.y00=(217>>8)&0xff;
+			info.x01=111&0xff;info.y01=217&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((217+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(217+18)&0xff;
+			cut(info);			
+			info.x00=(127>>8)&0xff;info.y00=(216>>8)&0xff;
+			info.x01=127&0xff;info.y01=216&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(216+18)&0xff;
 			info.vp0=(ADDR_CUT_PM10_2>>8)&0xff;
 			info.vp1=ADDR_CUT_PM10_2&0xff;
 			cut(info);
@@ -1699,11 +2300,15 @@ void show_main_alarm()
 			info.page1=MAIN_SUB_PAGE1&0xff;
 			info.vp0=(ADDR_CUT_PM10_1>>8)&0xff;
 			info.vp1=ADDR_CUT_PM10_1&0xff;
-			info.x00=(126>>8)&0xff;info.y00=(186>>8)&0xff;
-			info.x01=126&0xff;info.y01=186&0xff;
-			info.x10=((126+19)>>8)&0xff;info.y10=((186+18)>>8)&0xff;
-			info.x11=(126+19)&0xff;info.y11=(186+18)&0xff;
+			info.x00=(111>>8)&0xff;info.y00=(217>>8)&0xff;
+			info.x01=111&0xff;info.y01=217&0xff;
+			info.x10=((111+19)>>8)&0xff;info.y10=((217+18)>>8)&0xff;
+			info.x11=(111+19)&0xff;info.y11=(217+18)&0xff;
 			cut(info);
+			info.x00=(127>>8)&0xff;info.y00=(216>>8)&0xff;
+			info.x01=127&0xff;info.y01=216&0xff;
+			info.x10=((127+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+			info.x11=(127+19)&0xff;info.y11=(216+18)&0xff;
 			info.vp0=(ADDR_CUT_PM10_2>>8)&0xff;
 			info.vp1=ADDR_CUT_PM10_2&0xff;
 			cut(info);
@@ -1729,11 +2334,15 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_WIND_1>>8)&0xff;
 		info.vp1=ADDR_CUT_WIND_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(187>>8)&0xff;
-		info.x01=540&0xff;info.y01=187&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((187+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(187+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(218>>8)&0xff;
+		info.x01=525&0xff;info.y01=218&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((218+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(218+18)&0xff;
 		cut(info);
+		info.x00=(541>>8)&0xff;info.y00=(216>>8)&0xff;
+		info.x01=541&0xff;info.y01=216&0xff;
+		info.x10=((541+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+		info.x11=(541+19)&0xff;info.y11=(216+18)&0xff;
 		info.vp0=(ADDR_CUT_WIND_2>>8)&0xff;
 		info.vp1=ADDR_CUT_WIND_2&0xff;
 		cut(info);
@@ -1745,11 +2354,15 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_WIND_1>>8)&0xff;
 		info.vp1=ADDR_CUT_WIND_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(187>>8)&0xff;
-		info.x01=540&0xff;info.y01=187&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((187+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(187+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(218>>8)&0xff;
+		info.x01=525&0xff;info.y01=218&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((218+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(218+18)&0xff;
 		cut(info);
+		info.x00=(541>>8)&0xff;info.y00=(216>>8)&0xff;
+		info.x01=541&0xff;info.y01=216&0xff;
+		info.x10=((541+19)>>8)&0xff;info.y10=((216+18)>>8)&0xff;
+		info.x11=(541+19)&0xff;info.y11=(216+18)&0xff;
 		info.vp0=(ADDR_CUT_WIND_2>>8)&0xff;
 		info.vp1=ADDR_CUT_WIND_2&0xff;
 		cut(info);
@@ -1777,11 +2390,15 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_NOISE_1>>8)&0xff;
 		info.vp1=ADDR_CUT_NOISE_1&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(249>>8)&0xff;
-		info.x01=541&0xff;info.y01=249&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(249+18)&0xff;
+		info.x00=(526>>8)&0xff;info.y00=(280>>8)&0xff;
+		info.x01=526&0xff;info.y01=280&0xff;
+		info.x10=((526+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+		info.x11=(526+19)&0xff;info.y11=(280+18)&0xff;
 		cut(info);
+		info.x00=(540>>8)&0xff;info.y00=(283>>8)&0xff;
+		info.x01=540&0xff;info.y01=283&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((283+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(283+18)&0xff;
 		info.vp0=(ADDR_CUT_NOISE_2>>8)&0xff;
 		info.vp1=ADDR_CUT_NOISE_2&0xff;
 		cut(info);
@@ -1793,11 +2410,15 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_NOISE_1>>8)&0xff;
 		info.vp1=ADDR_CUT_NOISE_1&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(249>>8)&0xff;
-		info.x01=541&0xff;info.y01=249&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((249+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(249+18)&0xff;
+		info.x00=(526>>8)&0xff;info.y00=(280>>8)&0xff;
+		info.x01=526&0xff;info.y01=280&0xff;
+		info.x10=((526+19)>>8)&0xff;info.y10=((280+18)>>8)&0xff;
+		info.x11=(526+19)&0xff;info.y11=(280+18)&0xff;
 		cut(info);
+		info.x00=(540>>8)&0xff;info.y00=(283>>8)&0xff;
+		info.x01=540&0xff;info.y01=283&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((283+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(283+18)&0xff;
 		info.vp0=(ADDR_CUT_NOISE_2>>8)&0xff;
 		info.vp1=ADDR_CUT_NOISE_2&0xff;
 		cut(info);
@@ -1823,11 +2444,15 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_PRESS_1>>8)&0xff;
 		info.vp1=ADDR_CUT_PRESS_1&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(311>>8)&0xff;
-		info.x01=541&0xff;info.y01=311&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(311+18)&0xff;
+		info.x00=(526>>8)&0xff;info.y00=(342>>8)&0xff;
+		info.x01=526&0xff;info.y01=342&0xff;
+		info.x10=((526+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+		info.x11=(526+19)&0xff;info.y11=(342+18)&0xff;
 		cut(info);
+		info.x00=(540>>8)&0xff;info.y00=(344>>8)&0xff;
+		info.x01=540&0xff;info.y01=344&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(344+18)&0xff;
 		info.vp0=(ADDR_CUT_PRESS_2>>8)&0xff;
 		info.vp1=ADDR_CUT_PRESS_2&0xff;
 		cut(info);
@@ -1839,11 +2464,15 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_PRESS_1>>8)&0xff;
 		info.vp1=ADDR_CUT_PRESS_1&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(311>>8)&0xff;
-		info.x01=541&0xff;info.y01=311&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((311+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(311+18)&0xff;
+		info.x00=(526>>8)&0xff;info.y00=(342>>8)&0xff;
+		info.x01=526&0xff;info.y01=342&0xff;
+		info.x10=((526+19)>>8)&0xff;info.y10=((342+18)>>8)&0xff;
+		info.x11=(526+19)&0xff;info.y11=(342+18)&0xff;
 		cut(info);
+		info.x00=(540>>8)&0xff;info.y00=(344>>8)&0xff;
+		info.x01=540&0xff;info.y01=344&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((344+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(344+18)&0xff;
 		info.vp0=(ADDR_CUT_PRESS_2>>8)&0xff;
 		info.vp1=ADDR_CUT_PRESS_2&0xff;
 		cut(info);
@@ -1869,11 +2498,15 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_CO2_1>>8)&0xff;
 		info.vp1=ADDR_CUT_CO2_1&0xff;
-		info.x00=(126>>8)&0xff;info.y00=(375>>8)&0xff;
-		info.x01=126&0xff;info.y01=375&0xff;
-		info.x10=((126+19)>>8)&0xff;info.y10=((375+18)>>8)&0xff;
-		info.x11=(126+19)&0xff;info.y11=(375+18)&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(406>>8)&0xff;
+		info.x01=111&0xff;info.y01=406&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((406+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(406+18)&0xff;
 		cut(info);
+		info.x00=(127>>8)&0xff;info.y00=(409>>8)&0xff;
+		info.x01=127&0xff;info.y01=409&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((409+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(409+18)&0xff;
 		info.vp0=(ADDR_CUT_CO2_2>>8)&0xff;
 		info.vp1=ADDR_CUT_CO2_2&0xff;
 		cut(info);
@@ -1885,11 +2518,15 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_CO2_1>>8)&0xff;
 		info.vp1=ADDR_CUT_CO2_1&0xff;
-		info.x00=(126>>8)&0xff;info.y00=(375>>8)&0xff;
-		info.x01=126&0xff;info.y01=375&0xff;
-		info.x10=((126+19)>>8)&0xff;info.y10=((375+18)>>8)&0xff;
-		info.x11=(126+19)&0xff;info.y11=(375+18)&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(406>>8)&0xff;
+		info.x01=111&0xff;info.y01=406&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((406+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(406+18)&0xff;
 		cut(info);
+		info.x00=(127>>8)&0xff;info.y00=(409>>8)&0xff;
+		info.x01=127&0xff;info.y01=409&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((409+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(409+18)&0xff;
 		info.vp0=(ADDR_CUT_CO2_2>>8)&0xff;
 		info.vp1=ADDR_CUT_CO2_2&0xff;
 		cut(info);
@@ -1915,11 +2552,15 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_TVOC_1>>8)&0xff;
 		info.vp1=ADDR_CUT_TVOC_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(374>>8)&0xff;
-		info.x01=540&0xff;info.y01=374&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((374+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(374+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(405>>8)&0xff;
+		info.x01=525&0xff;info.y01=405&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((405+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(405+18)&0xff;
 		cut(info);
+		info.x00=(539>>8)&0xff;info.y00=(408>>8)&0xff;
+		info.x01=539&0xff;info.y01=408&0xff;
+		info.x10=((539+19)>>8)&0xff;info.y10=((408+18)>>8)&0xff;
+		info.x11=(539+19)&0xff;info.y11=(408+18)&0xff;
 		info.vp0=(ADDR_CUT_TVOC_2>>8)&0xff;
 		info.vp1=ADDR_CUT_TVOC_2&0xff;
 		cut(info);
@@ -1931,11 +2572,15 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_TVOC_1>>8)&0xff;
 		info.vp1=ADDR_CUT_TVOC_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(374>>8)&0xff;
-		info.x01=540&0xff;info.y01=374&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((374+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(374+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(405>>8)&0xff;
+		info.x01=525&0xff;info.y01=405&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((405+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(405+18)&0xff;
 		cut(info);
+		info.x00=(539>>8)&0xff;info.y00=(408>>8)&0xff;
+		info.x01=539&0xff;info.y01=408&0xff;
+		info.x10=((539+19)>>8)&0xff;info.y10=((408+18)>>8)&0xff;
+		info.x11=(539+19)&0xff;info.y11=(408+18)&0xff;
 		info.vp0=(ADDR_CUT_TVOC_2>>8)&0xff;
 		info.vp1=ADDR_CUT_TVOC_2&0xff;
 		cut(info);
@@ -1961,19 +2606,19 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_TEMP_1>>8)&0xff;
 		info.vp1=ADDR_CUT_TEMP_1&0xff;
-		info.x00=(126>>8)&0xff;info.y00=(440>>8)&0xff;
-		info.x01=126&0xff;info.y01=440&0xff;
-		info.x10=((126+19)>>8)&0xff;info.y10=((440+18)>>8)&0xff;
-		info.x11=(126+19)&0xff;info.y11=(440+18)&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=111&0xff;info.y01=471&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(471+18)&0xff;
 		cut(info);
 		info.page0=(MAIN_PAGE_PPM>>8)&0xff;
 		info.page1=MAIN_PAGE_PPM&0xff;
 		info.vp0=(ADDR_CUT_TEMP_2>>8)&0xff;
 		info.vp1=ADDR_CUT_TEMP_2&0xff;
-		info.x00=(127>>8)&0xff;info.y00=(446>>8)&0xff;
-		info.x01=127&0xff;info.y01=446&0xff;
-		info.x10=((127+19)>>8)&0xff;info.y10=((446+18)>>8)&0xff;
-		info.x11=(127+19)&0xff;info.y11=(446+18)&0xff;
+		info.x00=(127>>8)&0xff;info.y00=(473>>8)&0xff;
+		info.x01=127&0xff;info.y01=473&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((473+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(473+18)&0xff;
 		cut(info);
 	}
 	else
@@ -1983,19 +2628,19 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_TEMP_1>>8)&0xff;
 		info.vp1=ADDR_CUT_TEMP_1&0xff;
-		info.x00=(126>>8)&0xff;info.y00=(440>>8)&0xff;
-		info.x01=126&0xff;info.y01=440&0xff;
-		info.x10=((126+19)>>8)&0xff;info.y10=((440+18)>>8)&0xff;
-		info.x11=(126+19)&0xff;info.y11=(440+18)&0xff;
+		info.x00=(111>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=111&0xff;info.y01=471&0xff;
+		info.x10=((111+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(111+19)&0xff;info.y11=(471+18)&0xff;
 		cut(info);
 		info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
 		info.page1=MAIN_SUB_PAGE2&0xff;
 		info.vp0=(ADDR_CUT_TEMP_2>>8)&0xff;
 		info.vp1=ADDR_CUT_TEMP_2&0xff;
-		info.x00=(127>>8)&0xff;info.y00=(446>>8)&0xff;
-		info.x01=127&0xff;info.y01=446&0xff;
-		info.x10=((127+19)>>8)&0xff;info.y10=((446+18)>>8)&0xff;
-		info.x11=(127+19)&0xff;info.y11=(446+18)&0xff;
+		info.x00=(127>>8)&0xff;info.y00=(473>>8)&0xff;
+		info.x01=127&0xff;info.y01=473&0xff;
+		info.x10=((127+19)>>8)&0xff;info.y10=((473+18)>>8)&0xff;
+		info.x11=(127+19)&0xff;info.y11=(473+18)&0xff;
 		cut(info);
 	}
 }
@@ -2019,19 +2664,19 @@ else
 		info.page1=MAIN_PAGE&0xff;
 		info.vp0=(ADDR_CUT_O3_1>>8)&0xff;
 		info.vp1=ADDR_CUT_O3_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(440>>8)&0xff;
-		info.x01=540&0xff;info.y01=440&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((440+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(440+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=525&0xff;info.y01=471&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(471+18)&0xff;
 		cut(info);
 		info.page0=(MAIN_PAGE_PPM>>8)&0xff;
 		info.page1=MAIN_PAGE_PPM&0xff;
 		info.vp0=(ADDR_CUT_O3_2>>8)&0xff;
 		info.vp1=ADDR_CUT_O3_2&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(448>>8)&0xff;
-		info.x01=541&0xff;info.y01=448&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((448+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(448+18)&0xff;
+		info.x00=(540>>8)&0xff;info.y00=(475>>8)&0xff;
+		info.x01=540&0xff;info.y01=475&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((475+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(475+18)&0xff;
 		cut(info);
 	}
 	else
@@ -2041,19 +2686,19 @@ else
 		info.page1=MAIN_SUB_PAGE1&0xff;
 		info.vp0=(ADDR_CUT_O3_1>>8)&0xff;
 		info.vp1=ADDR_CUT_O3_1&0xff;
-		info.x00=(540>>8)&0xff;info.y00=(440>>8)&0xff;
-		info.x01=540&0xff;info.y01=440&0xff;
-		info.x10=((540+19)>>8)&0xff;info.y10=((440+18)>>8)&0xff;
-		info.x11=(540+19)&0xff;info.y11=(440+18)&0xff;
+		info.x00=(525>>8)&0xff;info.y00=(471>>8)&0xff;
+		info.x01=525&0xff;info.y01=471&0xff;
+		info.x10=((525+19)>>8)&0xff;info.y10=((471+18)>>8)&0xff;
+		info.x11=(525+19)&0xff;info.y11=(471+18)&0xff;
 		cut(info);
 		info.page0=(MAIN_SUB_PAGE2>>8)&0xff;
 		info.page1=MAIN_SUB_PAGE2&0xff;
 		info.vp0=(ADDR_CUT_O3_2>>8)&0xff;
 		info.vp1=ADDR_CUT_O3_2&0xff;
-		info.x00=(541>>8)&0xff;info.y00=(448>>8)&0xff;
-		info.x01=541&0xff;info.y01=448&0xff;
-		info.x10=((541+19)>>8)&0xff;info.y10=((448+18)>>8)&0xff;
-		info.x11=(541+19)&0xff;info.y11=(448+18)&0xff;
+		info.x00=(540>>8)&0xff;info.y00=(475>>8)&0xff;
+		info.x01=540&0xff;info.y01=475&0xff;
+		info.x10=((540+19)>>8)&0xff;info.y10=((475+18)>>8)&0xff;
+		info.x11=(540+19)&0xff;info.y11=(475+18)&0xff;
 		cut(info);
 	}
 }
