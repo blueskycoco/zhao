@@ -6001,6 +6001,7 @@ int lcd_init()
 		g_share_memory	= (struct share_memory *)shmat(shmid_share_memory,	 0, 0);
 		g_share_memory->sensor_interface_mem[0] = 0x1234;
 		signal(SIGALRM, lcd_off);		
+		init_alarm_show();
 		if(g_share_memory->sleep!=0)
 			alarm(g_share_memory->sleep*60);
 		else

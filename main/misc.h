@@ -39,4 +39,5 @@ void show_main_alarm_shidu(char *data);
 void show_main_alarm_noise(char *data);
 void show_main_alarm_pm25(char *data);
 void show_main_alarm_pm10(char *data);
+void init_alarm_show();
 #endif
