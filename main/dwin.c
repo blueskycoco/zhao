@@ -4886,6 +4886,16 @@ unsigned short input_handle(char *input)
 		display_time(g_share_memory->server_time[5]+2000,g_share_memory->server_time[6],g_share_memory->server_time[7],
 			g_share_memory->server_time[8],g_share_memory->server_time[9],g_share_memory->server_time[10]);
 	}
+	else if(addr==TOUCH_INTERFACE_0 && (TOUCH_INTERFACE_0+0x100)==data)
+	{
+		if(interface_select==0)
+		{
+			g_index=VERIFY_PAGE;
+			verify_object=101;
+			g_share_memory->jiaozhun_sensor=atoi(ID_CAP_PM_10);
+			jiaozhun(1,verify_object,verify_point);
+		}
+	}
 	else if(addr==TOUCH_INTERFACE_1 && (TOUCH_INTERFACE_1+0x100)==data)
 	{
 		if(interface_select==0)
@@ -4993,8 +5003,8 @@ unsigned short input_handle(char *input)
 		if(interface_select==0)
 		{
 			g_index=VERIFY_PAGE;
-			verify_object=7;
-			g_share_memory->jiaozhun_sensor=atoi(Get_Type(verify_object));
+			verify_object=107;
+			g_share_memory->jiaozhun_sensor=atoi(ID_CAP_SHI_DU);
 			jiaozhun(1,verify_object,verify_point);		
 		}
 		else
