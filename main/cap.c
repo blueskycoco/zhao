@@ -1422,7 +1422,8 @@ void	send_cmd_to_cap(char *cmd,int len)
 			printfLog(CAP_PROCESS"wait for cap_board ack timeout\n");
 			break;
 		}
-		printfLog(CAP_PROCESS"cap_board_ack %d\n",g_share_memory->cap_board_ack);
+		if (g_share_memory->cap_board_ack != 0)
+			printfLog(CAP_PROCESS"cap_board_ack %d\n",g_share_memory->cap_board_ack);
 		if(g_share_memory->cap_board_ack)
 			break;
 		else

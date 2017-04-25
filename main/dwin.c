@@ -5918,6 +5918,7 @@ void lcd_loop()
 	char ch;
 	int i=1;
 	int get=0;
+	int len = 0;
 	char ptr[32]={0};	
 	switch_pic(MAIN_PAGE);
 	g_index=MAIN_PAGE;
@@ -5948,13 +5949,15 @@ void lcd_loop()
 						get=0;
 					break;
 				case 2:
-					if(ch==0x06 || ch == 0x0a)
-					{
+					//if(ch==0x06 || ch == 0x0a)
+					//{
 						//printf(LCD_PROCESS"0x06 get,get =3\r\n");
-						get=3;
-					}
-					else
-						get=0;
+					//	get=3;
+					//}
+					//else
+					//	get=0;
+					len = ch;
+					get=3;
 					break;
 				case 3:
 					if(ch==0x83)
@@ -5970,7 +5973,7 @@ void lcd_loop()
 					{
 						//printf(LCD_PROCESS"%02x get ,get =5\r\n",ch);
 						ptr[i++]=ch;
-						if(i==6)
+						if(i==len)
 						{
 							get=0;
 							ptr[0]=0x01;
