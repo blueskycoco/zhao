@@ -43,7 +43,7 @@
 #ifdef NO_LOG
 #define VERSION	"2017-02-20-00"
 #else
-#define VERSION	"2017-02-204-01"
+#define VERSION	"2017-02-205-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -138,6 +138,7 @@ struct share_memory{
 	char	cap_board_ack;
 	char	fan_state;
 	char	audio_state;
+	char 	show_val_from_cur;
 	struct alarm_val sensor_alarm_val;
 	pthread_mutex_t mutex;
 };
@@ -222,7 +223,7 @@ extern key_t  shmid_history_pm10;
 #define SLEEPING_SELECT_PAGE	118
 #define SLEEPING_PINGBAO_SETTING_PAGE	120
 #define ALARM_SETTING_PAGE	122
-
+#define ALARM_VALE_SEL_PAGE 126
 
 #define	ADDR_HCHO_REAL_1	0x0000
 #define	ADDR_PM10_REAL_1	0x0001
@@ -1140,6 +1141,8 @@ extern key_t  shmid_history_pm10;
 #define	TOUCH_SET_ALAM	0x00da
 #define	TOUCH_RETURN_ALAM 0x00db
 #define TOUCH_ALAM_SET	0x00d3
+#define TOUCH_SEL_ALARM_CUR	0x0219
+#define TOUCH_SEL_ALARM_HIS	0x021a
 #define ADDR_ALARM_CO_SHOW1	0x00ee
 #define ADDR_ALARM_CO_SHOW2	0x00ef
 

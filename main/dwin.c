@@ -4652,6 +4652,20 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_SET_ALAM&& (TOUCH_SET_ALAM+0x100)==data)
 	{//setting alarm value
 		handle_alarm_value();
+		switch_pic(ALARM_VALE_SEL_PAGE);
+		g_index=ALARM_VALE_SEL_PAGE;
+	}
+	else if(addr == TOUCH_SEL_ALARM_CUR && (TOUCH_SEL_ALARM_CUR+0x100)==data)
+	{
+		g_share_memory->show_val_from_cur = 1;
+		set_net_interface();
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
+	}	
+	else if(addr == TOUCH_SEL_ALARM_HIS && (TOUCH_SEL_ALARM_HIS+0x100)==data)
+	{
+		g_share_memory->show_val_from_cur = 0;
+		set_net_interface();
 		show_main_alarm();
 		switch_pic(SYSTEM_SETTING_PAGE);
 		g_index=SYSTEM_SETTING_PAGE;

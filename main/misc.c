@@ -516,7 +516,8 @@ void get_net_interface()
 			printfLog(MISC_PROCESS"get interface size 0\n");
 			g_share_memory->send_by_wifi=1;
 			g_share_memory->sleep=5;
-			g_share_memory->black_lcd=1;	
+			g_share_memory->black_lcd=1;
+			g_share_memory->show_val_from_cur=1;
 			fclose(fp);
 			set_net_interface();
 		}
@@ -527,7 +528,9 @@ void get_net_interface()
 			if(fread(&(g_share_memory->sleep),1,1,fp)<0)
 				g_share_memory->sleep=5;				
 			if(fread(&(g_share_memory->black_lcd),1,1,fp)<0)
-				g_share_memory->black_lcd=1;	
+				g_share_memory->black_lcd=1;				
+			if(fread(&(g_share_memory->show_val_from_cur),1,1,fp)<0)
+				g_share_memory->show_val_from_cur=1;	
 			fclose(fp);
 		}
 	}
@@ -535,7 +538,8 @@ void get_net_interface()
 	{
 		g_share_memory->send_by_wifi=1;
 		g_share_memory->sleep=5;
-		g_share_memory->black_lcd=1;	
+		g_share_memory->black_lcd=1;
+		g_share_memory->show_val_from_cur=1;
 	}
 	
 	printfLog(MISC_PROCESS"get interface is %d\n",g_share_memory->send_by_wifi);
@@ -644,6 +648,7 @@ void set_net_interface()
 	fwrite(&(g_share_memory->send_by_wifi),1,1,fp);
 	fwrite(&(g_share_memory->sleep),1,1,fp);
 	fwrite(&(g_share_memory->black_lcd),1,1,fp);
+	fwrite(&(g_share_memory->show_val_from_cur),1,1,fp);
 	fclose(fp);
 	printfLog(MISC_PROCESS"set interface is %d\n",g_share_memory->send_by_wifi);
 }
@@ -1456,6 +1461,8 @@ int beyond_alarm(char *alarm,char *data)
 void show_main_alarm_co(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
 	{
@@ -1517,6 +1524,8 @@ void show_main_alarm_co(char *data)
 void show_main_alarm_co2(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 /*1 get history data <> alarm point */
 if (strlen(g_share_memory->sensor_alarm_val.co2) ==0)
 {
@@ -1577,6 +1586,8 @@ else
 void show_main_alarm_hcho(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.hcho) ==0)
 	{
@@ -1639,6 +1650,8 @@ void show_main_alarm_hcho(char *data)
 void show_main_alarm_temp(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 /*1 get history data <> alarm point */
 if (strlen(g_share_memory->sensor_alarm_val.temp) ==0)
 {
@@ -1701,6 +1714,8 @@ else
 void show_main_alarm_shidu(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.shidu) ==0)
 	{
@@ -1763,6 +1778,8 @@ void show_main_alarm_shidu(char *data)
 void show_main_alarm_o3(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 /*1 get history data <> alarm point */
 if (strlen(g_share_memory->sensor_alarm_val.o3) ==0)
 {
@@ -1823,6 +1840,8 @@ else
 void show_main_alarm_tvoc(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 /*1 get history data <> alarm point */
 if (strlen(g_share_memory->sensor_alarm_val.tvoc) ==0)
 {
@@ -1884,6 +1903,8 @@ void show_main_alarm_noise(char *data)
 {
 	struct cut_info info;
 	
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.noise) ==0)
 	{
@@ -1945,6 +1966,8 @@ void show_main_alarm_noise(char *data)
 void show_main_alarm_pm25(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.pm25) ==0)
 	{
@@ -2005,6 +2028,8 @@ void show_main_alarm_pm25(char *data)
 void show_main_alarm_pm10(char *data)
 {
 	struct cut_info info;
+	if (!g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.pm10) ==0)
 	{
@@ -2092,7 +2117,8 @@ void init_alarm_show()
 void show_main_alarm()
 {
 	struct cut_info info;
-	return ;
+	if (g_share_memory->show_val_from_cur)
+		return ;
 	/*1 get history data <> alarm point */
 	if (strlen(g_share_memory->sensor_alarm_val.co) ==0)
 	{
