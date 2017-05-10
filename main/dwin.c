@@ -3572,8 +3572,34 @@ void handle_alarm_value()
 	result = read_dgus(ADDR_ALAM_CO2,6,val);
 	if (result && strlen(val) !=0)		
 	{
+		int i=0;
+		char *p = val;
+		char val1[10]={0};
+		printfLog(LCD_PROCESS"co2 alam val %s\n", val);
+		while (*p != '\0')
+		{
+			if (*p == '.')
+				break;
+			i++;
+			p++;
+		}
+		if (i != strlen(val))
+		{
+			int j =0;
+			int len = strlen(val1);
+			if (len <= 5)
+			{
+				strcpy(val1, val+i);
+				for (j=0;j<5-len; j++)
+					strcat(val1,"0");
+			}
+			else
+				memcpy(val1,val+i,5);
+		}
+		else
+			strcpy(val1,val);
 		memset(g_share_memory->sensor_alarm_val.co2,0,10);
-		strcpy(g_share_memory->sensor_alarm_val.co2,val);
+		sprintf(g_share_memory->sensor_alarm_val.co2,"%d",atoi(val1));
 		printfLog(LCD_PROCESS"co2 alarm value %s\n", g_share_memory->sensor_alarm_val.co2);
 	}
 	memset(val,0,10);
@@ -4645,30 +4671,31 @@ unsigned short input_handle(char *input)
 	}		
 	else if(addr==TOUCH_ALAM_SET&& (TOUCH_ALAM_SET+0x100)==data)
 	{//setting alarm value
-		show_alarm_value();
-		switch_pic(ALARM_SETTING_PAGE);
-		g_index=ALARM_SETTING_PAGE;
+		switch_pic(ALARM_VALE_SEL_PAGE);
+		g_index=ALARM_VALE_SEL_PAGE;
 	}
 	else if(addr==TOUCH_SET_ALAM&& (TOUCH_SET_ALAM+0x100)==data)
 	{//setting alarm value
 		handle_alarm_value();
-		switch_pic(ALARM_VALE_SEL_PAGE);
-		g_index=ALARM_VALE_SEL_PAGE;
+		show_main_alarm();
+		switch_pic(SYSTEM_SETTING_PAGE);
+		g_index=SYSTEM_SETTING_PAGE;
 	}
 	else if(addr == TOUCH_SEL_ALARM_CUR && (TOUCH_SEL_ALARM_CUR+0x100)==data)
 	{
 		g_share_memory->show_val_from_cur = 1;
 		set_net_interface();
-		switch_pic(SYSTEM_SETTING_PAGE);
-		g_index=SYSTEM_SETTING_PAGE;
+		show_alarm_value();
+		switch_pic(ALARM_SETTING_PAGE);
+		g_index=ALARM_SETTING_PAGE;
 	}	
 	else if(addr == TOUCH_SEL_ALARM_HIS && (TOUCH_SEL_ALARM_HIS+0x100)==data)
 	{
 		g_share_memory->show_val_from_cur = 0;
-		set_net_interface();
-		show_main_alarm();
-		switch_pic(SYSTEM_SETTING_PAGE);
-		g_index=SYSTEM_SETTING_PAGE;
+		set_net_interface();		
+		show_alarm_value();
+		switch_pic(ALARM_SETTING_PAGE);
+		g_index=ALARM_SETTING_PAGE;
 	}
 	else if(addr==TOUCH_CLEAN_ALARM_CO && (TOUCH_CLEAN_ALARM_CO+0x100)==data)
 	{
