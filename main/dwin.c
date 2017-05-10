@@ -3578,26 +3578,29 @@ void handle_alarm_value()
 		printfLog(LCD_PROCESS"co2 alam val %s\n", val);
 		while (*p != '\0')
 		{
+			i++;
 			if (*p == '.')
 				break;
-			i++;
 			p++;
 		}
+		printfLog(LCD_PROCESS"i %d, %d\n",i, strlen(val));
 		if (i != strlen(val))
 		{
 			int j =0;
-			int len = strlen(val1);
-			if (len <= 5)
+			int len = strlen(val+i);
+			printfLog(LCD_PROCESS"len %d\n",len);
+			if (len <= 4)
 			{
 				strcpy(val1, val+i);
-				for (j=0;j<5-len; j++)
+				for (j=0;j<4-len; j++)
 					strcat(val1,"0");
 			}
 			else
-				memcpy(val1,val+i,5);
+				memcpy(val1,val+i,4);
 		}
 		else
 			strcpy(val1,val);
+		printfLog(LCD_PROCESS"val1 %s %d\n",val1,atoi(val1));
 		memset(g_share_memory->sensor_alarm_val.co2,0,10);
 		sprintf(g_share_memory->sensor_alarm_val.co2,"%d",atoi(val1));
 		printfLog(LCD_PROCESS"co2 alarm value %s\n", g_share_memory->sensor_alarm_val.co2);
@@ -3653,8 +3656,20 @@ void show_alarm_value()
 		write_string(ADDR_ALAM_NOISE,g_share_memory->sensor_alarm_val.noise,
 			strlen(g_share_memory->sensor_alarm_val.noise));	
 	if (strlen(g_share_memory->sensor_alarm_val.co2)!=0)
-		write_string(ADDR_ALAM_CO2,g_share_memory->sensor_alarm_val.co2,
-			strlen(g_share_memory->sensor_alarm_val.co2));	
+	{
+		int i=0;
+		char val[10]={0};
+		strcpy(val,"0.");
+		if (strlen(g_share_memory->sensor_alarm_val.co2) <= 5)
+		for (i=0;i<5 - strlen(g_share_memory->sensor_alarm_val.co2);i++)
+		{
+			strcat(val, "0");
+		}
+		strcat(val,g_share_memory->sensor_alarm_val.co2);
+		printfLog(LCD_PROCESS"co2 alarm val %s\n",val);
+		write_string(ADDR_ALAM_CO2,val,
+			strlen(val));	
+	}
 	if (strlen(g_share_memory->sensor_alarm_val.temp)!=0)
 		write_string(ADDR_ALAM_TEMP,g_share_memory->sensor_alarm_val.temp,
 			strlen(g_share_memory->sensor_alarm_val.temp));	
