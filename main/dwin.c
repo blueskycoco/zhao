@@ -3660,8 +3660,8 @@ void show_alarm_value()
 		int i=0;
 		char val[10]={0};
 		strcpy(val,"0.");
-		if (strlen(g_share_memory->sensor_alarm_val.co2) <= 5)
-		for (i=0;i<5 - strlen(g_share_memory->sensor_alarm_val.co2);i++)
+		if (strlen(g_share_memory->sensor_alarm_val.co2) <= 4)
+		for (i=0;i<4 - strlen(g_share_memory->sensor_alarm_val.co2);i++)
 		{
 			strcat(val, "0");
 		}
