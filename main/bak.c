@@ -76,7 +76,7 @@ int file_len(char *path)
 		flen=ftell(fp);
 		fseek(fp,0L,SEEK_SET);
 		fclose(fp);
-		//printfLog("check %s, len %d\n", path, flen);	
+		printfLog("check %s, len %d\n", path, flen);	
 	} else {
 		printfLog("file %s is not exist\n",path);
 	}
@@ -91,7 +91,7 @@ int main(void)
 	//read_curr_time(file);
 	strcpy(file,"_file");
 	init_log(file);
-	//printfLog("check system files\n");
+	printfLog("check system files\n");
 	
 	flen_ori = file_len(CAP_IMX280);
 	flen_bak = file_len(CAP_IMX280_BAK);
@@ -109,10 +109,12 @@ int main(void)
 	}
 	else
 	{
+		printfLog("copy from %s to %s\n", CAP_IMX280,
+					CAP_IMX280_BAK);
 		sprintf(cmd, "cp -f %s %s", CAP_IMX280, CAP_IMX280_BAK);
 		system(cmd);
 	}
-	//printfLog("check configuration files\n");
+	printfLog("check configuration files\n");
 	flen_ori = file_len(WPA_FILE);
 	flen_bak = file_len(WPA_FILE_BAK);
 	if (flen_ori == 0 || flen_ori < flen_bak)
@@ -129,8 +131,8 @@ int main(void)
 	}
 	else
 	{
-		//printfLog("copy from %s to %s\n", WPA_FILE,
-		//			WPA_FILE_BAK);
+		printfLog("copy from %s to %s\n", WPA_FILE,
+					WPA_FILE_BAK);
 		sprintf(cmd, "cp -f %s %s", WPA_FILE, WPA_FILE_BAK);
 		system(cmd);
 	}
