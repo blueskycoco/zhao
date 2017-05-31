@@ -202,7 +202,7 @@ static char *http_parse_result(const char*lpbuf)
 		printfLog(NET_LIB_TAG"http/1.1 not faind\n%s\n",lpbuf);  
 		return NULL;  
 	}  
-	//printf(NET_LIB_TAG"%s",lpbuf);
+	//printfLog(NET_LIB_TAG"%s",lpbuf);
 	if(atoi(ptmp + 9)!=200)
 	{  
 		if(strstr(lpbuf,"ok")==NULL)
