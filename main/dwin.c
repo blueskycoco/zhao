@@ -52,7 +52,10 @@ void switch_pic(unsigned char Index)
 void lcd_on(int page)
 {
 	char cmd[]={0x5a,0xa5,0x03,0x80,0x01,0x40};
-	switch_pic(page);
+	//switch_pic(page);	
+	clear_buf(ADDR_LOGIN_USER_NAME,16);
+	clear_buf(ADDR_LOGIN_USER_KEY,16);
+	switch_pic(LOGIN_PAGE);
 	usleep(200000);
 	if(g_share_memory->black_lcd)
 	{
@@ -2880,6 +2883,7 @@ void log_in()
 {
 	char user_name[256]={0};
 	char passwd[256]={0};
+	logged=0;
 	if(read_dgus(ADDR_LOGIN_USER_NAME,16,user_name) && read_dgus(ADDR_LOGIN_USER_KEY,16,passwd))
 	{
 		printfLog(LCD_PROCESS"User Name %s \nUser Pwd %s\n",user_name,passwd);
@@ -5620,6 +5624,14 @@ unsigned short input_handle(char *input)
 	else if(addr==TOUCH_LOGIN_OK&& (TOUCH_LOGIN_OK+0x100)==data)
 	{//Login if didn't 
 		log_in();
+		if(logged)
+		{
+			if(g_index==SENSOR_SETTING_PAGE)
+				switch_pic(g_index);
+			else
+				switch_pic(MAIN_PAGE);
+		}
+		#if 0
 		printfLog(LCD_PROCESS"lcd=>history_done %d\n",g_share_memory->history_done);
 		if(logged)
 		{
@@ -5794,6 +5806,7 @@ unsigned short input_handle(char *input)
 			if(g_index==SENSOR_SETTING_PAGE)
 				switch_pic(g_index);
 		}
+		#endif
 	}
 	else if((addr==TOUCH_FAN_1&& (TOUCH_FAN_1+0x100)==data) ||
 		(addr==TOUCH_FAN_2&& (TOUCH_FAN_2+0x100)==data))
