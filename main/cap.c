@@ -1019,6 +1019,8 @@ char *build_message(char *cmd,int len,char *message)
 					{
 						message=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_DATA);
 						message=add_item(message,ID_DEVICE_UID,g_share_memory->uuid);
+						if (strlen(g_share_memory->ip)==0)
+							get_ip();
 						message=add_item(message,ID_DEVICE_IP_ADDR,g_share_memory->ip);
 						message=add_item(message,ID_DEVICE_PORT,(char *)"9517");	
 					}

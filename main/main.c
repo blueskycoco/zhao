@@ -114,6 +114,7 @@ int main(int argc, char *argv[])
 	g_share_memory->factory_mode=NORMAL_MODE;
 	g_share_memory->history_done=0;
 	g_share_memory->ppm=0;
+	memset(g_share_memory->ip,20,0);
 	pthread_mutex_init(&(g_share_memory->mutex),NULL);
 	get_ip();
 	get_sensor_alarm_info();
