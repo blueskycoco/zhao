@@ -2817,3 +2817,39 @@ else
 	}
 }
 }
+
+void *network_thread(void* arg)
+{
+	while(1) {
+		get_ip();
+		if (strlen(g_share_memory->ip) != 0)
+		{			
+			char cmd[256]={0};
+			char ret[256]={0};
+			FILE *fp;
+			char *p = strrchr(g_share_memory->ip, '.');
+			strcpy(cmd, "ping -W 1 -c 1 ");
+			memcpy(cmd + strlen("ping -W 1 -c 1 "), g_share_memory->ip, 
+				strlen(g_share_memory->ip) - strlen(p)+1);
+			strcat(cmd,"1");
+			//sprintf(cmd,"ping -W 1 -c 1 www.baidu.com");
+			printfLog(MISC_PROCESS"exec %s\n", cmd);
+			if((fp=popen(cmd,"r"))!=NULL)
+			{
+				memset(ret,0,256);
+				fread(ret,sizeof(char),sizeof(ret),fp);
+				pclose(fp);
+				printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
+				if(strstr(ret,"from")==NULL)
+				{
+					/*net is down*/
+					execute_cmd("ifconfig ra0 down");
+					sleep(2);
+					execute_cmd("ifconfig ra0 up");
+					sleep(5);
+				}
+			}
+			sleep(60);
+		}
+	}	
+}

@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include "cap.h"
 #include "history.h"
 #include "misc.h"
@@ -21,6 +22,8 @@ key_t	shmid_history_pm10;
 key_t	shmid_share_memory;
 int main(int argc, char *argv[])
 {
+	pthread_t tid;
+	int err;
 	int fpid;	
 	char curr_time[256]={0};
 	//long i;
@@ -151,6 +154,15 @@ int main(int argc, char *argv[])
 		close(g_share_memory->fd_lcd);
 		return -1;
 	}
+
+	err = pthread_create (&tid, NULL, network_thread, NULL);
+	if (err != 0)
+	{
+		printfLog(MAIN_PROCESS"can't create thread, %s\n", strerror(err));
+		return -1;
+	}
+	else
+		printfLog(MAIN_PROCESS"thread %d in charge of network status\n", tid);
 
 	xfer_init();
 	if((fpid=fork())==0)
