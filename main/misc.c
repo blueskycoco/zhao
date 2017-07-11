@@ -2842,14 +2842,17 @@ void *network_thread(void* arg)
 				printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
 				if(strstr(ret,"from")==NULL)
 				{
+					printfLog("network down\n");
 					/*net is down*/
 					execute_cmd("ifconfig ra0 down");
 					sleep(2);
 					execute_cmd("ifconfig ra0 up");
 					sleep(5);
+					execute_cmd("udhcpc -i ra0");
+					sleep(5);
 				}
 			}
-			sleep(60);
 		}
+		sleep(60);
 	}	
 }
