@@ -335,6 +335,7 @@ int GetIP_v4_and_v6_linux(int family,char *address,int size)
 			else 
 			{
 				printfLog(MISC_PROCESS"inet_ntop error\r\n");
+				memset(address,0,size);
 				break;  
 			}
 		}
@@ -2817,41 +2818,63 @@ else
 	}
 }
 }
-
+int check_cnn(void)
+{
+	char cmd[256]={0};
+	char ret[256]={0};
+	FILE *fp;
+	int result = 1;
+	
+	strcpy(cmd, "wpa_cli status");
+	printfLog(MISC_PROCESS"exec %s\n", cmd);
+	if((fp=popen(cmd,"r"))!=NULL)
+	{
+		fread(ret,sizeof(char),sizeof(ret),fp);
+		pclose(fp);
+		printfLog(MISC_PROCESS"wpa_cli status %s %d\n",ret,strlen(ret));
+		if(strstr(ret,"wpa_state=COMPLETED")==NULL)
+			result = 0;
+	}
+	return result;
+}
 void *network_thread(void* arg)
 {
 	while(1) {
-		get_ip();
-		if (strlen(g_share_memory->ip) != 0)
-		{			
-			char cmd[256]={0};
-			char ret[256]={0};
-			FILE *fp;
-			char *p = strrchr(g_share_memory->ip, '.');
-			strcpy(cmd, "ping -W 1 -c 1 ");
-			memcpy(cmd + strlen("ping -W 1 -c 1 "), g_share_memory->ip, 
-				strlen(g_share_memory->ip) - strlen(p)+1);
-			strcat(cmd,"1");
-			//sprintf(cmd,"ping -W 1 -c 1 www.baidu.com");
-			printfLog(MISC_PROCESS"exec %s\n", cmd);
-			if((fp=popen(cmd,"r"))!=NULL)
-			{
-				memset(ret,0,256);
-				fread(ret,sizeof(char),sizeof(ret),fp);
-				pclose(fp);
-				printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
-				if(strstr(ret,"from")==NULL)
+		if (check_cnn()==1) {
+			get_ip();
+			if (strlen(g_share_memory->ip) != 0)
+			{			
+				char cmd[256]={0};
+				char ret[256]={0};
+				FILE *fp;
+				char *p = strrchr(g_share_memory->ip, '.');
+				strcpy(cmd, "ping -W 1 -c 10 ");
+				memcpy(cmd + strlen("ping -W 1 -c 10 "), g_share_memory->ip, 
+					strlen(g_share_memory->ip) - strlen(p)+1);
+				strcat(cmd,"1");
+				//sprintf(cmd,"ping -W 1 -c 1 www.baidu.com");
+				printfLog(MISC_PROCESS"exec %s\n", cmd);
+				if((fp=popen(cmd,"r"))!=NULL)
 				{
-					printfLog("network down\n");
-					/*net is down*/
-					execute_cmd("ifconfig ra0 down");
-					sleep(2);
-					execute_cmd("ifconfig ra0 up");
-					sleep(5);
-					execute_cmd("udhcpc -i ra0");
-					sleep(5);
+					memset(ret,0,256);
+					fread(ret,sizeof(char),sizeof(ret),fp);
+					pclose(fp);
+					printfLog(MISC_PROCESS"ping return %s %d\n",ret,strlen(ret));
+					if(strstr(ret,"from")==NULL)
+					{
+						printfLog("network down\n");
+						/*net is down*/
+						execute_cmd("ifconfig ra0 down");
+						sleep(2);
+						execute_cmd("ifconfig ra0 up");
+						sleep(5);
+						execute_cmd("udhcpc -i ra0 -q -n");
+						sleep(5);
+					}
 				}
 			}
+			else
+				execute_cmd("udhcpc -i ra0 -q -n");
 		}
 		sleep(60);
 	}	
