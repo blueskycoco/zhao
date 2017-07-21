@@ -1402,18 +1402,8 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
-	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)  
-	{  
+	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
-		printfLog(CAP_PROCESS"RMID %d ,result %d\n",msgid,msgctl(msgid, IPC_RMID, NULL));
-		g_share_memory->msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
-		if(g_share_memory->msgid == -1)  
-			printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);
-		else
-			printfLog(CAP_PROCESS"reget msgid %d\n",g_share_memory->msgid);		
-		if(msgsnd(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
-			printfLog(CAP_PROCESS"msgsnd failed again %s\n",strerror(errno));
-	}
 	//printfLog(CAP_PROCESS"send msg done\n");
 	return 0;
 }
@@ -1649,15 +1639,8 @@ void cap_data_handle()
 		free(message);
 	}
 	else
-	{
-		g_share_memory->msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
-		if(g_share_memory->msgid == -1)  
-		{  
-			printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);
-		}
-		else
-		printfLog(CAP_PROCESS"msgid %d\n",g_share_memory->msgid);			
-		sleep(1);
+	{		
+		printfLog(CAP_PROCESS"msgrcv failed with error: %d\n", strerror(errno));
 	}
 	
 }
