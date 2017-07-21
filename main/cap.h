@@ -43,7 +43,7 @@
 #ifdef NO_LOG
 #define VERSION	"2017-02-20-00"
 #else
-#define VERSION	"2017-02-20-01"
+#define VERSION	"2017-02-20-03"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -141,6 +141,7 @@ struct share_memory{
 	char 	show_val_from_cur;
 	struct alarm_val sensor_alarm_val;
 	pthread_mutex_t mutex;
+	int 	msgid;
 };
 extern struct history sensor_history;
 extern struct share_memory *g_share_memory;

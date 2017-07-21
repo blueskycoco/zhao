@@ -7,7 +7,7 @@
 
 #define CAP_PROCESS "[CAP_PROCESS] "
 int g_upload=0;
-int msgid=0;
+
 char *post_message=NULL,*warnning_msg=NULL;
 struct msg_st  
 {  
@@ -21,7 +21,7 @@ void set_upload_flag(int a)
 {
 	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
-	alarm(600);
+	alarm(60);
 }
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
@@ -1405,6 +1405,14 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)  
 	{  
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
+		printfLog(CAP_PROCESS"RMID %d ,result %d\n",msgid,msgctl(msgid, IPC_RMID, NULL));
+		g_share_memory->msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+		if(g_share_memory->msgid == -1)  
+			printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);
+		else
+			printfLog(CAP_PROCESS"reget msgid %d\n",g_share_memory->msgid);		
+		if(msgsnd(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
+			printfLog(CAP_PROCESS"msgsnd failed again %s\n",strerror(errno));
 	}
 	//printfLog(CAP_PROCESS"send msg done\n");
 	return 0;
@@ -1520,7 +1528,7 @@ int cap_board_mon()
 						printfLog("\n");
 					}
 					else
-						send_msg(msgid,0x33,to_check,message_len+7);
+						send_msg(g_share_memory->msgid,0x33,to_check,message_len+7);
 					return 0;											
 				}
 				default:
@@ -1540,10 +1548,10 @@ void cap_data_handle()
 	int 	message_len=0;
 	int 	i=0;
 	//unsigned char *message=NULL;
-	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
-	if(msgrcv(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
+	printfLog(CAP_PROCESS"Enter cap_data_handle\n");
+	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
-		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
 		char *cmd=(char *)malloc(data.len);
 		memset(cmd,'\0',data.len);
 		memcpy(cmd,data.text,data.len);
@@ -1642,13 +1650,13 @@ void cap_data_handle()
 	}
 	else
 	{
-		msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
-		if(msgid == -1)  
+		g_share_memory->msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+		if(g_share_memory->msgid == -1)  
 		{  
 			printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);
 		}
 		else
-		printfLog(CAP_PROCESS"msgid %d\n",msgid);			
+		printfLog(CAP_PROCESS"msgid %d\n",g_share_memory->msgid);			
 		sleep(1);
 	}
 	
@@ -1660,14 +1668,14 @@ void cap_data_handle()
 int cap_init()
 {
 	int fpid = 0;
-	msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
-	if(msgid == -1)  
+	g_share_memory->msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+	if(g_share_memory->msgid == -1)  
 	{  
 		printfLog(CAP_PROCESS"msgget failed with error: %d\n", errno);  
 		exit(-1);  
 	}
 	else
-		printfLog(CAP_PROCESS"msgid %d\n",msgid);
+		printfLog(CAP_PROCESS"msgid %d\n",g_share_memory->msgid);
 	fpid=fork();
 	if(fpid==0)
 	{
@@ -1735,7 +1743,7 @@ int cap_init()
 		write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
 		write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);
 		signal(SIGALRM, set_upload_flag);
-		alarm(600);
+		alarm(60);
 		while(1)
 			cap_data_handle();
 	}
