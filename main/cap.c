@@ -21,7 +21,6 @@ void set_upload_flag(int a)
 {
 	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
-	alarm(60);
 }
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
@@ -807,7 +806,8 @@ char *build_message(char *cmd,int len,char *message)
 					message=count_pj(message);
 					send_server_save_local(date,message,1);
 					show_main_his();
-					show_main_alarm();
+					show_main_alarm();					
+					alarm(20);
 				}
 				free(message);
 				message=NULL;
@@ -1056,12 +1056,12 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(float)(cmd[5]<<8|cmd[6]);
 					}
-					//printfLog(CAP_PROCESS"1 Value %d\n",value);
+					printfLog(CAP_PROCESS"1 Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
-					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
+					printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
-					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
+					printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
 						cmd[3]!=atoi(ID_CAP_HCHO_EXT)&&cmd[3]!=atoi(ID_CAP_SHI_DU) &&
 						cmd[3]!=atoi(ID_CAP_TEMPERATURE) &&cmd[3]!=atoi(ID_CAP_PM_25) &&
@@ -1069,7 +1069,7 @@ char *build_message(char *cmd,int len,char *message)
 						cmd[3]!=atoi(ID_CAP_BUZZY) &&cmd[3]!=atoi(ID_CAP_TVOC) &&
 						cmd[3]!=atoi(ID_CAP_CHOU_YANG) &&cmd[3]!=atoi(ID_CAP_PM_10))
 					message=add_item(message,id,data);
-					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
+					printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
 				}
 			}
@@ -1390,6 +1390,18 @@ void show_verify_point()
 	clear_point();
 	switch_pic(VERIFY_PAGE);
 }
+void printf_msg_queue(int id)
+{
+	struct msqid_ds msg_info;
+	int rel = msgctl(id, IPC_STAT, &msg_info);
+	if (rel == -1)
+		printfLog(CAP_PROCESS"get IPC_STAT failed %s\n", strerror(errno));
+	else
+		printfLog(CAP_PROCESS"msg_cbytes %d\nmsg_qnum %d\nmsg_qbytes %d\n\
+					msg_lspid %d\nmsg_lrpid %d\n",
+					msg_info.msg_cbytes,msg_info.msg_qnum,msg_info.msg_qbytes,
+					msg_info.msg_lspid,msg_info.msg_lrpid);
+}
 int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
 	struct msg_st data;
@@ -1402,8 +1414,11 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
-	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
+	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), /*IPC_NOWAIT*/0) == -1)
+	{
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
+		printf_msg_queue(msgid);
+	}
 	//printfLog(CAP_PROCESS"send msg done\n");
 	return 0;
 }
@@ -1640,7 +1655,8 @@ void cap_data_handle()
 	}
 	else
 	{		
-		printfLog(CAP_PROCESS"msgrcv failed with error: %d\n", strerror(errno));
+		printfLog(CAP_PROCESS"msgrcv failed with error: %s\n", strerror(errno));
+		printf_msg_queue(g_share_memory->msgid);
 	}
 	
 }
@@ -1726,7 +1742,7 @@ int cap_init()
 		write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
 		write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);
 		signal(SIGALRM, set_upload_flag);
-		alarm(60);
+		alarm(20);
 		while(1)
 			cap_data_handle();
 	}
