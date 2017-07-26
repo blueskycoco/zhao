@@ -21,11 +21,12 @@ void set_upload_flag(int a)
 {
 	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
+	alarm(20);
 }
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
 {
-	printfLog(CAP_PROCESS"set_upload_data id %s,cnt %d,data %s,date %s\n",id,*cnt,data,date);
+	//printfLog(CAP_PROCESS"set_upload_data id %s,cnt %d,data %s,date %s\n",id,*cnt,data,date);
 	memset(history->data,'\0',10);
 	if(strncmp(id,ID_CAP_CO2,strlen(ID_CAP_CO2))==0)
 		sprintf(history->data,"%04d",atoi(data+2));
@@ -153,7 +154,7 @@ char *get_pj(int id,float *buf,int len)
 	int i, j;
 	float temp;
 	char *rt=NULL;
-	printfLog("Enter get_pj\n");
+	//printfLog("Enter get_pj %d %d\n",id,len);
 	for (i = 0; i < len - 1; i++)
 		for (j = 0; j < len - 1 - i; j++)
 			if (buf[j] > buf[j + 1]) {
@@ -162,9 +163,13 @@ char *get_pj(int id,float *buf,int len)
 				buf[j + 1] = temp;
 			}
 	temp=0;
-	for(i=1;i<len-1;i++)
-		temp+=buf[i];
-	temp=temp/(len-2);
+	if (len > 2) {
+		for(i=1;i<len-1;i++)
+			temp+=buf[i];
+		temp=temp/(len-2);
+	}
+	else
+		temp=buf[0];
 	rt=(char *)malloc(10);
 	memset(rt,'\0',10);
 	switch(id)
@@ -208,7 +213,7 @@ char *get_pj(int id,float *buf,int len)
 		default:
 			break;
 	}
-	printfLog("Leave pj %s\n",rt);
+	//printfLog("Leave pj %s\n",rt);
 	return rt;
 }
 char *count_pj(char *message)
@@ -806,8 +811,7 @@ char *build_message(char *cmd,int len,char *message)
 					message=count_pj(message);
 					send_server_save_local(date,message,1);
 					show_main_his();
-					show_main_alarm();					
-					alarm(20);
+					show_main_alarm();	
 				}
 				free(message);
 				message=NULL;
@@ -1056,12 +1060,12 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(float)(cmd[5]<<8|cmd[6]);
 					}
-					printfLog(CAP_PROCESS"1 Value %d\n",value);
+					//printfLog(CAP_PROCESS"1 Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
-					printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
+					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
-					printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
+					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
 						cmd[3]!=atoi(ID_CAP_HCHO_EXT)&&cmd[3]!=atoi(ID_CAP_SHI_DU) &&
 						cmd[3]!=atoi(ID_CAP_TEMPERATURE) &&cmd[3]!=atoi(ID_CAP_PM_25) &&
@@ -1069,7 +1073,7 @@ char *build_message(char *cmd,int len,char *message)
 						cmd[3]!=atoi(ID_CAP_BUZZY) &&cmd[3]!=atoi(ID_CAP_TVOC) &&
 						cmd[3]!=atoi(ID_CAP_CHOU_YANG) &&cmd[3]!=atoi(ID_CAP_PM_10))
 					message=add_item(message,id,data);
-					printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
+					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
 				}
 			}
@@ -1402,6 +1406,19 @@ void printf_msg_queue(int id)
 					msg_info.msg_cbytes,msg_info.msg_qnum,msg_info.msg_qbytes,
 					msg_info.msg_lspid,msg_info.msg_lrpid);
 }
+int is_msg_queue(int id)
+{
+	struct msqid_ds msg_info;
+	int rel = msgctl(id, IPC_STAT, &msg_info);
+	if (rel == -1)
+		printfLog(CAP_PROCESS"get IPC_STAT failed %s\n", strerror(errno));
+	/*else
+		printfLog(CAP_PROCESS"msg_cbytes %d\nmsg_qnum %d\nmsg_qbytes %d\n\
+					msg_lspid %d\nmsg_lrpid %d\n",
+					msg_info.msg_cbytes,msg_info.msg_qnum,msg_info.msg_qbytes,
+					msg_info.msg_lspid,msg_info.msg_lrpid);*/
+	return msg_info.msg_qnum > 0;
+}
 int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
 	struct msg_st data;
@@ -1553,10 +1570,12 @@ void cap_data_handle()
 	int 	message_len=0;
 	int 	i=0;
 	//unsigned char *message=NULL;
-	printfLog(CAP_PROCESS"Enter cap_data_handle\n");
+	if (is_msg_queue(g_share_memory->msgid))
+	{
+	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
 	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
-		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
 		char *cmd=(char *)malloc(data.len);
 		memset(cmd,'\0',data.len);
 		memcpy(cmd,data.text,data.len);
@@ -1658,7 +1677,7 @@ void cap_data_handle()
 		printfLog(CAP_PROCESS"msgrcv failed with error: %s\n", strerror(errno));
 		printf_msg_queue(g_share_memory->msgid);
 	}
-	
+	}
 }
 /*
  * open com port

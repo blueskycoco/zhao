@@ -1274,8 +1274,8 @@ void show_main_his()
 	if(g_share_memory->cnt[SENSOR_CO2]!=0) {
 		out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
 		write_data(ADDR_CO2_HIS_1,atoi(out));
-		printfLog(MISC_PROCESS"show co2 HIS %s == %s\n", out,
-			sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+		//printfLog(MISC_PROCESS"show co2 HIS %s == %s\n", out,
+		//	sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
 		free(out);
 	}
 	if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
@@ -1343,8 +1343,8 @@ void show_main_his()
 	if(g_share_memory->cnt[SENSOR_CO2]!=0) {
 		out=remove_p(sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
 		write_data(ADDR_CO2_HIS_2,atoi(out));
-		printfLog(MISC_PROCESS"CO2_HIS_2 %s == %s\n",out,
-			sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
+		//printfLog(MISC_PROCESS"CO2_HIS_2 %s == %s\n",out,
+		//	sensor_history.co2[g_share_memory->cnt[SENSOR_CO2]-1].data);
 		free(out);
 	}
 	if(g_share_memory->cnt[SENSOR_HCHO]!=0) {
@@ -1368,7 +1368,7 @@ int beyond_alarm(char *alarm,char *data)
 {
 	int result=0;
 	int i=0,j=0;
-	printfLog(MISC_PROCESS"alarm %s data %s",alarm,data);
+	//printfLog(MISC_PROCESS"alarm %s data %s",alarm,data);
 	char *out1=(char *)malloc(strlen(alarm));
 	memset(out1,'\0',strlen(alarm));
 	while(alarm[i]!='\0')
@@ -1434,7 +1434,7 @@ int beyond_alarm(char *alarm,char *data)
 		}
 		else
 		{
-			printfLog(MISC_PROCESS"out1 %s out2 %s\n",out1,out2);
+			//printfLog(MISC_PROCESS"out1 %s out2 %s\n",out1,out2);
 			if(strlen(out1)>strlen(out2))
 			{
 				int a=atoi(out2);
@@ -1448,7 +1448,7 @@ int beyond_alarm(char *alarm,char *data)
 				int a=atoi(out1);
 				for(i=0;i<strlen(out2)-strlen(out1);i++)
 					a=a*10;
-				printfLog(MISC_PROCESS"a %d out2 %d\n",a,atoi(out2));
+				//printfLog(MISC_PROCESS"a %d out2 %d\n",a,atoi(out2));
 				if(a>=atoi(out2))
 					result=1;
 
@@ -1917,7 +1917,7 @@ void show_main_alarm_noise(char *data)
 	{
 		write_data(ADDR_ALARM_NOISE_SHOW1,0x0000);
 		write_data(ADDR_ALARM_NOISE_SHOW2,0x0000);
-		printfLog("noise %s <> %s\n",g_share_memory->sensor_alarm_val.noise,data);	
+		//printfLog("noise %s <> %s\n",g_share_memory->sensor_alarm_val.noise,data);	
 		if (beyond_alarm(g_share_memory->sensor_alarm_val.noise,data))
 		{
 			/* <, show green */
@@ -2479,8 +2479,8 @@ else
 {
 	write_data(ADDR_ALARM_NOISE_SHOW1,0x0000);
 	write_data(ADDR_ALARM_NOISE_SHOW2,0x0000);
-	printfLog("noise %s <> %s\n",g_share_memory->sensor_alarm_val.noise,
-		sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data);	
+	//printfLog("noise %s <> %s\n",g_share_memory->sensor_alarm_val.noise,
+	//	sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data);	
 	if (beyond_alarm(g_share_memory->sensor_alarm_val.noise,
 		sensor_history.noise[g_share_memory->cnt[SENSOR_NOISE]-1].data))
 	{
