@@ -2840,6 +2840,7 @@ int check_cnn(void)
 void *network_thread(void* arg)
 {
 	while(1) {
+		sleep(60);
 		if (check_cnn()==1) {
 			get_ip();
 			if (strlen(g_share_memory->ip) != 0)
@@ -2876,6 +2877,5 @@ void *network_thread(void* arg)
 			else
 				execute_cmd("udhcpc -i ra0 -q -n");
 		}
-		sleep(60);
 	}	
 }
