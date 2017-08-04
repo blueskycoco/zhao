@@ -1431,7 +1431,7 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
-	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), /*IPC_NOWAIT*/0) == -1)
+	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
 	{
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
 		printf_msg_queue(msgid);
@@ -1570,8 +1570,8 @@ void cap_data_handle()
 	int 	message_len=0;
 	int 	i=0;
 	//unsigned char *message=NULL;
-	if (is_msg_queue(g_share_memory->msgid))
-	{
+	//if (is_msg_queue(g_share_memory->msgid))
+	//{
 	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
 	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
@@ -1677,7 +1677,7 @@ void cap_data_handle()
 		printfLog(CAP_PROCESS"msgrcv failed with error: %s\n", strerror(errno));
 		printf_msg_queue(g_share_memory->msgid);
 	}
-	}
+	//}
 }
 /*
  * open com port
