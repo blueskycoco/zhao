@@ -3,6 +3,7 @@
 #include "log.h"
 #include "misc.h"
 #include "netlib.h"
+#include "mycurl.h"
 pthread_mutex_t mutex;
 extern struct share_memory *g_share_memory;
 #define UPLOAD_PROCESS "[XFER] "

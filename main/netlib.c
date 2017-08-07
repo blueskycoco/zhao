@@ -232,7 +232,7 @@ static char *http_parse_result(const char*lpbuf)
 	return response;  
 }  
 
-char * http_post(const char *url,const char *post_str,int timeout){  
+char * http_post1(const char *url,const char *post_str,int timeout){  
 
 	//char post[BUFFER_SIZE] = {'\0'};  
 	int socket_fd = -1;  
