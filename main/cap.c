@@ -1419,8 +1419,16 @@ int is_msg_queue(int id)
 					msg_info.msg_lspid,msg_info.msg_lrpid);*/
 	return msg_info.msg_qnum > 0;
 }
+unsigned long get_cur_ms(void)
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	return (ts.tv_sec*1000 + ts.tv_nsec/1000000);
+}
 int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
+	static unsigned long ms = 0;
 	struct msg_st data;
 	data.msg_type = msg_type;
 	data.len=len;
@@ -1431,6 +1439,8 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
+	printfLog(CAP_PROCESS"sned_msg ms %d\n", get_cur_ms()-ms);
+	ms = get_cur_ms();
 	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
 	{
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
@@ -1569,10 +1579,13 @@ void cap_data_handle()
 	int 	message_type=0;
 	int 	message_len=0;
 	int 	i=0;
+	static unsigned long ms = 0;
 	//unsigned char *message=NULL;
 	//if (is_msg_queue(g_share_memory->msgid))
 	//{
 	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
+	printfLog(CAP_PROCESS"cap_data %d\n", get_cur_ms()-ms);
+	ms = get_cur_ms();
 	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
 		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
@@ -1614,7 +1627,11 @@ void cap_data_handle()
 				}
 			}
 			else
+			{
+				unsigned long build_ms = get_cur_ms();
 				post_message=build_message(cmd,message_len+7,post_message);
+				printfLog(CAP_PROCESS"build_ms %d\n", get_cur_ms() - build_ms);
+			}
 		}
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
 		{
