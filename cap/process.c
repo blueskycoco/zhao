@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include "log.h"
 #include "process.h"
 
 unsigned int CRC_check(unsigned char *Data,unsigned char Data_length)

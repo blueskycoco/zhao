@@ -810,12 +810,16 @@ char *build_message(char *cmd,int len,char *message)
 					printfLog(CAP_PROCESS"Upload data msg :\n");
 					message=count_pj(message);
 					send_server_save_local(date,message,1);
+					printfLog(CAP_PROCESS"Upload data msg 1:\n");
 					show_main_his();
+					printfLog(CAP_PROCESS"Upload data msg 2:\n");
 					show_main_alarm();	
+					printfLog(CAP_PROCESS"Upload data msg 3:\n");
 				}
 				free(message);
 				message=NULL;
 				memset(date,'\0',32);
+				printfLog(CAP_PROCESS"Upload data msg 4:\n");
 			}
 			break;
 			case VERIFY_BYTE:

@@ -13,5 +13,5 @@ struct msg_st
 #define MESSAGE_TYPE_VERIFY_LIST	0x0003
 #define MESSAGE_TYPE_VERSION		0x0006
 
-uint32_t process_message(void);
+uint32_t process_message(int msgid);
 #endif
