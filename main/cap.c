@@ -1064,20 +1064,23 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(float)(cmd[5]<<8|cmd[6]);
 					}
-					//printfLog(CAP_PROCESS"1 Value %d\n",value);
+					printfLog(CAP_PROCESS"1 Value %d\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
-					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
+					printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
-					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
-					if( cmd[3]!=atoi(ID_CAP_CO_EXT) &&cmd[3]!=atoi(ID_CAP_CO2) &&
-						cmd[3]!=atoi(ID_CAP_HCHO_EXT)&&cmd[3]!=atoi(ID_CAP_SHI_DU) &&
-						cmd[3]!=atoi(ID_CAP_TEMPERATURE) &&cmd[3]!=atoi(ID_CAP_PM_25) &&
-						cmd[3]!=atoi(ID_CAP_FENG_SU) &&cmd[3]!=atoi(ID_CAP_QI_YA) &&
-						cmd[3]!=atoi(ID_CAP_BUZZY) &&cmd[3]!=atoi(ID_CAP_TVOC) &&
-						cmd[3]!=atoi(ID_CAP_CHOU_YANG) &&cmd[3]!=atoi(ID_CAP_PM_10))
+					printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
+					//this used to get non-pj value
+					if( message_type!=atoi(ID_CAP_CO_EXT) &&message_type!=atoi(ID_CAP_CO2) &&
+						message_type!=atoi(ID_CAP_HCHO_EXT)&&message_type!=atoi(ID_CAP_SHI_DU) &&
+						message_type!=atoi(ID_CAP_TEMPERATURE) &&message_type!=atoi(ID_CAP_PM_25) &&
+						message_type!=atoi(ID_CAP_FENG_SU) &&message_type!=atoi(ID_CAP_QI_YA) &&
+						message_type!=atoi(ID_CAP_BUZZY) &&message_type!=atoi(ID_CAP_TVOC) &&
+						message_type!=atoi(ID_CAP_CHOU_YANG) &&message_type!=atoi(ID_CAP_PM_10)) {
+						printfLog(CAP_PROCESS"sfsfsdfsdf\n");
 					message=add_item(message,id,data);
-					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
+						}
+					printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
 				}
 			}
