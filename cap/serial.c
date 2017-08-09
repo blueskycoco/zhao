@@ -209,10 +209,12 @@ int process_serial(char *buf, int len)
 					}
 					else*/
 					//send_msg(g_share_memory->msgid,0x33,to_check,message_len+7);
-					printfLog(SERIAL_TAG"new cmd :\n");
+					//printfLog(SERIAL_TAG"new cmd :\n");
 					for(k=0; k<message_len+7; k++)
 						printfLog("%02x ", to_check[k]);
 					printfLog("\n");
+					if (message_type == 0x0001)
+						printfLog("\n");
 					i=0;
 					state=STATE_IDLE;
 				}
@@ -248,19 +250,19 @@ int cap_serial(int fd)
 					int length = read(events[i].data.fd, buff, sizeof(buff));
 
 					if(length > 0) {
-						printfLog(SERIAL_TAG"read %d bytes\n",length);
+						/*printfLog(SERIAL_TAG"read %d bytes\n",length);
 						for(j=0; j<length; j++) {
 							printfLog("%x ", buff[j]);
 						}
-						printfLog("\n");
+						printfLog("\n");*/
 						process_serial(buff,length);
 					}
 					break;
 				}
 			}
-		} else {
+		} /*else {
 			printf("No data whthin 5 seconds.\n");
-		}
+		}*/
 	}
 	free (events);
 	close (fd);
