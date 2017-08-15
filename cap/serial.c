@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <sys/epoll.h>
 #include "log.h"
+#include "mymsg.h"
 #define STATE_IDLE 	0
 #define STATE_6C 	1
 #define STATE_AA 	2
@@ -131,10 +132,10 @@ int process_serial(char *buf, int len)
 	char 	ch = 0;
 	static char 	state=STATE_IDLE;
 	static int 	message_len=0;
-	static char 	message[8192]={0};
+	static char 	message[64]={0};
 	static int 	i=0;
 	int 	j=0,k=0;
-	static char 	to_check[8192]={0};
+	static char 	to_check[64]={0};
 	static int 	crc=0;
 	static int 	message_type=0;
 	while(j < len)
@@ -197,12 +198,17 @@ int process_serial(char *buf, int len)
 					{
 						to_check[5+i]=message[i];
 					}
-					to_check[0]=0x6c;to_check[1]=0xaa;to_check[2]=(message_type>>8)&0xff;to_check[3]=message_type&0xff;
-					to_check[4]=message_len;to_check[5+message_len]=(crc>>8)&0xff;
+					to_check[0]=0x6c;
+					to_check[1]=0xaa;
+					to_check[2]=(message_type>>8)&0xff;
+					to_check[3]=message_type&0xff;
+					to_check[4]=message_len;
+					to_check[5+message_len]=(crc>>8)&0xff;
 					to_check[5+message_len+1]=crc&0xff;
 					/*if(crc!=CRC_check((unsigned char *)to_check,message_len+5))
 					{
-						printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",CRC_check((unsigned char *)to_check,message_len+5));
+						printfLog(CAP_PROCESS"CRC error 0x%04X\r\n",
+						CRC_check((unsigned char *)to_check,message_len+5));
 						for(i=0;i<message_len+5;i++)
 							printfLog("0x%02x ",to_check[i]);
 						printfLog("\n");
@@ -268,13 +274,21 @@ int cap_serial(int fd)
 	close (fd);
 }
 
+uint32_t serial_init(char *serial, int baud) 
+{
+	int fd = open_com_port(serial);
+	if (fd != -1)
+		set_opt(fd, baud, 8, 'N', 1);
+
+	return fd;
+}
 int main(int argc, void *argv[])
 {
 	init_log("cur_log");
-	int fd = open_com_port(argv[1]);
-	if (fd != -1) {
-		set_opt(fd,9600,8,'N',1);
+	int fd = serial_init(argv[1], atoi(argv[2]);
+	
+	if (fd != -1)
 		cap_serial(fd);
-	}
+	
 	return 0;
 }

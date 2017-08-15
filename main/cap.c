@@ -1064,7 +1064,7 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(float)(cmd[5]<<8|cmd[6]);
 					}
-					printfLog(CAP_PROCESS"1 Value %d\n",value);
+					printfLog(CAP_PROCESS"1 Value %f\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
 					printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
@@ -1077,8 +1077,8 @@ char *build_message(char *cmd,int len,char *message)
 						message_type!=atoi(ID_CAP_FENG_SU) &&message_type!=atoi(ID_CAP_QI_YA) &&
 						message_type!=atoi(ID_CAP_BUZZY) &&message_type!=atoi(ID_CAP_TVOC) &&
 						message_type!=atoi(ID_CAP_CHOU_YANG) &&message_type!=atoi(ID_CAP_PM_10)) {
-						printfLog(CAP_PROCESS"sfsfsdfsdf\n");
-					message=add_item(message,id,data);
+						printfLog(CAP_PROCESS"uuuuuu\n");
+						message=add_item(message,id,data);
 						}
 					printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
@@ -1446,8 +1446,8 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
-	printfLog(CAP_PROCESS"sned_msg ms %d\n", get_cur_ms()-ms);
-	ms = get_cur_ms();
+	printfLog(CAP_PROCESS"sned_msg ms \n");
+	//ms = get_cur_ms();
 	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
 	{
 		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
@@ -1591,11 +1591,11 @@ void cap_data_handle()
 	//if (is_msg_queue(g_share_memory->msgid))
 	//{
 	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
-	printfLog(CAP_PROCESS"cap_data %d\n", get_cur_ms()-ms);
-	ms = get_cur_ms();
+	printfLog(CAP_PROCESS"cap_data \n");
+	//ms = get_cur_ms();
 	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
-		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
 		char *cmd=(char *)malloc(data.len);
 		memset(cmd,'\0',data.len);
 		memcpy(cmd,data.text,data.len);
@@ -1635,9 +1635,10 @@ void cap_data_handle()
 			}
 			else
 			{
-				unsigned long build_ms = get_cur_ms();
+				//unsigned long build_ms = get_cur_ms();
+				printfLog(CAP_PROCESS"enter build message\n");
 				post_message=build_message(cmd,message_len+7,post_message);
-				printfLog(CAP_PROCESS"build_ms %d\n", get_cur_ms() - build_ms);
+				printfLog(CAP_PROCESS"build_ms \n");
 			}
 		}
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
