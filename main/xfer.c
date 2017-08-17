@@ -23,16 +23,16 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 	if(g_share_memory->send_by_wifi)
 	{
 		sprintf(request,"JSONStr=%s",buf);
-		printfLog(UPLOAD_PROCESS"send wifi %s\n",request);
+		//printfLog(UPLOAD_PROCESS"send wifi %s\n",request);
 		*out=http_post(url,request,timeout);
 		if(*out!=NULL)
 		{
-			printfLog(UPLOAD_PROCESS"<==%s\n",*out);
+			//printfLog(UPLOAD_PROCESS"<==%s\n",*out);
 			g_share_memory->network_state=1;
 		}
 		else
 		{
-			printfLog(UPLOAD_PROCESS"<==NULL\n");
+			//printfLog(UPLOAD_PROCESS"<==NULL\n");
 			g_share_memory->network_state=0;
 		}
 	}

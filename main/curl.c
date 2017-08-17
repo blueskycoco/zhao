@@ -27,8 +27,8 @@ int send_http_post(char * url, char * param, void * callBack,
 	static CURL *curl_handle = NULL;
 	CURLcode res;
 	//config.trace_ascii = 1;
-	printfLog(CURL_TAG"send_http_post ==>\n");
-	printfLog(CURL_TAG"send_http_post url:%s\n", url);
+	//printfLog(CURL_TAG"send_http_post ==>\n");
+	//printfLog(CURL_TAG"send_http_post url:%s\n", url);
 
 	if (curl_handle == NULL) {
 		curl_handle = curl_easy_init();
@@ -40,7 +40,7 @@ int send_http_post(char * url, char * param, void * callBack,
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, 	callBackHandle);
 	curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 	1);
 	curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 		5);
-	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 		1L);
+	curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 		0L);
 	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 	1L);
 	curl_easy_setopt(curl_handle, CURLOPT_PROTOCOLS, 	CURLPROTO_HTTP);
 	curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, 	param);
@@ -56,7 +56,7 @@ int send_http_post(char * url, char * param, void * callBack,
 
 	//curl_easy_cleanup(curl_handle);
 
-	printfLog(CURL_TAG"send_http_post <==\n");
+	//printfLog(CURL_TAG"send_http_post <==\n");
 	return ret;
 }
 char* http_post(char* url, char* request, int timeout)

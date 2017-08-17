@@ -807,19 +807,19 @@ char *build_message(char *cmd,int len,char *message)
 				if(g_upload)
 				{
 					g_upload=0;
-					printfLog(CAP_PROCESS"Upload data msg :\n");
+					//printfLog(CAP_PROCESS"Upload data msg :\n");
 					message=count_pj(message);
 					send_server_save_local(date,message,1);
-					printfLog(CAP_PROCESS"Upload data msg 1:\n");
+					//printfLog(CAP_PROCESS"Upload data msg 1:\n");
 					show_main_his();
-					printfLog(CAP_PROCESS"Upload data msg 2:\n");
+					//printfLog(CAP_PROCESS"Upload data msg 2:\n");
 					show_main_alarm();	
-					printfLog(CAP_PROCESS"Upload data msg 3:\n");
+					//printfLog(CAP_PROCESS"Upload data msg 3:\n");
 				}
 				free(message);
 				message=NULL;
 				memset(date,'\0',32);
-				printfLog(CAP_PROCESS"Upload data msg 4:\n");
+				//printfLog(CAP_PROCESS"Upload data msg 4:\n");
 			}
 			break;
 			case VERIFY_BYTE:
@@ -1064,12 +1064,12 @@ char *build_message(char *cmd,int len,char *message)
 					{
 							value=(float)(cmd[5]<<8|cmd[6]);
 					}
-					printfLog(CAP_PROCESS"1 Value %f\n",value);
+					//printfLog(CAP_PROCESS"1 Value %f\n",value);
 					warnning_msg=count_sensor_value(cmd[3],warnning_msg,value);
-					printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
+					//printfLog(CAP_PROCESS"0 id %s data %s\r\n",id,data);
 					//real time update cap data
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
-					printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
+					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					//this used to get non-pj value
 					if( message_type!=atoi(ID_CAP_CO_EXT) &&message_type!=atoi(ID_CAP_CO2) &&
 						message_type!=atoi(ID_CAP_HCHO_EXT)&&message_type!=atoi(ID_CAP_SHI_DU) &&
@@ -1077,10 +1077,10 @@ char *build_message(char *cmd,int len,char *message)
 						message_type!=atoi(ID_CAP_FENG_SU) &&message_type!=atoi(ID_CAP_QI_YA) &&
 						message_type!=atoi(ID_CAP_BUZZY) &&message_type!=atoi(ID_CAP_TVOC) &&
 						message_type!=atoi(ID_CAP_CHOU_YANG) &&message_type!=atoi(ID_CAP_PM_10)) {
-						printfLog(CAP_PROCESS"uuuuuu\n");
+						//printfLog(CAP_PROCESS"uuuuuu\n");
 						message=add_item(message,id,data);
 						}
-					printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
+					//printfLog(CAP_PROCESS"2 id %s data %s\r\n==>\n%s\n",id,data,message);
 					return message;
 				}
 			}
@@ -1446,7 +1446,7 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	{
 		memcpy(data.text,text,len);
 	}
-	printfLog(CAP_PROCESS"sned_msg ms \n");
+	//printfLog(CAP_PROCESS"sned_msg ms \n");
 	//ms = get_cur_ms();
 	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
 	{
@@ -1586,16 +1586,16 @@ void cap_data_handle()
 	int 	message_type=0;
 	int 	message_len=0;
 	int 	i=0;
-	static unsigned long ms = 0;
+	//static unsigned long ms = 0;
 	//unsigned char *message=NULL;
 	//if (is_msg_queue(g_share_memory->msgid))
 	//{
 	//printfLog(CAP_PROCESS"Enter cap_data_handle\n");
-	printfLog(CAP_PROCESS"cap_data \n");
+	//printfLog(CAP_PROCESS"cap_data \n");
 	//ms = get_cur_ms();
 	if(msgrcv(g_share_memory->msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0x33 , 0)>=0)
 	{
-		printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
+		//printfLog(CAP_PROCESS"msgget len: %d\n", data.len);		
 		char *cmd=(char *)malloc(data.len);
 		memset(cmd,'\0',data.len);
 		memcpy(cmd,data.text,data.len);
@@ -1636,9 +1636,9 @@ void cap_data_handle()
 			else
 			{
 				//unsigned long build_ms = get_cur_ms();
-				printfLog(CAP_PROCESS"enter build message\n");
+				//printfLog(CAP_PROCESS"enter build message\n");
 				post_message=build_message(cmd,message_len+7,post_message);
-				printfLog(CAP_PROCESS"build_ms \n");
+				//printfLog(CAP_PROCESS"build_ms \n");
 			}
 		}
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)
@@ -1695,12 +1695,16 @@ void cap_data_handle()
 			}
 		}
 		free(cmd);
+		//printfLog(CAP_PROCESS"free cmd \n");
 		free(message);
+		//printfLog(CAP_PROCESS"free message \n");
 	}
 	else
 	{		
-		printfLog(CAP_PROCESS"msgrcv failed with error: %s\n", strerror(errno));
-		printf_msg_queue(g_share_memory->msgid);
+		if (errno != EINTR) {
+			printfLog(CAP_PROCESS"msgrcv failed with error: %s\n", strerror(errno));
+			printf_msg_queue(g_share_memory->msgid);
+		}
 	}
 	//}
 }
