@@ -5,6 +5,8 @@
 #include "xfer.h"
 #include "history.h"
 #include <stdbool.h>
+#include <sys/epoll.h>
+
 int lcd_state=1;
 char logged=0,g_index=0,interface_select=0,last_g_index=0,cur_index=0;
 extern char g_uuid[256];
@@ -5968,7 +5970,7 @@ long dataD(date mf, date time)
 	printfLog(LCD_PROCESS"dist first to end %d mins\n",sum);
     return sum;
 }
-
+#if 0
 void lcd_loop()
 {	
 	char ch;
@@ -6048,7 +6050,116 @@ void lcd_loop()
 		}
 	}	
 }
+#else
+void process_dwin(char *buf, int lenbuf)
+{	
+	char ch;
+	int j=0;
+	static int i=1;
+	static int get=0;
+	static int len = 0;
+	static char ptr[32]={0};	
+	while(j<lenbuf)	
+	{	
+			ch = buf[j++];
+			switch(get)
+			{
+				case 0:
+					if(ch==0x5a)
+					{
+						get=1;
+					}
+					else
+						get=0;
+					break;
+				case 1:
+					if(ch==0xa5)
+					{
+						get=2;
 
+					}
+					else
+						get=0;
+					break;
+				case 2:
+					len = ch;
+					get=3;
+					break;
+				case 3:
+					if(ch==0x83)
+					{
+						get=4;
+						i=1;
+						break;
+					}
+					else
+						get=0;
+				case 4:
+					{
+						ptr[i++]=ch;
+						if(i==len)
+						{
+							get=0;
+							ptr[0]=0x01;
+							printfLog(LCD_PROCESS"get %x %x %x %x %x %x\r\n",ptr[0],ptr[1],ptr[2],ptr[3],ptr[4],ptr[5]);
+							input_handle(ptr);
+							printfLog(LCD_PROCESS"enter new loop\n");
+							i=1;
+							len=0;
+						}
+					}
+					break;	
+				default:
+					printfLog(LCD_PROCESS"unknown state\r\n");
+					get=0;
+					i=1;
+					len=0;
+					break;						
+			}		
+	}	
+}
+
+int lcd_loop()
+{
+	int efd,i,j;
+	char buff[1024] = {0};
+	struct epoll_event event;
+	struct epoll_event *events;
+	switch_pic(MAIN_PAGE);
+	g_index=MAIN_PAGE;
+	efd = epoll_create1 (0);
+	event.data.fd = g_share_memory->fd_lcd;
+	event.events = EPOLLIN | EPOLLET;
+	epoll_ctl (efd, EPOLL_CTL_ADD, g_share_memory->fd_lcd, &event);
+	events = calloc (64, sizeof(event));
+	for(;;) {
+		int n;
+		n = epoll_wait (efd, events, 64, 5000);
+		if(n > 0) {
+			for (i=0; i<n; i++) {
+				if (events[i].data.fd == g_share_memory->fd_lcd &&
+						(events[i].events & EPOLLIN)) {
+					int length = read(events[i].data.fd, buff, sizeof(buff));
+
+					if(length > 0) {
+						/*printfLog(SERIAL_TAG"read %d bytes\n",length);
+						for(j=0; j<length; j++) {
+							printfLog("%x ", buff[j]);
+						}
+						printfLog("\n");*/
+						process_dwin(buff,length);
+					}
+					break;
+				}
+			}
+		} /*else {
+			printf("No data whthin 5 seconds.\n");
+		}*/
+	}
+	free (events);
+	close (g_share_memory->fd_lcd);
+}
+#endif
 int lcd_init()
 {
 	int fpid = 0, i=0;
