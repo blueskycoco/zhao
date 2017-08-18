@@ -156,14 +156,14 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	/*err = pthread_create (&tid, NULL, network_thread, NULL);
+	err = pthread_create (&tid, NULL, network_thread, NULL);
 	if (err != 0)
 	{
 		printfLog(MAIN_PROCESS"can't create thread, %s\n", strerror(err));
 		return -1;
 	}
 	else
-		printfLog(MAIN_PROCESS"thread %d in charge of network status\n", tid);*/
+		printfLog(MAIN_PROCESS"thread %d in charge of network status\n", tid);
 
 	xfer_init();
 	if((fpid=fork())==0)

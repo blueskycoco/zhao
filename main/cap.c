@@ -1072,8 +1072,8 @@ char *build_message(char *cmd,int len,char *message)
 					update_dwin_real_value(id,cmd[5]<<8|cmd[6],data);
 					//printfLog(CAP_PROCESS"1 id %s data %s\r\n",id,data);
 					//this used to get non-pj value
-					if( message_type!=atoi(ID_CAP_CO_EXT) &&message_type!=atoi(ID_CAP_CO2) &&
-						message_type!=atoi(ID_CAP_HCHO_EXT)&&message_type!=atoi(ID_CAP_SHI_DU) &&
+					if( /*message_type!=atoi(ID_CAP_CO_EXT) &&*/message_type!=atoi(ID_CAP_CO2) &&
+						/*message_type!=atoi(ID_CAP_HCHO_EXT)&&*/message_type!=atoi(ID_CAP_SHI_DU) &&
 						message_type!=atoi(ID_CAP_TEMPERATURE) &&message_type!=atoi(ID_CAP_PM_25) &&
 						message_type!=atoi(ID_CAP_FENG_SU) &&message_type!=atoi(ID_CAP_QI_YA) &&
 						message_type!=atoi(ID_CAP_BUZZY) &&message_type!=atoi(ID_CAP_TVOC) &&
