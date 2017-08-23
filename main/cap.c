@@ -1449,10 +1449,10 @@ int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 	}
 	//printfLog(CAP_PROCESS"sned_msg ms \n");
 	//ms = get_cur_ms();
-	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), IPC_NOWAIT) == -1)
+	if(msgsnd(msgid, (void*)&data, sizeof(struct msg_st)-sizeof(long int), 0/*IPC_NOWAIT*/) == -1)
 	{
-		printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
-		printf_msg_queue(msgid);
+		//printfLog(CAP_PROCESS"msgsnd failed %s\n",strerror(errno));
+		//printf_msg_queue(msgid);
 	}
 	//printfLog(CAP_PROCESS"send msg done\n");
 	return 0;
@@ -1789,7 +1789,7 @@ void cap_data_handle()
 				//unsigned long build_ms = get_cur_ms();
 				//printfLog(CAP_PROCESS"enter build message\n");
 				post_message=build_message(cmd,message_len+7,post_message);
-				//printfLog(CAP_PROCESS"build_ms \n");
+				//printfLog(CAP_PROCESS"leave build message \n");
 			}
 		}
 		else if(g_share_memory->factory_mode==TUN_ZERO_MODE)

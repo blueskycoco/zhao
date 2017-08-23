@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 	}
 	else
 		printfLog(MAIN_PROCESS"thread %d in charge of network status\n", tid);
-
+	
 	xfer_init();
 	if((fpid=fork())==0)
 	{
