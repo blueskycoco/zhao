@@ -1,0 +1,1 @@
+./configure --host=arm-fsl-linux-gnueabi --build=i686-pc-linux --prefix=/home/irdetogame/dillon/work/tmp/zhao/curl-imx280 --without-ssl
