@@ -2884,7 +2884,7 @@ void *network_thread(void* arg)
 int read_zhao_du(void)
 {
 	uint8_t cmd[] = {0x01,0x03,0x00,0x07,0x00,0x02,0x75,0xca};
-	int efd,i,j,zhao_du = -1;
+	int efd,i,zhao_du = -1;
 	int fd = 0;
 	char buff[1024] = {0};
 	struct epoll_event event;

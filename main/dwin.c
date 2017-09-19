@@ -6121,7 +6121,7 @@ void process_dwin(char *buf, int lenbuf)
 
 int lcd_loop()
 {
-	int efd,i,j;
+	int efd,i;
 	char buff[1024] = {0};
 	struct epoll_event event;
 	struct epoll_event *events;

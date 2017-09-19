@@ -809,9 +809,16 @@ char *build_message(char *cmd,int len,char *message)
 				if (zd != -1) {
 					sprintf(data,"%d",zd);
 					update_dwin_real_value(ID_CAP_CHOU_YANG_EXT,zd,data);
+					update_dwin_real_value(ID_CAP_CHOU_YANG,zd,data);
 				}
 				else
+				{
+					g_share_memory->alarm[SENSOR_O3]|=ALARM_UNINSERT;
+					g_share_memory->sent[SENSOR_O3]=0;
 					g_share_memory->sensor_has_data[SENSOR_O3]=0;
+					write_data(ADDR_O3_SHOW_PIC,0x01);
+					write_data(ADDR_O3_SHOW_PIC_PPM,0x01);
+				}
 				if(g_upload)
 				{
 					g_upload=0;
@@ -1446,7 +1453,7 @@ unsigned long get_cur_ms(void)
 }
 int send_msg(int msgid,unsigned char msg_type,char *text,int len)
 {
-	static unsigned long ms = 0;
+	//static unsigned long ms = 0;
 	struct msg_st data;
 	data.msg_type = msg_type;
 	data.len=len;
@@ -1600,7 +1607,7 @@ int process_serial(char *buf, int len)
 	static int 	message_len=0;
 	static char 	message[64]={0};
 	static int 	i=0;
-	int 	j=0,k=0;
+	int 	j=0;
 	static char 	to_check[64]={0};
 	static int 	crc=0;
 	static int 	message_type=0;
@@ -1703,7 +1710,7 @@ int process_serial(char *buf, int len)
 }
 int cap_serial(int fd)
 {
-	int efd,i,j;
+	int efd,i;
 	char buff[1024] = {0};
 	struct epoll_event event;
 	struct epoll_event *events;
