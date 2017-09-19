@@ -22,7 +22,7 @@ void set_upload_flag(int a)
 {
 	printfLog(CAP_PROCESS"set upload flag\n");
 	g_upload=1;
-	alarm(20);
+	alarm(600);
 }
 //format sensor history data
 void set_upload_data(char *id,struct nano *history,long *cnt,char *data,char *date)
@@ -1952,7 +1952,7 @@ int cap_init()
 		write_data(ADDR_PM10_SHOW_PIC_PPM,0x01);
 		write_data(ADDR_HCHO_SHOW_PIC_PPM,0x01);
 		signal(SIGALRM, set_upload_flag);
-		alarm(20);
+		alarm(600);
 		while(1)
 			cap_data_handle();
 	}
