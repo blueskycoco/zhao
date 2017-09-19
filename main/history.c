@@ -159,7 +159,7 @@ void load_history(const char *name)
 												&(g_share_memory->cnt[SENSOR_NOISE]));
 				set_data(line,ID_CAP_TVOC_EXT,	&(sensor_history.tvoc[g_share_memory->cnt[SENSOR_TVOC]]),	
 												&(g_share_memory->cnt[SENSOR_TVOC]));
-				set_data(line,ID_CAP_CHOU_YANG_EXT,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
+				set_data(line,ID_CAP_ZHAO_DU,&(sensor_history.o3[g_share_memory->cnt[SENSOR_O3]]),	
 												&(g_share_memory->cnt[SENSOR_O3]));
 				set_data(line,ID_CAP_PM_10,		&(sensor_history.pm10[g_share_memory->cnt[SENSOR_PM10]]),	
 												&(g_share_memory->cnt[SENSOR_PM10]));

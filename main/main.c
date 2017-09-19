@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 		printfLog(MAIN_PROCESS"set_opt gprs error");
 		close(g_share_memory->fd_gprs);
 		return -1;
-	}
+	}	
 	if((g_share_memory->fd_lcd=open_com_port("/dev/ttySP1"))<0)
 	{
 		printfLog(MAIN_PROCESS"open_port lcd error");

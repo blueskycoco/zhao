@@ -41,4 +41,5 @@ void show_main_alarm_pm25(char *data);
 void show_main_alarm_pm10(char *data);
 void init_alarm_show();
 void *network_thread(void* arg);
+int read_zhao_du(void);
 #endif

@@ -121,7 +121,7 @@ int cap_serial(int fd)
 				if(length > 0) {
 					printf("read %d bytes\n",length);
 					for(j=0; j<length; j++) {
-						printf("0x%2x ", buff[j]);
+						printf("0x%02x ", buff[j]);
 					}
 					printf("\n");
 					if (length == 9)

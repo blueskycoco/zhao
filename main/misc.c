@@ -3,6 +3,8 @@
 #include "xfer.h"
 #include "misc.h"
 #include "dwin.h"
+#include <sys/epoll.h>
+
 #define MISC_PROCESS	"[MISC] "
 #define RTCDEV 			"/dev/rtc0"
 #define ETH_NAME "ra0"
@@ -2879,3 +2881,62 @@ void *network_thread(void* arg)
 		}
 	}	
 }
+int read_zhao_du(void)
+{
+	uint8_t cmd[] = {0x01,0x03,0x00,0x07,0x00,0x02,0x75,0xca};
+	int efd,i,j,zhao_du = -1;
+	int fd = 0;
+	char buff[1024] = {0};
+	struct epoll_event event;
+	struct epoll_event *events;	
+	if (access("/dev/ttyUSB0", F_OK) != 0) 
+		return zhao_du;
+
+	if((fd = open_com_port("/dev/ttyUSB0"))<0)
+	{
+		printfLog(MISC_PROCESS"open_port zd error");
+		return zhao_du;
+	}
+	if(set_opt(fd,9600,8,'N',1)<0)
+	{
+		printfLog(MISC_PROCESS"set_opt zd error");
+		close(fd);
+		return zhao_du;
+	}
+	efd = epoll_create1 (0);
+	event.data.fd = fd;
+	event.events = EPOLLIN | EPOLLET;
+	epoll_ctl (efd, EPOLL_CTL_ADD, fd, &event);
+	events = calloc (64, sizeof(event));
+	int n;
+
+	write(fd, cmd, sizeof(cmd));
+	n = epoll_wait (efd, events, 64, 5000);
+	if(n > 0) {
+		for (i=0; i<n; i++) {
+			if (events[i].data.fd == fd &&
+					(events[i].events & EPOLLIN)) {
+				int length = read(events[i].data.fd, buff, sizeof(buff));
+
+				if(length > 0) {
+					//printf("read %d bytes\n",length);
+					//for(j=0; j<length; j++) {
+					//	printf("0x%02x ", buff[j]);
+					//}
+					//printf("\n");
+					if (length == 9)
+					{
+						zhao_du = buff[3]<<24|buff[4]<<16| buff[5]<<8|buff[6];
+						printfLog(MISC_PROCESS"light value %d\n", zhao_du);
+					}
+				}
+				break;
+			}
+		}
+	} 
+	free (events);
+	close(fd);
+	close(efd);
+	return zhao_du;
+}
+

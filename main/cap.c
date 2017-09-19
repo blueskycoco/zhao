@@ -804,12 +804,22 @@ char *build_message(char *cmd,int len,char *message)
 					if(warnning_msg!=NULL)
 						free(warnning_msg);
 					warnning_msg=NULL;
+				}				
+				int zd = read_zhao_du();
+				if (zd != -1) {
+					sprintf(data,"%d",zd);
+					update_dwin_real_value(ID_CAP_CHOU_YANG_EXT,zd,data);
 				}
+				else
+					g_share_memory->sensor_has_data[SENSOR_O3]=0;
 				if(g_upload)
 				{
 					g_upload=0;
 					//printfLog(CAP_PROCESS"Upload data msg :\n");
 					message=count_pj(message);
+					if (zd != -1) {
+						message=add_item(message,ID_CAP_ZHAO_DU,data);
+					}
 					send_server_save_local(date,message,1);
 					//printfLog(CAP_PROCESS"Upload data msg 1:\n");
 					show_main_his();
