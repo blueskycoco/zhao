@@ -901,8 +901,9 @@ char *build_message(char *cmd,int len,char *message)
 						g_share_memory->alarm[SENSOR_PM25]|=ALARM_UNINSERT;
 						g_share_memory->sent[SENSOR_PM25]=0;
 						g_share_memory->sensor_has_data[SENSOR_PM25]=0;
-						write_data(ADDR_PM25_SHOW_PIC,0x01);
-						write_data(ADDR_PM25_SHOW_PIC_PPM,0x01);
+						//2017-11-14 for xiao , not hide pm25 realtime data
+						//write_data(ADDR_PM25_SHOW_PIC,0x01);
+						//write_data(ADDR_PM25_SHOW_PIC_PPM,0x01);
 					}
 					else if(cmd[3]==atoi(ID_CAP_TVOC) && !(g_share_memory->alarm[SENSOR_TVOC] & ALARM_UNINSERT))
 					{
