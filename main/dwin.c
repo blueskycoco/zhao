@@ -2177,6 +2177,27 @@ bool execute_cmd(char *cmd)
 
 	return false;
 }
+void execute_cmd_out(char *cmd, char **out)
+{
+	char ret[256] = {0};
+	FILE *fp;
+	if ((fp=popen(cmd,"r"))!=NULL)
+	{
+		memset(ret,0,256);
+		fread(ret,sizeof(char),sizeof(ret),fp);
+		pclose(fp);
+		printfLog(LCD_PROCESS"==>%s\n%s\n", cmd,ret);		
+	}
+
+	if(strlen(ret)!=0)
+	{
+		*out = (char *)malloc(strlen(ret)+1);
+		memset(*out,0,strlen(ret)+1);
+		memcpy(*out, ret, strlen(ret));
+	}
+
+	return ;
+}
 
 void wifi_handle()
 {
@@ -4926,6 +4947,19 @@ unsigned short input_handle(char *input)
 		if(g_share_memory->send_by_wifi)
 		{
 			write_string(ADDR_XFER_SELECT,"WIFI",strlen("WIFI"));
+			char *out = NULL;
+			printfLog(LCD_PROCESS"wifi ap name check\r\n");
+			execute_cmd_out("wpa_cli status",&out);
+			if (out!=NULL) {
+				char *result = (char *)strstr(out, "\nssid=");
+				if (result != NULL) {
+					int ap_len = 0;
+					while(result[6+ap_len] != '\r' && result[6+ap_len] != '\n')
+						ap_len++;
+					write_string(ADDR_AP_NAME,result + 6,ap_len);
+					printfLog(LCD_PROCESS"curr ap is %s\r\n", result+6);
+					}
+			}
 		}
 		else
 		{
