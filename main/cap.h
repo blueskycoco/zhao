@@ -41,9 +41,9 @@
 //#include "dwin.h"
 #include "log.h"
 #ifdef NO_LOG
-#define VERSION	"2018-02-01-00"
+#define VERSION	"2018-05-10-00"
 #else
-#define VERSION	"2018-02-01-01"
+#define VERSION	"2018-05-10-01"
 #endif
 #define SENSOR_NO		12
 #define SENSOR_CO		0
@@ -58,7 +58,7 @@
 #define	SENSOR_PRESS	9
 #define	SENSOR_TVOC		10
 #define	SENSOR_O3		11
-#define HISTORY_PATH 	"/home/user/history"
+#define HISTORY_PATH 	"/opt/history"
 struct nano{
 	char time[20];
 	char data[10];
@@ -1863,8 +1863,8 @@ extern key_t  shmid_history_pm10;
 #define TUN_ZERO_MODE	1
 #define SENSOR_VERIFY_MODE	2
 #define CONFIG_FILE "sensor_alarm.cfg"
-#define FILE_PATH	"/home/user/history/"
-#define SENSOR_ALARM_FILE	"/home/user/sensor_alarm_config.cfg"
+#define FILE_PATH	"/opt/history/"
+#define SENSOR_ALARM_FILE	"/opt/sensor_alarm_config.cfg"
 #define PERM S_IRUSR|S_IWUSR  
 #define ALARM_NONE		0
 #define ALARM_BELOW 	1

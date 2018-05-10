@@ -35,10 +35,10 @@
 
 #include "log.h"
 #define RTCDEV 			"/dev/rtc0"
-#define CAP_IMX280 		"/home/user/cap-imx280"
-#define CAP_IMX280_BAK	"/home/user/cap-imx280-bak"
-#define WPA_FILE		"/etc/wpa_supplicant.conf"
-#define WPA_FILE_BAK	"/home/user/wpa_supplicant.conf-bak"
+#define CAP_IMX280 		"/opt/cap-imx280"
+#define CAP_IMX280_BAK	"/opt/cap-imx280-bak"
+#define WPA_FILE		"/opt/wpa_supplicant.conf"
+#define WPA_FILE_BAK	"/opt/wpa_supplicant.conf-bak"
 #if 0
 void read_curr_time(char *out)
 {

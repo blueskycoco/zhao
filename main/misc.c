@@ -386,7 +386,7 @@ void get_ip()
 void get_uuid()
 {
 	memset(g_share_memory->uuid,0,256);
-	FILE *fp=fopen("/home/user/uuid.txt","r");
+	FILE *fp=fopen("/opt/uuid.txt","r");
 	if(fp!=NULL)
 	{
 		if(fread(g_share_memory->uuid,256,1,fp)<0)
@@ -511,7 +511,7 @@ long filesize(FILE*stream)
 
 void get_net_interface()
 {
-	FILE *fp=fopen("/home/user/interface.txt","r");
+	FILE *fp=fopen("/opt/interface.txt","r");
 	if(fp!=NULL)
 	{
 		if(filesize(fp)==0)
@@ -647,7 +647,7 @@ void save_sensor_alarm_info()
 }
 void set_net_interface()
 {
-	FILE *fp=fopen("/home/user/interface.txt","w");
+	FILE *fp=fopen("/opt/interface.txt","w");
 	fwrite(&(g_share_memory->send_by_wifi),1,1,fp);
 	fwrite(&(g_share_memory->sleep),1,1,fp);
 	fwrite(&(g_share_memory->black_lcd),1,1,fp);
