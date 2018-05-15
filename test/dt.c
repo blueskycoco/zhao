@@ -133,6 +133,9 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 int main(int argc, void *argv[])
 {
 	uint8_t cmd[] = {0xa5,0x5a,0x02,0x80,0xaa};
+	uint8_t cmd1[] = {0xff,0x01,0x78,0x41,0x00,0x00,0x00,0x00,0x46};
+	uint8_t cmd2[] = {0xff,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
+	uint8_t zd[] = {0x01,0x03,0x00,0x00,0x00,0x02,0xc4,0x0b};
 	int efd,i,hcho = -1;
 	int fd = 0;
 	int mode = 0;
@@ -143,10 +146,10 @@ int main(int argc, void *argv[])
 	if (argc == 2)
 		mode = atoi(argv[1]);
 
-	if (access("/dev/ttyUSB0", F_OK) != 0) 
+	if (access(argv[2], F_OK) != 0) 
 		return hcho;
 
-	if((fd = open_com_port("/dev/ttyUSB0"))<0)
+	if((fd = open_com_port(argv[2]))<0)
 	{
 		printf("open_port zd error");
 		return hcho;
@@ -163,11 +166,17 @@ int main(int argc, void *argv[])
 	epoll_ctl (efd, EPOLL_CTL_ADD, fd, &event);
 	events = calloc (64, sizeof(event));
 	int n,j;
-
+	if (!mode) {
+		write(fd, cmd1, sizeof(cmd1));		
+	}
 	while (1) {
-		if(mode) {
-			sleep(1);
+		sleep(1);
+		if(mode == 1) {
 			write(fd, cmd, sizeof(cmd));
+		} else if (mode == 0) {
+			write(fd, cmd2, sizeof(cmd2));
+		} else if (mode == 2) {
+			write(fd, zd, sizeof(zd));
 		}
 		n = epoll_wait (efd, events, 64, 5000);
 		if(n > 0) {
@@ -184,22 +193,25 @@ int main(int argc, void *argv[])
 						printf("\n");
 						if (length == 9)
 						{
-							if (mode) {
+							if (mode == 1) {
 								hcho = buff[6] * 256 + buff[7];
 								printf("hcho value %d.%d\n", hcho/100,hcho%100);
-							} else {
-								if (buff[0] == 0xff && buff[1] == 0x17 &&
-									buff[2] == 0x04 && buff[3] == 0x04) {
-									hcho = buff[4] * 256 + buff[5];
-									printf("hcho value %d.%d\n", hcho/10000,hcho%10000);
+							} else if (mode == 0) {
+								if (buff[0] == 0xff && buff[1] == 0x86) {
+									hcho = buff[6] * 256 + buff[7];
+									printf("hcho value %d\n", hcho);
 								}
+							} else if (mode == 2) {
+								hcho = buff[3]<<24|buff[4]<<16| buff[5]<<8|buff[6];
+								printf("light value %d\n", hcho);
 							}
 						}
 					}
 					break;
 				}
 			}
-		} 
+		} else
+			printf("no data in 5 sec\r\n");
 	}
 	free (events);
 	close(fd);
