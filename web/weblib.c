@@ -156,9 +156,32 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	struct timeval tv; 
 	int valopt,ret; 
 	int imode=1,i=0;
+	char *ptr, **pptr;  
+	 char str[32] = {0};  
 	if((he = gethostbyname(host))==NULL){  
 		printf(LOG_PREFX"gethostbyname failed\n");
 		return -1;  
+	}  
+	printf("official hostname:%s\n", he->h_name);    
+
+	for(pptr = he->h_aliases; *pptr != NULL; pptr++)  
+		printf("alias: %s\n", *pptr);  
+
+	switch(he->h_addrtype)  
+	{  
+		case AF_INET:  
+		case AF_INET6:  
+			pptr = he->h_addr_list;  
+
+			for(; *pptr != NULL; pptr++)   
+			{
+				printf("address: %s\n", inet_ntop(he->h_addrtype, *pptr, str, sizeof(str)));
+				printf("first address: %s\n", inet_ntop(he->h_addrtype, he->h_addr, str, sizeof(str)));  
+			}  
+			break;  
+		default:  
+			printf("unkown address type\n");  
+			break;  
 	}  
 
 	server_addr.sin_family = AF_INET;  
@@ -170,7 +193,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	}  
 	tv.tv_usec=0;
 	tv.tv_sec = timeout;
-	#if 0
+#if 0
 	bzero(&addr,sizeof(addr));	
 	addr.sin_family = AF_INET;	
 	addr.sin_port = htons(3569);  
@@ -184,7 +207,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 		perror("reuse"); 
 		exit(1);  
 	}
-	#endif
+#endif
 	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	if(connect(socket_fd, (struct sockaddr *)&server_addr,sizeof(struct sockaddr)) <0)
 	{
@@ -221,7 +244,6 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 		printf(LOG_PREFX"Error select error\n");
 		return -1;
 	}
-
 	if (FD_ISSET(socket_fd, &rset) || FD_ISSET(socket_fd, &wset)) {
 		/* check is there any error */
 		len = sizeof(error);
@@ -470,9 +492,9 @@ char * http_post(const char *url,const char *post_str,int timeout){
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  
 	}
-	
-//	http_tcpclient_recv(socket_fd,lpbuf+len,timeout);
-	
+
+	//	http_tcpclient_recv(socket_fd,lpbuf+len,timeout);
+
 	http_tcpclient_close(socket_fd);  
 
 	return http_parse_result(lpbuf);  
@@ -499,7 +521,7 @@ char * http_get(const char *url,int timeout)
 		printf(LOG_PREFX"http_parse_url failed!\n");  
 		return NULL;  
 	}  
-	//printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
+	printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
 
 	socket_fd =  http_tcpclient_create(host_addr,port,timeout);  
 	if(socket_fd < 0){  
@@ -584,7 +606,7 @@ char *doit_data(char *text,char *item_str)
 	if (!item_json) {printf(LOG_PREFX"Error data before: [%s]\n",cJSON_GetErrorPtr());}
 	else
 	{
-	 		 
+
 		cJSON *data;
 		data=cJSON_GetObjectItem(item_json,item_str);
 		if(data)
