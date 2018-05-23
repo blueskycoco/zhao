@@ -133,7 +133,7 @@ int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 int main(int argc, void *argv[])
 {
 	uint8_t cmd[] = {0xa5,0x5a,0x02,0x80,0xaa};
-	uint8_t cmd1[] = {0xff,0x01,0x78,0x41,0x00,0x00,0x00,0x00,0x46};
+	uint8_t cmd1[] = {0xff,0x01,0x78,0x40,0x00,0x00,0x00,0x00,0x47};
 	uint8_t cmd2[] = {0xff,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
 	uint8_t zd[] = {0x01,0x03,0x00,0x00,0x00,0x02,0xc4,0x0b};
 	int efd,i,hcho = -1;
@@ -143,7 +143,6 @@ int main(int argc, void *argv[])
 	struct epoll_event event;
 	struct epoll_event *events;	
 
-	if (argc == 2)
 		mode = atoi(argv[1]);
 
 	if (access(argv[2], F_OK) != 0) 
@@ -165,17 +164,18 @@ int main(int argc, void *argv[])
 	event.events = EPOLLIN | EPOLLET;
 	epoll_ctl (efd, EPOLL_CTL_ADD, fd, &event);
 	events = calloc (64, sizeof(event));
-	int n,j;
-	if (!mode) {
-		write(fd, cmd1, sizeof(cmd1));		
+	int n,j,length;
+	if (mode==1) {
+		//write(fd, cmd1, sizeof(cmd1));		
 	}
 	while (1) {
-		sleep(1);
 		if(mode == 1) {
+			sleep(1);
 			write(fd, cmd, sizeof(cmd));
 		} else if (mode == 0) {
-			write(fd, cmd2, sizeof(cmd2));
+			//write(fd, cmd2, sizeof(cmd2));
 		} else if (mode == 2) {
+			sleep(1);
 			write(fd, zd, sizeof(zd));
 		}
 		n = epoll_wait (efd, events, 64, 5000);
@@ -183,35 +183,40 @@ int main(int argc, void *argv[])
 			for (i=0; i<n; i++) {
 				if (events[i].data.fd == fd &&
 						(events[i].events & EPOLLIN)) {
-					int length = read(events[i].data.fd, buff, sizeof(buff));
+					length += read(events[i].data.fd, buff+length, sizeof(buff));
 
-					if(length > 0) {
-						printf("read %d bytes\n",length);
+					if(length >= 9) {
+						/*printf("read %d bytes\n",length);
 						for(j=0; j<length; j++) {
 							printf("0x%02x ", buff[j]);
 						}
-						printf("\n");
-						if (length == 9)
+						printf("\n");*/
+						//if (length == 9)
 						{
-							if (mode == 1) {
-								hcho = buff[6] * 256 + buff[7];
-								printf("hcho value %d.%d\n", hcho/100,hcho%100);
-							} else if (mode == 0) {
-								if (buff[0] == 0xff && buff[1] == 0x86) {
-									hcho = buff[6] * 256 + buff[7];
-									printf("hcho value %d\n", hcho);
+							if (mode == 0) {
+								if (buff[0] == 0xff && buff[1] == 0x17 &&
+										buff[2] == 0x04) {
+								hcho = buff[4] * 256 + buff[5];
+								printf("hcho value %f\n", ((float)hcho)/10000.0);
+								}
+							} else if (mode == 1) {
+								if (buff[0] == 0xa5 && buff[1] == 0x5a &&
+										buff[2] == 0x06 && buff[3] == 0x80) {
+									hcho = buff[4] * 256 + buff[5];
+									printf("hcho value %f\n", ((float)hcho)/100.0);
 								}
 							} else if (mode == 2) {
 								hcho = buff[3]<<24|buff[4]<<16| buff[5]<<8|buff[6];
 								printf("light value %d\n", hcho);
 							}
 						}
+						length = 0;
 					}
 					break;
 				}
 			}
-		} else
-			printf("no data in 5 sec\r\n");
+		} //else
+			//printf("no data in 5 sec\r\n");
 	}
 	free (events);
 	close(fd);

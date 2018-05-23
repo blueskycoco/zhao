@@ -14,135 +14,11 @@
 #include <errno.h>
 #include "weblib.h"
 #define PORT 9517
-#if 0
-//http get 
-#define HOST "www.baidu.com"  
-#define PAGE "/"  
-#define PORT 8080
-#define USERAGENT "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.114 Safari/537.36"  
-#define ACCEPTLANGUAGE "zh-CN,zh;q=0.8,en;q=0.6,en-US;q=0.4,en-GB;q=0.2"  
-#define ACCEPTENCODING "gzip,deflate,sdch"  
-char *build_get_query(char *host,char *page){  
-	char *query;  
-	char *getpage=page;  
-	char *tpl="GET %s HTTP/1.1\r\nHost:%s\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\nUser-Agent:%s\r\nAccept-Language:%s\r\n\r\n";//Accept-Encoding:%s\r\n  
-	query=(char *)malloc(strlen(host)+strlen(getpage)+strlen(USERAGENT)+strlen(tpl)+strlen(ACCEPTLANGUAGE)-5);//+strlen(ACCEPTENCODING)  
-	sprintf(query,tpl,getpage,host,USERAGENT,ACCEPTLANGUAGE);//ACCEPTENCODING  
-	return query;  
-}  
-char *get_ip(char *host){  
-	struct hostent *hent;  
-	int iplen=15;  
-	char *ip=(char *)malloc(iplen+1);  
-	memset(ip,0,iplen+1);  
-	if((hent=gethostbyname(host))==NULL){  
-		perror("Can't get ip");  
-		exit(1);  
-	}  
-	if(inet_ntop(AF_INET,(void *)hent->h_addr_list[0],ip,iplen)==NULL){  
-		perror("Can't resolve host!\n");  
-		exit(1);  
-	}  
-	return ip;  
-}  
-void usage(){  
-	fprintf(LOG_PREFXstderr,"USAGE:htmlget host [page]\n\thost:the website hostname. ex:www.baidu.com\n\tpage:the page to retrieve. ex:index.html,default:/\n");  
-}  
-int create_tcp_socket(){  
-	int sock;  
-	if((sock=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))<0){  
-		perror("Can't create TCP socket!\n");  
-		exit(1);  
-	}  
-	return sock;  
-} 
-int htpp_get(int argc,char *argv[])
-{
-	struct sockaddr_in *remote;  
-	int sock;  
-	int tmpres;  
-	char *ip;  
-	char *get;  
-	char buf[BUFSIZ+1];  
-	char *host;  
-	char *page;  
-
-
-	if(argc==1){  
-		usage();  
-		exit(2);  
-	}  
-	host=argv[1];  
-	if(argc>2){  
-		page=argv[2];  
-	}else{  
-		page=PAGE;  
-	}  
-	fprintf(LOG_PREFXstdout,"page:%s,hostName:%s\n",page,host);  
-	sock=create_tcp_socket();  
-	ip=argv[1];//get_ip(host);  
-	fprintf(LOG_PREFXstderr,"IP is %s\n",ip);  
-	remote=(struct sockaddr_in *)malloc(sizeof(struct sockaddr_in*));  
-	remote->sin_family=AF_INET;  
-	tmpres=inet_pton(AF_INET,ip,(void *)(&(remote->sin_addr.s_addr)));  
-	if(tmpres<0){  
-		perror("Can't set remote->sin_addr.s_addr");  
-		exit(1);  
-	}else if(tmpres==0){  
-		fprintf(LOG_PREFXstderr,"%s is not a valid IP address\n",ip);  
-		exit(1);  
-	}  
-	remote->sin_port=htons(PORT);  
-	if(connect(sock,(struct sockaddr *)remote,sizeof(struct sockaddr))<0){  
-		perror("Could not connect!\n");  
-		exit(1);  
-	}  
-	get =build_get_query(host,page);  
-	fprintf(LOG_PREFXstdout,"<start>\n%s\n<end>\n",get);  
-	int sent=0;  
-	while(sent<strlen(get)){  
-		tmpres=send(sock,get+sent,strlen(get)-sent,0);  
-		if(tmpres==-1){  
-			perror("Can't send query!");  
-			exit(1);  
-		}  
-		sent+=tmpres;  
-	}  
-	memset(buf,0,sizeof(buf));  
-	int htmlstart=0;  
-	char *htmlcontent;  
-	while((tmpres=recv(sock,buf,BUFSIZ,0))>0){  
-		if(htmlstart==0){  
-			htmlcontent=strstr(buf,"\r\n\r\n");  
-			if(htmlcontent!=NULL){  
-				htmlstart=1;  
-				htmlcontent+=4;  
-			}  
-		}else{  
-			htmlcontent=buf;  
-		}  
-		if(htmlstart){  
-			fprintf(LOG_PREFXstdout,"%s",htmlcontent);  
-		}  
-		memset(buf,0,tmpres);  
-		// fprintf(LOG_PREFXstdout,"\n\n\ntmpres Value:%d\n",tmpres);  
-	}  
-	fprintf(LOG_PREFXstdout,"\nreceive data over!\n");  
-	if(tmpres<0){  
-		perror("Error receiving data!\n");  
-	}  
-	free(get);  
-	free(remote);  
-	//free(ip);  
-	close(sock);  
-	return 0;  
-}
-#else
 #define BUFFER_SIZE 1024  
 #define HTTP_POST "POST /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n"\
 	"Content-Type:application/x-www-form-urlencoded\r\nContent-Length: %d\r\n\r\n%s"  
 #define HTTP_GET "GET /%s HTTP/1.1\r\nHOST: %s:%d\r\nAccept: */*\r\n\r\n"  
-#define MY_HTTP_DEFAULT_PORT 8080  
+#define MY_HTTP_DEFAULT_PORT 80 
 
 static int http_tcpclient_create(const char *host, int port,int timeout){  
 	struct hostent *he;  
@@ -157,11 +33,12 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	int valopt,ret; 
 	int imode=1,i=0;
 	char *ptr, **pptr;  
-	 char str[32] = {0};  
+	char str[32] = {0};  
 	if((he = gethostbyname(host))==NULL){  
 		printf(LOG_PREFX"gethostbyname failed\n");
 		return -1;  
 	}  
+#if 0
 	printf("official hostname:%s\n", he->h_name);    
 
 	for(pptr = he->h_aliases; *pptr != NULL; pptr++)  
@@ -183,7 +60,7 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 			printf("unkown address type\n");  
 			break;  
 	}  
-
+#endif
 	server_addr.sin_family = AF_INET;  
 	server_addr.sin_port = htons(port);  
 	server_addr.sin_addr = *((struct in_addr *)he->h_addr);  
@@ -193,21 +70,6 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 	}  
 	tv.tv_usec=0;
 	tv.tv_sec = timeout;
-#if 0
-	bzero(&addr,sizeof(addr));	
-	addr.sin_family = AF_INET;	
-	addr.sin_port = htons(3569);  
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);  
-	if(bind(socket_fd,(struct sockaddr *)&addr,sizeof(addr))<0){  
-		perror("bind");	
-		exit(1);  
-	}
-	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR,(const void *)&nOptval , sizeof(int)) < 0)
-	{
-		perror("reuse"); 
-		exit(1);  
-	}
-#endif
 	fcntl(socket_fd, F_SETFL, O_NONBLOCK);
 	if(connect(socket_fd, (struct sockaddr *)&server_addr,sizeof(struct sockaddr)) <0)
 	{
@@ -257,61 +119,6 @@ static int http_tcpclient_create(const char *host, int port,int timeout){
 		printf(LOG_PREFX"Error %s\n",strerror(errno));
 		return -1;
 	}
-	/*
-	   ioctl(socket_fd, FIONBIO, &imode);
-	   while(i<timeout)
-	   {
-	   FD_ZERO(&myset);
-	   FD_SET(socket_fd, &myset);
-	   if(select(socket_fd+1,  0,&myset, 0, &tv) > 0 )
-	   {
-	   if(connect(socket_fd, (struct sockaddr *)&server_addr,sizeof(struct sockaddr)) == -1)
-	   {
-	   if(errno==EINPROGRESS)
-	   {
-
-	   FD_ZERO(&myset); 
-	   FD_SET(socket_fd, &myset);
-	   if(select(socket_fd+1, NULL, &myset, NULL, &tv) > 0) 
-	   { 
-	   if(FD_ISSET(socket_fd,&myset))
-	   {
-	   lon = sizeof(int); 
-	   getsockopt(socket_fd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon); 
-	   if(!valopt) 
-	   { 
-	   printf(LOG_PREFX"OK Connection is done\n");
-	   break;
-	   }
-	   else
-	   printf(LOG_PREFX"3\n");
-	   }
-	   else
-	   printf(LOG_PREFX"2\n");
-	   }
-	   else
-	   printf(LOG_PREFX"1\n");
-	   }
-	   else
-	   {
-	   printf(LOG_PREFX"connect failed %d\n",i++);
-	   sleep(1);
-	   }
-	   }
-	   else
-	   break;
-	   }
-	   else
-	   printf(LOG_PREFX"4\n");
-	   }
-	   imode=0;
-	   ioctl(socket_fd, FIONBIO, &imode); 
-	   if(i==timeout)
-	   {
-	   close(socket_fd);  
-	   return -1;
-	   }*/
-	//fcntl(socket_fd, F_SETFL, 0);
 	return socket_fd;  
 }  
 
@@ -521,7 +328,7 @@ char * http_get(const char *url,int timeout)
 		printf(LOG_PREFX"http_parse_url failed!\n");  
 		return NULL;  
 	}  
-	printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
+	//printf(LOG_PREFX"host_addr : %s\tfile:%s\t,%d\n",host_addr,file,port);  
 
 	socket_fd =  http_tcpclient_create(host_addr,port,timeout);  
 	if(socket_fd < 0){  
@@ -541,15 +348,10 @@ char * http_get(const char *url,int timeout)
 		printf(LOG_PREFX"http_tcpclient_recv failed\n");  
 		return NULL;  
 	}
-	else
-	{
-		http_tcpclient_recv(socket_fd,lpbuf+len,3);
-	}
 	http_tcpclient_close(socket_fd);  
 
 	return http_parse_result(lpbuf);  
 }  
-#endif
 char doit_ack(char *text,const char *item_str)
 {
 	char result=0;cJSON *json,*item_json;

@@ -25,49 +25,27 @@ int upload_data(char *url,char *appid,char *appkey,char *url2, int timeout)
 	rcv=http_get(message,timeout);
 
 	free(message);
-	if (rcv) {
-		printf("rcv %s\r\n", rcv);
-		free(rcv);
-	}
-#if 0
 	if(rcv!=NULL)
 	{	
 		int len=strlen(rcv);
-		//rcv[len-1]='\0';
-		printf(LOG_PREFX"<=== %s\n",rcv);
-		//if(strncmp(rcv,"ok",strlen("ok"))==0 ||strncmp(rcv,"200",strlen("200"))==0) 
+		printf("<=== %s\n",rcv);
+		char *res_code=NULL;
+		char *res_message=NULL;
+		res_code=doit_data(rcv,(char *)"res_code");
+		res_message=doit_data(rcv,(char *)"message");
+		printf("res_code\t %s\r\n",res_code);
+		printf("message\t\t %s\r\n", res_message);
+		if(res_code!=NULL)
 		{
-			printf(LOG_PREFX"send ok\n");
-			char *starttime=NULL;
-			char *tmp=NULL;
-			//strcpy(rcv,"{\"30\":\"230FFEE9981283737D\",\"210\":\"2015-08-27 14:43:57.0\",\"211\":\"???,????,???,313131\",\"212\":\"??\",\"213\":\"??\",\"104\":\"2015-09-18 11:53:58\",\"201\":[],\"202\":[]}");
-			if(atoi(type)==5)
-			{
-				starttime=doit_data(rcv,(char *)"210");
-				tmp=doit_data(rcv,(char *)"211");
-				printf("201 %s\r\n",doit(rcv,"201"));
-				printf("202 %s\r\n",doit(rcv,"202"));
-			}
-			else if(atoi(type)==6)
-			{
-				starttime=doit_data(rcv,(char *)"101");
-				tmp=doit_data(rcv,(char *)"102");
-			}
-			if(starttime!=NULL)
-			{
-				printf("%s\r\n",starttime);
-				free(starttime);
-			}
-			if(tmp!=NULL)
-			{
-				printf("%s\r\n",tmp);
-				free(tmp);
-			}
-			result=1;
+			free(res_code);
 		}
+		if(res_message!=NULL)
+		{
+			free(res_message);
+		}
+		result=1;
 		free(rcv);
 	}
-#endif
 	return result;
 }
 
@@ -82,17 +60,17 @@ int main(int argc,char *argv[])
 {
 	if (argc != 5) {
 		printf("input param not 5\r\n");
-		return;
+		return -1;
 	}
-	
+
 	printf("url:\t\t %s\r\napp_id:\t\t %s\r\napp_key:\t %s\nurl2:\t\t %s\n\n",
-		argv[1],argv[2],argv[3],argv[4]);		
-	
-	if(upload_data(argv[1],argv[2],argv[3],argv[4],9))
-		printf("send data ok\n");
+			argv[1],argv[2],argv[3],argv[4]);		
+
+	if(upload_data(argv[1],argv[2],argv[3],argv[4],99))
+		printf("xfer data ok\n");
 	else
-		printf("send data failed\n");
-	
+		printf("xfer data failed\n");
+
 	return 0;
 }
 
