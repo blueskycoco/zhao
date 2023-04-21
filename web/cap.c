@@ -112,7 +112,13 @@ struct nano{
 };
 struct nano *g_history_co,*g_history_temp,*g_history_shidu,*g_history_co2,*g_history_hcho,*g_history_pm25;
 long *g_co_cnt,*g_co2_cnt,*g_hcho_cnt,*g_temp_cnt,*g_pm25_cnt,*g_shidu_cnt;
-char network_state=0,logged=0,g_index=0;
+char logged=0,g_index=0;
+key_t state_shmid;
+struct state{
+	char network_state;
+	char sensor[6];
+};
+struct state *g_state;
 //*******************************************************************
 //
 // Ãû³Æ: CRC_check
@@ -160,12 +166,12 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 		if(*out!=NULL)
 		{
 			printf(UPLOAD_PROCESS"<==%s\n",*out);
-			network_state=1;
+			g_state->network_state=1;
 		}
 		else
 		{
 			printf(UPLOAD_PROCESS"<==NULL\n");
-			network_state=0;
+			g_state->network_state=0;
 		}
 	}
 	else
@@ -196,7 +202,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 						memset(*out,'\0',i+1);
 						memcpy(*out,rcv,i);//strcpy(*out,rcv);
 						pthread_mutex_unlock(&mutex);
-						network_state=1;
+						g_state->network_state=1;
 						return;
 					}
 					else if(ch=='{')
@@ -212,7 +218,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 								memset(rcv,'\0',512);
 								strcpy(rcv,"ok");
 								pthread_mutex_unlock(&mutex);
-								network_state=1;
+								g_state->network_state=1;
 								return;
 							}
 					}
@@ -236,7 +242,7 @@ void send_web_post(char *url,char *buf,int timeout,char **out)
 								pthread_mutex_unlock(&mutex);
 								return;
 							}
-							network_state=0;
+							g_state->network_state=0;
 							break;
 						}
 					}
@@ -1654,13 +1660,15 @@ void load_history(const char *name)
 void show_sensor_network(int fd)
 {
 	int pic=0;
-	if((sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(!network_state))
+	printf("sensor %d %d %d %d %d %d\nnet_work %d\n",g_state->sensor[0],g_state->sensor[1],g_state->sensor[2],g_state->sensor[3],g_state->sensor[4],g_state->sensor[5],
+		g_state->network_state);
+	if((g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
 		pic=11;
-	else if((sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(network_state))
+	else if((g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(g_state->network_state))
 		pic=10;
-	else if(!(sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(network_state))
+	else if(!(g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(g_state->network_state))
 		pic=9;
-	else if(!(sensor.co2 || sensor.co || sensor.hcho || sensor.shidu || sensor.pm25 || sensor.temp)&&(!network_state))
+	else if(!(g_state->sensor[0] || g_state->sensor[1] || g_state->sensor[2] || g_state->sensor[3] || g_state->sensor[4] || g_state->sensor[5])&&(!g_state->network_state))
 		pic=12;
 	switch_pic(fd,pic);
 }
@@ -1809,19 +1817,22 @@ void draw_curve(int fd,int *data,int len)
 int read_dgus(int fd,int addr,char len,char *out)
 {
 	char ch,i;
+	int timeout=0;
 	char cmd[]={0x5a,0xa5,0x04,0x83,0x00,0x00,0x00};
 	cmd[4]=(addr & 0xff00)>>8;
 	cmd[5]=addr & 0x00ff;
 	cmd[6]=len;
 	write(fd,cmd,7);
-	out=(char *)malloc(len);
 	i=0;
 	while(1)	
 	{	
 		if(read(fd,&ch,1)==1)
 		{
-			out[i++]=ch;
-			if(i==len)
+			if(i>=7)
+				out[i-7]=ch;
+			i++;
+			printf("==> %x\n",ch);
+			if(i==(2*len+7))
 				return 1;
 		}
 		else
@@ -1837,7 +1848,7 @@ int read_dgus(int fd,int addr,char len,char *out)
 int verify_pwd(char *username,char *passwd)
 {
 	int result=0;
-	char verify_msg=add_item(verify_msg,ID_DGRAM_TYPE,TYPE_DGRAM_VERIFY_USER);
+	char *verify_msg=add_item(NULL,ID_DGRAM_TYPE,TYPE_DGRAM_VERIFY_USER);
 	verify_msg=add_item(verify_msg,ID_DEVICE_UID,g_uuid);
 	verify_msg=add_item(verify_msg,ID_DEVICE_IP_ADDR,ip);
 	verify_msg=add_item(verify_msg,ID_DEVICE_PORT,"9517");
@@ -1859,25 +1870,27 @@ int verify_pwd(char *username,char *passwd)
 	}	
 	return result;
 }
+void clear_buf(int fd,int addr,int len)
+{
+	char *tmp=(char *)malloc(len);
+	memset(tmp,0,len);
+	write_string(fd,addr,tmp,len);
+	free(tmp);
+}
 void log_in(int fd)
 {
-	char *user_name=NULL;
-	char *passwd=NULL;
-	if(read_dgus(fd,USER_NAME_ADDR,10,user_name) && read_dgus(fd,USER_PWD_ADDR,10,passwd))
+	char user_name[256]={0};
+	char passwd[256]={0};
+	if(read_dgus(fd,USER_NAME_ADDR,5,user_name) && read_dgus(fd,USER_PWD_ADDR,5,passwd))
 	{
+		printf("User Name %s \nUser Pwd %s\n",user_name,passwd);
 		if(verify_pwd(user_name,passwd))
 		{
 			switch_pic(fd,g_index);
-			free(user_name);
-			free(passwd);
 			return;
 		}
 	}
 	switch_pic(fd,2);
-	if(user_name)
-		free(user_name);
-	if(passwd)
-		free(passwd);
 }
 unsigned short input_handle(int fd_lcd,char *input)
 {
@@ -1911,6 +1924,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 		}
 		else
 		{
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
 			g_index=3;
 		}
@@ -1925,6 +1940,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 		}
 		else
 		{
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);	
 			g_index=4;
 		}
@@ -1938,7 +1955,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 			begin_hcho=0;
 		}
 		else
-		{
+		{		
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
 			g_index=5;
 		}
@@ -1953,6 +1972,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 		}
 		else
 		{
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);		
 			switch_pic(fd_lcd,16);
 			g_index=7;
 		}		
@@ -1967,6 +1988,8 @@ unsigned short input_handle(int fd_lcd,char *input)
 		}
 		else
 		{
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
 			switch_pic(fd_lcd,16);
 			g_index=6;
 		}		
@@ -1981,7 +2004,9 @@ unsigned short input_handle(int fd_lcd,char *input)
 		}
 		else
 		{
-			switch_pic(16);
+			clear_buf(fd_lcd,USER_NAME_ADDR,10);
+			clear_buf(fd_lcd,USER_PWD_ADDR,10);
+			switch_pic(fd_lcd,16);
 			g_index=8;
 		}
 	}	
@@ -2017,11 +2042,52 @@ unsigned short input_handle(int fd_lcd,char *input)
 	}
 	else if(addr==TOUCH_SENSOR_NETWORK_STATE&& (TOUCH_SENSOR_NETWORK_STATE-0x100)==data)
 	{//show sensor and network state
-		show_sensor_network();
+		show_sensor_network(fd_lcd);
 	}
 	else if(addr==TOUCH_LOGIN_HISTORY&& (TOUCH_LOGIN_HISTORY-0x100)==data)
 	{//Login if didn't 
 		log_in(fd_lcd);
+		switch (g_index)
+		{
+			case 3:
+			{//co
+				show_history(fd_lcd,"/home/user/history",ID_CAP_CO,0);
+				begin_co=0;
+			}
+			break;
+			case 4:
+			{//co2
+				show_history(fd_lcd,"/home/user/history",ID_CAP_CO2,0);
+				begin_co2=0;
+			}
+			break;
+			case 5:
+			{//hcho
+				show_history(fd_lcd,"/home/user/history",ID_CAP_HCHO,0);
+				begin_hcho=0;
+			}
+			break;
+			case 7:
+			{//shidu
+				show_history(fd_lcd,"/home/user/history",ID_CAP_SHI_DU,0);
+				begin_shidu=0;
+			}
+			break;
+			case 6:
+			{//temp
+				show_history(fd_lcd,"/home/user/history",ID_CAP_TEMPERATURE,0);
+				begin_temp=0;
+			}
+			break;
+			case 8:
+			{//pm25
+				show_history(fd_lcd,"/home/user/history",ID_CAP_PM_25,0);
+				begin_pm25=0;
+			}
+			break;
+			default:
+				break;
+		}
 	}
 	return STATE_MAIN;
 }
@@ -2366,12 +2432,25 @@ void get_sensor_alarm_info()
 		return;
 	}
 	fread(&sensor,sizeof(struct _sensor_alarm),1,fp);
+	g_state->sensor[0]=sensor.co;
+	g_state->sensor[1]=sensor.co2;
+	g_state->sensor[2]=sensor.hcho;
+	g_state->sensor[3]=sensor.shidu;
+	g_state->sensor[4]=sensor.temp;
+	g_state->sensor[5]=sensor.pm25;
+
 	fclose(fp);
 	printf(MAIN_PROCESS"GOT Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
 }
 void save_sensor_alarm_info()
 {
 	FILE *fp=fopen(CONFIG_FILE,"w");
+	g_state->sensor[0]=sensor.co;
+	g_state->sensor[1]=sensor.co2;
+	g_state->sensor[2]=sensor.hcho;
+	g_state->sensor[3]=sensor.shidu;
+	g_state->sensor[4]=sensor.temp;
+	g_state->sensor[5]=sensor.pm25;
 	fwrite(&sensor,sizeof(struct _sensor_alarm),1,fp);
 	fclose(fp);
 	printf(MAIN_PROCESS"SAVE Alarm_Config co %d, co2 %d, hcho %d,shidu %d, temp %d, pm25 %d\n",sensor.co,sensor.co2,sensor.hcho,sensor.shidu,sensor.temp,sensor.pm25);
@@ -2441,7 +2520,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
         exit(1);  
     }
-
+	if((state_shmid= shmget(IPC_PRIVATE, sizeof(struct state), PERM)) == -1 )
+	{
+        fprintf(stderr, LCD_PROCESS"Create Share Memory Error:%s/n/a", strerror(errno));  
+        exit(1);  
+    }
+	g_state = (struct state *)shmat(state_shmid, 0, 0);
 	if(fork()==0)
 	{
 		load_history("/home/user/history");
@@ -2505,6 +2589,7 @@ int main(int argc, char *argv[])
 	if(fpid==0)
 	{
 		printf(LCD_PROCESS"begin to shmat1\n");
+		g_state = (struct state *)shmat(state_shmid, 0, 0);
 		g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
 		g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
 		g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
@@ -2531,6 +2616,7 @@ int main(int argc, char *argv[])
 		if(fpid==0)
 		{
 			printf(LCD_PROCESS"begin to shmat1\n");
+			g_state = (struct state *)shmat(state_shmid, 0, 0);
 			g_history_co = (struct nano *)shmat(shmid_co, 0, 0);
 			g_history_co2 = (struct nano *)shmat(shmid_co2, 0, 0);
 			g_history_hcho = (struct nano *)shmat(shmid_hcho, 0, 0);
